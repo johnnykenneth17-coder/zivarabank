@@ -1,7 +1,7 @@
 // dashboard.js - Handles user dashboard functionality
 
 // API Base URL
-const API_BASE_URL = "https://bank-backend-blush.vercel.app/api";
+const API_BASE_URL = "https://bank-backend-blush.vercel.app/api/";
 
 // State management
 let currentUser = null;
