@@ -1,7 +1,7 @@
 // main.js - Handles landing page, login, register functionality
 
 // API Base URL
-const API_BASE_URL = "https://bank-backend-blush.vercel.app/api/";
+const API_BASE_URL = "https://bank-backend-blush.vercel.app";
 
 
 // Check if user is already logged in
