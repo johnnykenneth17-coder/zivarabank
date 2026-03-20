@@ -1,0 +1,64 @@
+/* ───────────────────────────────────────────────
+   BETTER MOBILE BASE STYLES – add to ALL css files or to a shared file
+───────────────────────────────────────────────── */
+
+html {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;     /* smooth momentum scrolling on iOS */
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+/* Prevent zoom on double-tap on inputs on iOS */
+input,
+textarea,
+select,
+button {
+  font-size: 16px;           /* ≥16px prevents iOS zoom */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Fix awkward touch targets */
+button,
+a,
+input[type="button"],
+input[type="submit"],
+.label-like,
+.toggle-switch-label {
+  min-height: 44px;          /* Apple Human Interface Guidelines */
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+}
+
+/* Improve spacing on very small screens */
+@media (max-width: 360px) {
+  :root {
+    --border-radius: 10px;
+  }
+
+  h1 { font-size: 1.7rem; }
+  h2 { font-size: 1.45rem; }
+  h3 { font-size: 1.25rem; }
+
+  .btn,
+  .btn-primary,
+  .btn-outline {
+    padding: 10px 16px;
+    font-size: 0.95rem;
+  }
+
+  .form-control,
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 10px 12px;
+    font-size: 0.95rem;
+  }
+}

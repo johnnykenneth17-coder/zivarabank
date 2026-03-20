@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register - SecureBank</title>
+    <link rel="stylesheet" href="./CSS/main.css" />
+    <link rel="stylesheet" href="./CSS/mobile.css">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body class="auth-page">
+    <div class="auth-container">
+      <div class="auth-card">
+        <div class="auth-header">
+          <a href="index.html" class="auth-logo">
+            <i class="fas fa-shield-alt"></i>
+            <span>SecureBank</span>
+          </a>
+          <h1>Create Account</h1>
+          <p>Join thousands of satisfied customers</p>
+        </div>
+        <form id="registerForm" class="auth-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="first_name">First Name</label>
+              <div class="input-icon">
+                <i class="fas fa-user"></i>
+                <input
+                  type="text"
+                  id="first_name"
+                  name="first_name"
+                  placeholder=" "
+                  required
+                />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="last_name">Last Name</label>
+              <div class="input-icon">
+                <input
+                  type="text"
+                  id="last_name"
+                  name="last_name"
+                  placeholder=" "
+                  required
+                />
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <div class="input-icon">
+              <i class="fas fa-envelope"></i>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                placeholder="Enter your Email"
+                required
+              />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="phone">Phone Number</label>
+            <div class="input-icon">
+              <i class="fas fa-phone"></i>
+              <input
+                type="tel"
+                id="phone"
+                name="phone"
+                placeholder="+1 234 567 8900"
+                required
+              />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <div class="input-icon">
+              <i class="fas fa-lock"></i>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Create a strong password"
+                required
+              />
+              <button type="button" class="toggle-password">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+            <div class="password-strength">
+              <div class="strength-bar"></div>
+              <span class="strength-text"></span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="confirm_password">Confirm Password</label>
+            <div class="input-icon">
+              <i class="fas fa-lock"></i>
+              <input
+                type="password"
+                id="confirm_password"
+                name="confirm_password"
+                placeholder="Confirm your password"
+                required
+              />
+            </div>
+          </div>
+          <div class="form-group terms">
+            <label class="checkbox">
+              <input type="checkbox" name="terms" required />
+              <span
+                >I agree to the <a href="#">Terms of Service</a> and
+                <a href="#">Privacy Policy</a></span
+              >
+            </label>
+          </div>
+          <button
+            type="submit"
+            class="btn btn-primary btn-block"
+            id="registerBtn"
+          >
+            <span>Create Account</span>
+            <i class="fas fa-user-plus"></i>
+          </button>
+        </form>
+        <div class="auth-footer">
+          <p>Already have an account? <a href="login.html">Sign In</a></p>
+        </div>
+      </div>
+      <div class="auth-image">
+        <div class="auth-image-content">
+          <h2>Start Your Journey</h2>
+          <p>Get a $25 welcome bonus when you open your first account</p>
+          <ul class="benefits-list">
+            <li><i class="fas fa-check-circle"></i> No monthly fees</li>
+            <li><i class="fas fa-check-circle"></i> Instant transfers</li>
+            <li><i class="fas fa-check-circle"></i> 24/7 support</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <script src="./JAVASCRIPT/main.js"></script>
+    <!--<script src="./backend/middleware/auth.js"></script>-->
+  </body>
+</html>

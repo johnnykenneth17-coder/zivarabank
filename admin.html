@@ -1,0 +1,945 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard - SecureBank</title>
+    <link rel="stylesheet" href="./CSS/admin.css" />
+    <link rel="stylesheet" href="./CSS/main.css" />
+    <link rel="stylesheet" href="./CSS/dashboard.css" />
+    <link rel="stylesheet" href="./CSS/mobile.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="admin-dashboard">
+      <!-- Admin Sidebar -->
+      <aside class="admin-sidebar" id="adminSidebar">
+        <div class="sidebar-header">
+          <div class="logo">
+            <i class="fas fa-shield-alt"></i>
+            <span>Admin Panel</span>
+          </div>
+          <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+        </div>
+        <div class="admin-info">
+          <div class="admin-avatar">
+            <span id="adminInitials">AD</span>
+          </div>
+          <div class="admin-details">
+            <h4 id="adminName">Admin User</h4>
+            <p>Administrator</p>
+          </div>
+        </div>
+        <nav class="admin-nav">
+          <a href="#" class="nav-item active" data-page="dashboard">
+            <i class="fas fa-chart-pie"></i>
+            <span>Dashboard</span>
+          </a>
+          <a href="#" class="nav-item" data-page="users">
+            <i class="fas fa-users"></i>
+            <span>User Management</span>
+          </a>
+          <a href="#" class="nav-item" data-page="transactions">
+            <i class="fas fa-exchange-alt"></i>
+            <span>Transactions</span>
+          </a>
+          <a href="#" class="nav-item" data-page="accounts">
+            <i class="fas fa-wallet"></i>
+            <span>Account Oversight</span>
+          </a>
+          <a href="#" class="nav-item" data-page="otp">
+            <i class="fas fa-key"></i>
+            <span>OTP Management</span>
+          </a>
+          <a href="#" class="nav-item" data-page="support">
+            <i class="fas fa-headset"></i>
+            <span>Support Tickets</span>
+          </a>
+          <a href="#" class="nav-item" data-page="settings">
+            <i class="fas fa-cog"></i>
+            <span>System Settings</span>
+          </a>
+          <a href="#" class="nav-item" data-page="logs">
+            <i class="fas fa-history"></i>
+            <span>Admin Logs</span>
+          </a>
+        </nav>
+        <div class="sidebar-footer">
+          <a
+            href="#"
+            class="nav-item"
+            id="impersonateExit"
+            style="display: none"
+          >
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Exit Impersonation</span>
+          </a>
+          <a href="#" id="adminLogout" class="nav-item">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+          </a>
+        </div>
+      </aside>
+
+      <!-- Admin Main Content -->
+      <main class="admin-main" id="adminMain">
+        <!-- Admin Top Bar -->
+        <header class="admin-topbar">
+          <div class="topbar-left">
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+              <i class="fas fa-bars"></i>
+            </button>
+            <h1 id="adminPageTitle">Dashboard</h1>
+          </div>
+          <div class="topbar-right">
+            <div class="admin-search">
+              <i class="fas fa-search"></i>
+              <input type="text" placeholder="Search users, transactions..." />
+            </div>
+            <div class="admin-notifications">
+              <i class="fas fa-bell"></i>
+              <span class="badge">5</span>
+            </div>
+            <div class="admin-profile">
+              <span id="adminEmail">admin@bank.com</span>
+              <i class="fas fa-chevron-down"></i>
+            </div>
+          </div>
+        </header>
+
+        <!-- OTP Mode Toggle -->
+        <div class="otp-mode-bar">
+          <div class="otp-mode-info">
+            <i class="fas fa-shield-alt"></i>
+            <span>OTP Mode</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="otpModeToggle" />
+            <span class="slider"></span>
+          </label>
+          <span class="otp-mode-status" id="otpModeStatus">Disabled</span>
+        </div>
+
+        <!-- Dynamic Admin Pages -->
+        <div class="admin-pages">
+          <!-- Dashboard Page -->
+          <div class="admin-page active" id="page-dashboard">
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-icon blue">
+                  <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-details">
+                  <span class="stat-label">Total Users</span>
+                  <span class="stat-value" id="totalUsers">0</span>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon green">
+                  <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-details">
+                  <span class="stat-label">Active Users</span>
+                  <span class="stat-value" id="activeUsers">0</span>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon red">
+                  <i class="fas fa-ban"></i>
+                </div>
+                <div class="stat-details">
+                  <span class="stat-label">Frozen Users</span>
+                  <span class="stat-value" id="frozenUsers">0</span>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon orange">
+                  <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-details">
+                  <span class="stat-label">Pending KYC</span>
+                  <span class="stat-value" id="pendingKYC">0</span>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon purple">
+                  <i class="fas fa-arrow-right"></i>
+                </div>
+                <div class="stat-details">
+                  <span class="stat-label">Today's Transactions</span>
+                  <span class="stat-value" id="todayTransactions">0</span>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon cyan">
+                  <i class="fas fa-dollar-sign"></i>
+                </div>
+                <div class="stat-details">
+                  <span class="stat-label">Today's Volume</span>
+                  <span class="stat-value" id="todayVolume">$0</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="charts-row">
+              <div class="chart-card">
+                <h3>User Growth</h3>
+                <canvas id="userGrowthChart"></canvas>
+              </div>
+              <div class="chart-card">
+                <h3>Transaction Volume</h3>
+                <canvas id="transactionVolumeChart"></canvas>
+              </div>
+            </div>
+
+            <div class="recent-activity">
+              <h3>Recent Admin Actions</h3>
+              <div class="activity-list" id="adminActivityList">
+                <!-- Activity will be loaded here -->
+              </div>
+            </div>
+          </div>
+
+          <!-- User Management Page -->
+          <div class="admin-page" id="page-users">
+            <div class="page-header">
+              <h2>User Management</h2>
+              <button class="btn1 btn-primary" id="createUserBtn">
+                <i class="fas fa-user-plus"></i> Create User
+              </button>
+            </div>
+
+            <div class="filters-bar">
+              <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input
+                  type="text"
+                  id="userSearch"
+                  placeholder="Search by name, email..."
+                />
+              </div>
+              <select id="userStatusFilter" class="filter-select">
+                <option value="">All Status</option>
+                <option value="active">Active</option>
+                <option value="frozen">Frozen</option>
+                <option value="inactive">Inactive</option>
+              </select>
+              <select id="userKycFilter" class="filter-select">
+                <option value="">All KYC</option>
+                <option value="pending">Pending</option>
+                <option value="verified">Verified</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
+
+            <div class="table-responsive">
+              <table class="data-table" id="usersTable">
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>KYC</th>
+                    <th>Balance</th>
+                    <th>Joined</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                  <!-- Users will be loaded here -->
+                </tbody>
+              </table>
+            </div>
+            <div class="pagination" id="usersPagination">
+              <!-- Pagination will be loaded here -->
+            </div>
+          </div>
+
+          <!-- Transaction Monitoring Page -->
+          <div class="admin-page" id="page-transactions">
+            <div class="page-header">
+              <h2>Transaction Monitoring</h2>
+            </div>
+
+            <div class="filters-bar">
+              <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input
+                  type="text"
+                  id="transactionSearch"
+                  placeholder="Search by ID, user..."
+                />
+              </div>
+              <select id="transactionTypeFilter" class="filter-select">
+                <option value="">All Types</option>
+                <option value="transfer">Transfer</option>
+                <option value="withdrawal">Withdrawal</option>
+                <option value="deposit">Deposit</option>
+                <option value="bill_payment">Bill Payment</option>
+              </select>
+              <select id="transactionStatusFilter" class="filter-select">
+                <option value="">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="completed">Completed</option>
+                <option value="rejected">Rejected</option>
+              </select>
+              <input
+                type="date"
+                id="transactionDateFrom"
+                class="filter-input"
+                placeholder="From"
+              />
+              <input
+                type="date"
+                id="transactionDateTo"
+                class="filter-input"
+                placeholder="To"
+              />
+            </div>
+
+            <div class="table-responsive">
+              <table class="data-table" id="transactionsTable">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>From</th>
+                    <th>To</th>
+                    <th>Amount</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="transactionsTableBody">
+                  <!-- Transactions will be loaded here -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Account Oversight Page -->
+          <div class="admin-page" id="page-accounts">
+            <div class="page-header">
+              <h2>Account Oversight</h2>
+            </div>
+
+            <div class="account-controls">
+              <div class="user-selector">
+                <select id="accountUserSelect" class="form-control">
+                  <option value="">Select User</option>
+                </select>
+              </div>
+              <div class="account-actions">
+                <button class="btn btn-warning" id="freezeAccountBtn">
+                  <i class="fas fa-ban"></i> Freeze Account
+                </button>
+                <button class="btn btn-success" id="unfreezeAccountBtn">
+                  <i class="fas fa-check"></i> Unfreeze Account
+                </button>
+                <button class="btn btn-primary" id="updateBalanceBtn">
+                  <i class="fas fa-dollar-sign"></i> Update Balance
+                </button>
+                <button class="btn btn-danger" id="impersonateBtn">
+                  <i class="fas fa-mask"></i> Impersonate
+                </button>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Account #</th>
+                    <th>Owner</th>
+                    <th>Type</th>
+                    <th>Balance</th>
+                    <th>Available</th>
+                    <th>Status</th>
+                    <th>KYC</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="accountsTableBody">
+                  <!-- Filled by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- OTP Management Page -->
+          <div class="admin-page" id="page-otp">
+            <div class="page-header">
+              <h2>OTP Management</h2>
+              <button class="btn btn-primary" id="generateOtpBtn">
+                <i class="fas fa-key"></i> Generate OTP
+              </button>
+            </div>
+
+            <div class="otp-controls">
+              <div class="form-group">
+                <label>User</label>
+                <select id="otpUserSelect" class="form-control">
+                  <option value="">Select User</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>OTP Type</label>
+                <select id="otpType" class="form-control">
+                  <option value="withdrawal">Withdrawal</option>
+                  <option value="transfer">Transfer</option>
+                  <option value="unfreeze">Unfreeze</option>
+                  <option value="login">Login</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Transaction ID (optional)</label>
+                <input type="text" id="otpTransactionId" class="form-control" />
+              </div>
+              <button class="btn btn-primary" id="generateOtpCodeBtn">
+                Generate Code
+              </button>
+            </div>
+
+            <div class="generated-otp" id="generatedOtp" style="display: none">
+              <h3>Generated OTP</h3>
+              <div class="otp-code-display" id="otpCodeDisplay"></div>
+              <p>Expires: <span id="otpExpiry"></span></p>
+            </div>
+
+            <div class="recent-otps">
+              <h3>Recent OTPs</h3>
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>User</th>
+                      <th>Type</th>
+                      <th>Code</th>
+                      <th>Status</th>
+                      <th>Expires</th>
+                    </tr>
+                  </thead>
+                  <tbody id="recentOtpsTable">
+                    <!-- Recent OTPs will be loaded here -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Support Tickets Page -->
+          <div class="admin-page" id="page-support">
+            <div class="page-header">
+              <h2>Support Tickets</h2>
+            </div>
+
+            <div class="tickets-container">
+              <div class="tickets-sidebar">
+                <div class="filters">
+                  <select id="ticketStatusFilter" class="form-control">
+                    <option value="">All Status</option>
+                    <option value="open">Open</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="closed">Closed</option>
+                  </select>
+                  <select id="ticketPriorityFilter" class="form-control">
+                    <option value="">All Priority</option>
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                </div>
+                <div class="tickets-list" id="adminTicketsList">
+                  <!-- Tickets will be loaded here -->
+                </div>
+              </div>
+              <div class="ticket-chat" id="adminTicketChat">
+                <div class="chat-placeholder">
+                  <i class="fas fa-comments"></i>
+                  <p>Select a ticket to view conversation</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- System Settings Page -->
+          <div class="admin-page" id="page-settings">
+            <div class="page-header">
+              <h2>System Settings</h2>
+            </div>
+
+            <div class="settings-grid">
+              <div class="settings-card">
+                <h3>Banking Settings</h3>
+                <div class="setting-item">
+                  <label>Default Currency</label>
+                  <select id="defaultCurrency" class="form-control">
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="GBP">GBP</option>
+                  </select>
+                </div>
+                <div class="setting-item">
+                  <label>Transaction Fee (%)</label>
+                  <input
+                    type="number"
+                    id="transactionFee"
+                    class="form-control"
+                    step="0.1"
+                    min="0"
+                  />
+                </div>
+                <div class="setting-item">
+                  <label>Daily Transfer Limit</label>
+                  <input type="number" id="dailyLimit" class="form-control" />
+                </div>
+                <div class="setting-item">
+                  <label>Card Purchase Method</label>
+                  <select id="cardPurchaseMethod" class="form-control">
+                    <option value="crypto">Cryptocurrency</option>
+                    <option value="bank">Bank Transfer</option>
+                    <option value="both">Both</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="settings-card">
+                <h3>Security Settings</h3>
+                <div class="setting-item">
+                  <label>2FA Required for Admins</label>
+                  <label class="switch">
+                    <input type="checkbox" id="admin2FA" />
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="setting-item">
+                  <label>Session Timeout (minutes)</label>
+                  <input
+                    type="number"
+                    id="sessionTimeout"
+                    class="form-control"
+                  />
+                </div>
+                <div class="setting-item">
+                  <label>Max Login Attempts</label>
+                  <input
+                    type="number"
+                    id="maxLoginAttempts"
+                    class="form-control"
+                  />
+                </div>
+              </div>
+
+              <div class="settings-card">
+                <h3>Exchange Rates</h3>
+                <div class="exchange-rates" id="exchangeRates">
+                  <!-- Exchange rates will be loaded here -->
+                </div>
+                <button class="btn btn-outline btn-block" id="updateRatesBtn">
+                  Update Rates
+                </button>
+              </div>
+
+              <div class="settings-card">
+                <h3>Risk Management</h3>
+                <div class="setting-item">
+                  <label>Enable Geo-blocking</label>
+                  <label class="switch">
+                    <input type="checkbox" id="geoBlocking" />
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="setting-item">
+                  <label>High-risk Countries</label>
+                  <textarea
+                    id="blockedCountries"
+                    class="form-control"
+                    rows="3"
+                  ></textarea>
+                </div>
+                <div class="setting-item">
+                  <label>Suspicious Amount Threshold</label>
+                  <input
+                    type="number"
+                    id="suspiciousThreshold"
+                    class="form-control"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-actions">
+              <button class="btn btn-primary" id="saveSettings">
+                Save All Settings
+              </button>
+              <button class="btn btn-outline" id="resetSettings">
+                Reset to Default
+              </button>
+            </div>
+          </div>
+
+          <!-- Admin Logs Page -->
+          <div class="admin-page" id="page-logs">
+            <div class="page-header">
+              <h2>Admin Action Logs</h2>
+            </div>
+
+            <div class="filters-bar">
+              <input
+                type="text"
+                id="logSearch"
+                placeholder="Search logs..."
+                class="filter-input"
+              />
+              <input type="date" id="logDateFrom" class="filter-input" />
+              <input type="date" id="logDateTo" class="filter-input" />
+              <select id="logActionFilter" class="filter-select">
+                <option value="">All Actions</option>
+                <option value="create_user">Create User</option>
+                <option value="update_user">Update User</option>
+                <option value="freeze_user">Freeze User</option>
+                <option value="update_balance">Update Balance</option>
+                <option value="impersonate">Impersonate</option>
+                <option value="generate_otp">Generate OTP</option>
+              </select>
+            </div>
+
+            <div class="table-responsive">
+              <table class="data-table" id="logsTable">
+                <thead>
+                  <tr>
+                    <th>Timestamp</th>
+                    <th>Admin</th>
+                    <th>Action</th>
+                    <th>Target User</th>
+                    <th>Details</th>
+                    <th>IP Address</th>
+                  </tr>
+                </thead>
+                <tbody id="logsTableBody">
+                  <!-- Logs will be loaded here -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Modals -->
+
+    <div class="modal" id="createUserModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Create New User</h3>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form id="createUserForm">
+            <div class="form-group">
+              <label>First Name</label>
+              <input
+                type="text"
+                id="newUserFirstName"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label>Last Name</label>
+              <input
+                type="text"
+                id="newUserLastName"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input
+                type="email"
+                id="newUserEmail"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label>Phone</label>
+              <input
+                type="tel"
+                id="newUserPhone"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label>Password</label>
+              <input
+                type="password"
+                id="newUserPassword"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label>Role</label>
+              <select id="newUserRole" class="form-control">
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" id="cancelCreateUser">Cancel</button>
+          <button class="btn btn-primary" id="submitCreateUser">
+            Create User
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== VIEW USER MODAL ===================== -->
+    <div class="modal" id="viewUserModal">
+      <div class="modal-content" style="max-width: 700px">
+        <div class="modal-header">
+          <h3><i class="fas fa-user"></i> User Details</h3>
+          <button class="close-modal">×</button>
+        </div>
+        <div class="modal-body" id="viewUserContent">
+          <!-- Filled by JS -->
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" onclick="closeModal('viewUserModal')">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== EDIT USER MODAL ===================== -->
+    <div class="modal" id="editUserModal">
+      <div class="modal-content" style="max-width: 700px">
+        <div class="modal-header">
+          <h3><i class="fas fa-edit"></i> Edit User</h3>
+          <button class="close-modal">×</button>
+        </div>
+        <div class="modal-body">
+          <form id="editUserForm">
+            <input type="hidden" id="editUserId" />
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>First Name</label>
+                <input
+                  type="text"
+                  id="editFirstName"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label>Last Name</label>
+                <input
+                  type="text"
+                  id="editLastName"
+                  class="form-control"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Email</label>
+              <input
+                type="email"
+                id="editEmail"
+                class="form-control"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label>Phone</label>
+              <input type="tel" id="editPhone" class="form-control" />
+            </div>
+
+            <div class="form-group">
+              <label>Role</label>
+              <select id="editRole" class="form-control">
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>KYC Status</label>
+              <select id="editKycStatus" class="form-control">
+                <option value="pending">Pending</option>
+                <option value="verified">Verified</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Balance (Main Account)</label>
+              <input
+                type="number"
+                id="editBalance"
+                class="form-control"
+                step="0.01"
+              />
+            </div>
+
+            <button
+              type="button"
+              class="btn btn-primary btn-block"
+              id="saveUserBtn"
+            >
+              Save Changes
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="updateBalanceModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Update User Balance</h3>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form id="updateBalanceForm">
+            <div class="form-group">
+              <label>User</label>
+              <select id="balanceUserSelect" class="form-control" required>
+                <option value="">Select User</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Account</label>
+              <select id="balanceAccountSelect" class="form-control" required>
+                <option value="">Select Account</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Action</label>
+              <select id="balanceAction" class="form-control" required>
+                <option value="add">Add Amount</option>
+                <option value="subtract">Subtract Amount</option>
+                <option value="set">Set Exact Amount</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Amount</label>
+              <input
+                type="number"
+                id="balanceAmount"
+                class="form-control"
+                step="0.01"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label>Description</label>
+              <input type="text" id="balanceDescription" class="form-control" />
+            </div>
+            <div class="form-group checkbox">
+              <label>
+                <input type="checkbox" id="makeItLookLikeTransfer" />
+                Make it look like a transfer from another user
+              </label>
+            </div>
+            <div id="transferFromSection" style="display: none">
+              <div class="form-group">
+                <label>Transfer From User</label>
+                <select id="transferFromUser" class="form-control">
+                  <option value="">Select User</option>
+                </select>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" id="cancelBalanceUpdate">
+            Cancel
+          </button>
+          <button class="btn btn-primary" id="submitBalanceUpdate">
+            Update Balance
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="freezeModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Freeze User Account</h3>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form id="freezeForm">
+            <div class="form-group">
+              <label>User</label>
+              <select id="freezeUserSelect" class="form-control" required>
+                <option value="">Select User</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Reason for Freezing</label>
+              <textarea
+                id="freezeReason"
+                class="form-control"
+                rows="3"
+                required
+              ></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" id="cancelFreeze">Cancel</button>
+          <button class="btn btn-danger" id="confirmFreeze">
+            Freeze Account
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="impersonateModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Impersonate User</h3>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p>
+            You are about to impersonate <span id="impersonateUserName"></span>.
+            You will have full access to their account without their knowledge.
+          </p>
+          <p class="warning">This action is logged for security purposes.</p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" id="cancelImpersonate">Cancel</button>
+          <button class="btn btn-danger" id="confirmImpersonate">
+            Start Impersonation
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="./JAVASCRIPT/admin.js"></script>
+  </body>
+</html>
