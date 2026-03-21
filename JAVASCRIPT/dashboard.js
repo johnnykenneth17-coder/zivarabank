@@ -21,11 +21,21 @@ if (!token) {
 // Initialize dashboard
 document.addEventListener("DOMContentLoaded", async () => {
   await loadUserData();
+  debounce();
   //loadSpendingByCategory();
   //initializeEventListeners();
   startRealTimeUpdates();
   updateDateTime();
 });
+
+// Debounce helper (prevents calling API on every keystroke)
+function debounce(fn, delay = 600) {
+  let timeout;
+  return (...args) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => fn(...args), delay);
+  };
+}
 
 // Notification helper (copied/adapted from main.js)
 function showNotification(message, type = "info") {
@@ -492,6 +502,69 @@ if (transferForm) {
   });
 }
 
+// ── Recipient name lookup ───────────────────────────────────────────────
+const toAccountInput = document.getElementById("toAccount");
+const feedbackEl = document.getElementById("recipientFeedback");
+
+if (toAccountInput && feedbackEl) {
+  const lookupRecipient = debounce(async (accountNumber) => {
+    if (!accountNumber || accountNumber.length < 8) {
+      feedbackEl.textContent = "";
+      feedbackEl.className = "input-feedback";
+      return;
+    }
+
+    feedbackEl.textContent = "Verifying account...";
+    feedbackEl.className = "input-feedback loading";
+
+    try {
+      const res = await fetch(
+        `${API_BASE_URL}/accounts/recipient?account_number=${encodeURIComponent(accountNumber)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        },
+      );
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Verification failed");
+      }
+
+      const data = await res.json();
+
+      if (data.success) {
+        feedbackEl.textContent = `Recipient: ${data.name}`;
+        feedbackEl.className = "input-feedback success";
+        // Optional: store for transfer submission
+        toAccountInput.dataset.validRecipient = "true";
+        toAccountInput.dataset.recipientName = data.name;
+        toAccountInput.dataset.accountId = data.account_id;
+      } else {
+        throw new Error("Account not found");
+      }
+    } catch (err) {
+      feedbackEl.textContent = err.message.includes("not found")
+        ? "No account found with this number"
+        : "Could not verify account";
+      feedbackEl.className = "input-feedback error";
+      toAccountInput.dataset.validRecipient = "false";
+    }
+  }, 700); // 700ms delay — feels responsive but avoids spam
+
+  // Trigger on input + blur (good combo)
+  toAccountInput.addEventListener("input", (e) => {
+    const val = e.target.value.trim().replace(/\D/g, ""); // only digits
+    e.target.value = val; // enforce numbers only
+    lookupRecipient(val);
+  });
+
+  toAccountInput.addEventListener("blur", (e) => {
+    lookupRecipient(e.target.value.trim());
+  });
+}
+
 // OTP Modal
 function showOTPModal(transactionId, type) {
   const modal = document.getElementById("otpModal");
@@ -836,17 +909,20 @@ document
 async function loadSpendingByCategory() {
   try {
     // Safety: prevent double call
-    const canvas = document.getElementById('spendingChar');
+    const canvas = document.getElementById("spendingChar");
     if (!canvas) return;
-    if (canvas.dataset.loaded === 'true') return; // already loaded this session
+    if (canvas.dataset.loaded === "true") return; // already loaded this session
 
-    canvas.dataset.loaded = 'true';
+    canvas.dataset.loaded = "true";
 
-    const response = await fetch(`${API_BASE_URL}/user/transactions/category-summary`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/user/transactions/category-summary`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
@@ -859,66 +935,74 @@ async function loadSpendingByCategory() {
       charts.spending.destroy();
     }
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     charts.spending = new Chart(ctx, {
-      type: 'doughnut',
+      type: "doughnut",
       data: {
-        labels: data.map(item => item.category),
-        datasets: [{
-          data: data.map(item => item.total),
-          backgroundColor: [
-            '#4f46e5', '#10b981', '#f59e0b', '#ef4444',
-            '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#64748b'
-          ],
-          borderWidth: 1,
-          borderColor: '#ffffff'
-        }]
+        labels: data.map((item) => item.category),
+        datasets: [
+          {
+            data: data.map((item) => item.total),
+            backgroundColor: [
+              "#4f46e5",
+              "#10b981",
+              "#f59e0b",
+              "#ef4444",
+              "#8b5cf6",
+              "#ec4899",
+              "#14b8a6",
+              "#f97316",
+              "#64748b",
+            ],
+            borderWidth: 1,
+            borderColor: "#ffffff",
+          },
+        ],
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        cutout: '65%',
+        cutout: "65%",
         plugins: {
           legend: {
-            position: 'bottom',
-            labels: { font: { size: 13 } }
+            position: "bottom",
+            labels: { font: { size: 13 } },
           },
           tooltip: {
             callbacks: {
               label: (context) => {
                 const value = context.parsed;
-                return ` $${value.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-              }
-            }
+                return ` $${value.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+              },
+            },
           },
           title: {
             display: true,
-            text: 'Spending by Category (Last 30 Days)',
+            text: "Spending by Category (Last 30 Days)",
             font: { size: 16 },
-            padding: { top: 10, bottom: 20 }
-          }
-        }
-      }
+            padding: { top: 10, bottom: 20 },
+          },
+        },
+      },
     });
-
   } catch (err) {
-    console.error('Spending by category error:', err);
-    showNotification('Could not load spending breakdown', 'error');
+    console.error("Spending by category error:", err);
+    showNotification("Could not load spending breakdown", "error");
 
     // Optional fallback fake data (for development only)
-     renderFakeSpendingChart();
+    renderFakeSpendingChart();
   }
 }
 
 // Optional fallback – only use during testing
 function renderFakeSpendingChart() {
   const fakeData = [
-    { category: 'Food & Dining', total: 285.40 },
-    { category: 'Transportation', total: 142.80 },
-    { category: 'Shopping', total: 398.20 },
-    { category: 'Bills & Utilities', total: 175.60 },
-    { category: 'Entertainment', total: 89.50 },
-    { category: 'Other', total: 67.30 }
+    { category: "Food & Dining", total: 285.4 },
+    { category: "Transportation", total: 142.8 },
+    { category: "Shopping", total: 398.2 },
+    { category: "Bills & Utilities", total: 175.6 },
+    { category: "Entertainment", total: 89.5 },
+    { category: "Other", total: 67.3 },
   ];
 
   // same Chart.js code as above, but using fakeData
@@ -998,8 +1082,6 @@ document.getElementById("toggleBalance")?.addEventListener("click", () => {
   }
   balanceVisible = !balanceVisible;
 });
-
-
 
 // In dashboard.js — replace the existing nav-item listener block
 document.querySelectorAll(".sidebar-nav .nav-item").forEach((item) => {

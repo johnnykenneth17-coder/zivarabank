@@ -1,33 +1,12 @@
-<div class="modal" id="freezeModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 id="freezeModalTitle">Freeze User Account</h3>
-            <button class="close-modal">&times;</button>
-        </div>
-        <div class="modal-body">
-            <form id="freezeForm">
-                <div class="form-group">
-                    <label>User</label>
-                    <select id="freezeUserSelect" class="form-control" required></select>
-                </div>
-                <div class="form-group">
-                    <label id="freezeReasonLabel">Reason for Freezing</label>
-                    <textarea id="freezeReason" class="form-control" rows="3" required></textarea>
-                </div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-outline" id="cancelFreeze">Cancel</button>
-            <button class="btn btn-danger" id="confirmFreeze">Freeze Account</button>
-        </div>
-    </div>
+<!-- inside the transfers page / section -->
+<div class="form-group">
+  <label for="toAccount">Recipient Account Number</label>
+  <input 
+    type="text" 
+    id="toAccount" 
+    placeholder="Enter account number" 
+    maxlength="12" 
+    required
+  />
+  <div id="recipientFeedback" class="input-feedback" style="margin-top: 6px; font-size: 0.9rem;"></div>
 </div>
-
-
-
-<!-- Example in table row -->
-<button 
-  class="btn btn-success btn-sm" 
-  onclick="openUnfreezeModal('${account.user_id || user.id}')">
-  <i class="fas fa-lock-open"></i> Unfreeze
-</button>

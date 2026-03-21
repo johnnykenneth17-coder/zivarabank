@@ -1,521 +1,646 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard - ZivaraBank</title>
-    <link rel="stylesheet" href="./CSS/dashboard.css">
-    <link rel="stylesheet" href="./CSS/main.css">
-    <link rel="stylesheet" href="./CSS/mobile.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body>
+    <link rel="stylesheet" href="./CSS/dashboard.css" />
+    <link rel="stylesheet" href="./CSS/main.css" />
+    <link rel="stylesheet" href="./CSS/mobile.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body>
     <div class="dashboard">
-        <!-- Sidebar -->
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <div class="logo">
-                    <i class="fas fa-shield-alt"></i>
-                    <span>ZivaraBank</span>
+      <!-- Sidebar -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <div class="logo">
+            <i class="fas fa-shield-alt"></i>
+            <span>ZivaraBank</span>
+          </div>
+          <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+        </div>
+        <div class="sidebar-user">
+          <div class="user-avatar" id="userAvatar">
+            <span id="userInitials">JD</span>
+          </div>
+          <div class="user-info">
+            <h4 id="userName"></h4>
+            <p id="userEmail"></p>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <a href="#" class="nav-item active" data-page="overview">
+            <i class="fas fa-home"></i>
+            <span>Overview</span>
+          </a>
+          <a href="#" class="nav-item" data-page="accounts">
+            <i class="fas fa-wallet"></i>
+            <span>Accounts</span>
+          </a>
+          <a href="#" class="nav-item" data-page="transfers">
+            <i class="fas fa-exchange-alt"></i>
+            <span>Transfers</span>
+          </a>
+          <a href="#" class="nav-item" data-page="cards">
+            <i class="fas fa-credit-card"></i>
+            <span>Cards</span>
+          </a>
+          <a href="#" class="nav-item" data-page="bills">
+            <i class="fas fa-file-invoice"></i>
+            <span>Bill Payments</span>
+          </a>
+          <a href="#" class="nav-item" data-page="beneficiaries">
+            <i class="fas fa-users"></i>
+            <span>Beneficiaries</span>
+          </a>
+          <a href="#" class="nav-item" data-page="budgets">
+            <i class="fas fa-chart-pie"></i>
+            <span>Budgets</span>
+          </a>
+          <a href="#" class="nav-item" data-page="support">
+            <i class="fas fa-headset"></i>
+            <span>Support</span>
+          </a>
+          <a href="#" class="nav-item" data-page="settings">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
+          </a>
+        </nav>
+        <div class="sidebar-footer">
+          <a href="#" id="logoutBtn" class="nav-item">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+          </a>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content" id="mainContent">
+        <!-- Top Bar -->
+        <header class="top-bar">
+          <div class="top-bar-left">
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+              <i class="fas fa-bars"></i>
+            </button>
+            <h1 id="pageTitle">Overview</h1>
+          </div>
+          <div class="top-bar-right">
+            <div class="search-box">
+              <i class="fas fa-search"></i>
+              <input type="text" placeholder="Search..." />
+            </div>
+            <div class="notifications" id="notifications">
+              <i class="fas fa-bell"></i>
+              <span class="badge" id="notificationBadge">3</span>
+              <div class="notifications-dropdown" id="notificationsDropdown">
+                <div class="notifications-header">
+                  <h4>Notifications</h4>
+                  <button id="markAllRead">Mark all as read</button>
                 </div>
-                <button class="sidebar-toggle" id="sidebarToggle">
-                    <i class="fas fa-chevron-left"></i>
+                <div class="notifications-list" id="notificationsList">
+                  <!-- Notifications will be loaded here -->
+                </div>
+              </div>
+            </div>
+            <div class="user-menu" id="userMenu">
+              <img
+                src="https://via.placeholder.com/40"
+                alt="User"
+                id="userMenuAvatar"
+              />
+              <i class="fas fa-chevron-down"></i>
+              <div class="user-dropdown" id="userDropdown">
+                <a href="#"><i class="fas fa-user"></i> Profile</a>
+                <a href="#"><i class="fas fa-cog"></i> Settings</a>
+                <a href="#" id="logoutDropdown"
+                  ><i class="fas fa-sign-out-alt"></i> Logout</a
+                >
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- Freeze Notification -->
+        <div
+          class="freeze-notification"
+          id="freezeNotification"
+          style="display: none"
+        >
+          <i class="fas fa-exclamation-triangle"></i>
+          <div class="freeze-content">
+            <strong>Account Frozen</strong>
+            <p id="freezeReason">
+              Your account has been frozen. Please contact support.
+            </p>
+          </div>
+          <button class="btn btn-warning" id="requestUnfreezeBtn">
+            Request Unfreeze OTP
+          </button>
+        </div>
+
+        <!-- Dynamic Content Pages -->
+        <div class="content-pages">
+          <!-- Overview Page -->
+          <div class="page active" id="page-overview">
+            <div class="welcome-card">
+              <div>
+                <h2>Welcome back, <span id="welcomeName"> </span>! 👋</h2>
+                <p>Here's your financial summary</p>
+              </div>
+              <div class="date-time">
+                <i class="far fa-calendar"></i>
+                <span id="currentDate"></span>
+              </div>
+            </div>
+
+            <div class="balance-cards">
+              <div class="balance-card">
+                <div class="balance-label">
+                  <span>Total Balance</span>
+                  <i class="fas fa-eye" id="toggleBalance"></i>
+                </div>
+                <div class="balance-amount" id="totalBalance">$0.00</div>
+                <div class="balance-change positive">
+                  <i class="fas fa-arrow-up"></i>
+                  <span>+2.5% from last month</span>
+                </div>
+              </div>
+              <div class="balance-card">
+                <div class="balance-label">
+                  <span>Monthly Spending</span>
+                </div>
+                <div class="balance-amount" id="monthlySpending">$0.00</div>
+                <div class="progress-bar">
+                  <div class="progress" style="width: 68%"></div>
+                </div>
+                <div class="progress-label">68% of budget</div>
+              </div>
+              <div class="balance-card">
+                <div class="balance-label">
+                  <span>Savings Goals</span>
+                </div>
+                <div class="balance-amount" id="savingsGoal">$0.00 / $0.00</div>
+                <div class="progress-bar">
+                  <div class="progress" style="width: 50%"></div>
+                </div>
+                <div class="progress-label">50% completed</div>
+              </div>
+            </div>
+
+            <div class="charts-grid">
+              <div class="chart-card">
+                <h3>Spending by Category</h3>
+                <canvas id="spendingChart"></canvas>
+              </div>
+              <div class="chart-card">
+                <h3>Monthly Trend</h3>
+                <canvas id="trendChart"></canvas>
+              </div>
+            </div>
+
+            <div class="recent-transactions">
+              <div class="section-header">
+                <h3>Recent Transactions</h3>
+                <a href="#" class="view-all"
+                  >View All <i class="fas fa-arrow-right"></i
+                ></a>
+              </div>
+              <div class="transactions-list" id="recentTransactions">
+                <!-- Transactions will be loaded here -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Accounts Page -->
+          <div class="page" id="page-accounts">
+            <div class="page-header">
+              <h2>Your Accounts</h2>
+              <button class="btn btn-outline" id="addAccountBtn">
+                <i class="fas fa-plus"></i> Add Account
+              </button>
+            </div>
+            <div class="accounts-grid" id="accountsList">
+              <!-- Accounts will be loaded here -->
+            </div>
+            <div class="statements-section">
+              <h3>Account Statements</h3>
+              <div class="statements-list" id="statementsList">
+                <!-- Statements will be loaded here -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Transfers Page -->
+          <div class="page" id="page-transfers">
+            <div class="page-header">
+              <h2>Money Transfers</h2>
+            </div>
+            <div class="transfer-container">
+              <div class="transfer-tabs">
+                <button class="tab-btn active" data-tab="internal">
+                  Internal Transfer
                 </button>
-            </div>
-            <div class="sidebar-user">
-                <div class="user-avatar" id="userAvatar">
-                    <span id="userInitials">JD</span>
-                </div>
-                <div class="user-info">
-                    <h4 id="userName"> </h4>
-                    <p id="userEmail"> </p>
-                </div>
-            </div>
-            <nav class="sidebar-nav">
-                <a href="#" class="nav-item active" data-page="overview">
-                    <i class="fas fa-home"></i>
-                    <span>Overview</span>
-                </a>
-                <a href="#" class="nav-item" data-page="accounts">
-                    <i class="fas fa-wallet"></i>
-                    <span>Accounts</span>
-                </a>
-                <a href="#" class="nav-item" data-page="transfers">
-                    <i class="fas fa-exchange-alt"></i>
-                    <span>Transfers</span>
-                </a>
-                <a href="#" class="nav-item" data-page="cards">
-                    <i class="fas fa-credit-card"></i>
-                    <span>Cards</span>
-                </a>
-                <a href="#" class="nav-item" data-page="bills">
-                    <i class="fas fa-file-invoice"></i>
-                    <span>Bill Payments</span>
-                </a>
-                <a href="#" class="nav-item" data-page="beneficiaries">
-                    <i class="fas fa-users"></i>
-                    <span>Beneficiaries</span>
-                </a>
-                <a href="#" class="nav-item" data-page="budgets">
-                    <i class="fas fa-chart-pie"></i>
-                    <span>Budgets</span>
-                </a>
-                <a href="#" class="nav-item" data-page="support">
-                    <i class="fas fa-headset"></i>
-                    <span>Support</span>
-                </a>
-                <a href="#" class="nav-item" data-page="settings">
-                    <i class="fas fa-cog"></i>
-                    <span>Settings</span>
-                </a>
-            </nav>
-            <div class="sidebar-footer">
-                <a href="#" id="logoutBtn" class="nav-item">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
-                </a>
-            </div>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="main-content" id="mainContent">
-            <!-- Top Bar -->
-            <header class="top-bar">
-                <div class="top-bar-left">
-                    <button class="mobile-menu-btn" id="mobileMenuBtn">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                    <h1 id="pageTitle">Overview</h1>
-                </div>
-                <div class="top-bar-right">
-                    <div class="search-box">
-                        <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Search...">
-                    </div>
-                    <div class="notifications" id="notifications">
-                        <i class="fas fa-bell"></i>
-                        <span class="badge" id="notificationBadge">3</span>
-                        <div class="notifications-dropdown" id="notificationsDropdown">
-                            <div class="notifications-header">
-                                <h4>Notifications</h4>
-                                <button id="markAllRead">Mark all as read</button>
-                            </div>
-                            <div class="notifications-list" id="notificationsList">
-                                <!-- Notifications will be loaded here -->
-                            </div>
-                        </div>
-                    </div>
-                    <div class="user-menu" id="userMenu">
-                        <img src="https://via.placeholder.com/40" alt="User" id="userMenuAvatar">
-                        <i class="fas fa-chevron-down"></i>
-                        <div class="user-dropdown" id="userDropdown">
-                            <a href="#"><i class="fas fa-user"></i> Profile</a>
-                            <a href="#"><i class="fas fa-cog"></i> Settings</a>
-                            <a href="#" id="logoutDropdown"><i class="fas fa-sign-out-alt"></i> Logout</a>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            <!-- Freeze Notification -->
-            <div class="freeze-notification" id="freezeNotification" style="display: none;">
-                <i class="fas fa-exclamation-triangle"></i>
-                <div class="freeze-content">
-                    <strong>Account Frozen</strong>
-                    <p id="freezeReason">Your account has been frozen. Please contact support.</p>
-                </div>
-                <button class="btn btn-warning" id="requestUnfreezeBtn">Request Unfreeze OTP</button>
-            </div>
-
-            <!-- Dynamic Content Pages -->
-            <div class="content-pages">
-                <!-- Overview Page -->
-                <div class="page active" id="page-overview">
-                    <div class="welcome-card">
-                        <div>
-                            <h2>Welcome back, <span id="welcomeName"> </span>! 👋</h2>
-                            <p>Here's your financial summary</p>
-                        </div>
-                        <div class="date-time">
-                            <i class="far fa-calendar"></i>
-                            <span id="currentDate"></span>
-                        </div>
-                    </div>
-
-                    <div class="balance-cards">
-                        <div class="balance-card">
-                            <div class="balance-label">
-                                <span>Total Balance</span>
-                                <i class="fas fa-eye" id="toggleBalance"></i>
-                            </div>
-                            <div class="balance-amount" id="totalBalance">$0.00</div>
-                            <div class="balance-change positive">
-                                <i class="fas fa-arrow-up"></i>
-                                <span>+2.5% from last month</span>
-                            </div>
-                        </div>
-                        <div class="balance-card">
-                            <div class="balance-label">
-                                <span>Monthly Spending</span>
-                            </div>
-                            <div class="balance-amount" id="monthlySpending">$0.00</div>
-                            <div class="progress-bar">
-                                <div class="progress" style="width: 68%"></div>
-                            </div>
-                            <div class="progress-label">68% of budget</div>
-                        </div>
-                        <div class="balance-card">
-                            <div class="balance-label">
-                                <span>Savings Goals</span>
-                            </div>
-                            <div class="balance-amount" id="savingsGoal">$0.00 / $0.00</div>
-                            <div class="progress-bar">
-                                <div class="progress" style="width: 50%"></div>
-                            </div>
-                            <div class="progress-label">50% completed</div>
-                        </div>
-                    </div>
-
-                    <div class="charts-grid">
-                        <div class="chart-card">
-                            <h3>Spending by Category</h3>
-                            <canvas id="spendingChart"></canvas>
-                        </div>
-                        <div class="chart-card">
-                            <h3>Monthly Trend</h3>
-                            <canvas id="trendChart"></canvas>
-                        </div>
-                    </div>
-
-                    <div class="recent-transactions">
-                        <div class="section-header">
-                            <h3>Recent Transactions</h3>
-                            <a href="#" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
-                        </div>
-                        <div class="transactions-list" id="recentTransactions">
-                            <!-- Transactions will be loaded here -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Accounts Page -->
-                <div class="page" id="page-accounts">
-                    <div class="page-header">
-                        <h2>Your Accounts</h2>
-                        <button class="btn btn-outline" id="addAccountBtn">
-                            <i class="fas fa-plus"></i> Add Account
-                        </button>
-                    </div>
-                    <div class="accounts-grid" id="accountsList">
-                        <!-- Accounts will be loaded here -->
-                    </div>
-                    <div class="statements-section">
-                        <h3>Account Statements</h3>
-                        <div class="statements-list" id="statementsList">
-                            <!-- Statements will be loaded here -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Transfers Page -->
-                <div class="page" id="page-transfers">
-                    <div class="page-header">
-                        <h2>Money Transfers</h2>
-                    </div>
-                    <div class="transfer-container">
-                        <div class="transfer-tabs">
-                            <button class="tab-btn active" data-tab="internal">Internal Transfer</button>
-                            <button class="tab-btn" data-tab="external">External Transfer</button>
-                            <button class="tab-btn" data-tab="recurring">Recurring</button>
-                        </div>
-                        <div class="transfer-form-container">
-                            <form id="transferForm" class="transfer-form">
-                                <div class="form-group">
-                                    <label>From Account</label>
-                                    <select id="fromAccount" class="form-control" required>
-                                        <option value="">Select account</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
+                <button class="tab-btn" data-tab="external">
+                  External Transfer
+                </button>
+                <button class="tab-btn" data-tab="recurring">Recurring</button>
+              </div>
+              <div class="transfer-form-container">
+                <form id="transferForm" class="transfer-form">
+                  <div class="form-group">
+                    <label>From Account</label>
+                    <select id="fromAccount" class="form-control" required>
+                      <option value="">Select account</option>
+                    </select>
+                  </div>
+                  <!--<div class="form-group">
                                     <label>To Account</label>
                                     <input type="text" id="toAccount" class="form-control" placeholder="Account number" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Amount</label>
-                                    <div class="currency-input">
-                                        <span>$</span>
-                                        <input type="number" id="amount" class="form-control" placeholder="0.00" step="0.01" required>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label>Description</label>
-                                    <input type="text" id="description" class="form-control" placeholder="What's this for?">
-                                </div>
-                                <div class="form-group">
-                                    <label class="checkbox">
-                                        <input type="checkbox" id="saveBeneficiary">
-                                        <span>Save as beneficiary</span>
-                                    </label>
-                                </div>
-                                <button type="submit" class="btn btn-primary btn-block" id="transferBtn">
-                                    <span>Continue Transfer</span>
-                                    <i class="fas fa-arrow-right"></i>
-                                </button>
-                            </form>
-                            <div class="transfer-info">
-                                <h4>Transfer Information</h4>
-                                <ul>
-                                    <li><i class="fas fa-clock"></i> Instant transfers available</li>
-                                    <li><i class="fas fa-shield-alt"></i> Protected by encryption</li>
-                                    <li><i class="fas fa-bell"></i> Real-time notifications</li>
-                                </ul>
-                            </div>
-                        </div>
+                                </div>-->
+                  <div class="form-group">
+                    <label for="toAccount">Recipient Account Number</label>
+                    <input
+                      type="text"
+                      id="toAccount"
+                      class="form-control"
+                      placeholder="Enter account number"
+                      maxlength="12"
+                      required
+                    />
+                    <div
+                      id="recipientFeedback"
+                      class="input-feedback"
+                      style="margin-top: 6px; font-size: 0.9rem"
+                    ></div>
+                  </div>
+                  <div class="form-group">
+                    <label>Amount</label>
+                    <div class="currency-input">
+                      <span>$</span>
+                      <input
+                        type="number"
+                        id="amount"
+                        class="form-control"
+                        placeholder="0.00"
+                        step="0.01"
+                        required
+                      />
                     </div>
+                  </div>
+                  <div class="form-group">
+                    <label>Description</label>
+                    <input
+                      type="text"
+                      id="description"
+                      class="form-control"
+                      placeholder="What's this for?"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label class="checkbox">
+                      <input type="checkbox" id="saveBeneficiary" />
+                      <span>Save as beneficiary</span>
+                    </label>
+                  </div>
+                  <button
+                    type="submit"
+                    class="btn btn-primary btn-block"
+                    id="transferBtn"
+                  >
+                    <span>Continue Transfer</span>
+                    <i class="fas fa-arrow-right"></i>
+                  </button>
+                </form>
+                <div class="transfer-info">
+                  <h4>Transfer Information</h4>
+                  <ul>
+                    <li>
+                      <i class="fas fa-clock"></i> Instant transfers available
+                    </li>
+                    <li>
+                      <i class="fas fa-shield-alt"></i> Protected by encryption
+                    </li>
+                    <li><i class="fas fa-bell"></i> Real-time notifications</li>
+                  </ul>
                 </div>
-
-                <!-- Cards Page -->
-                <div class="page" id="page-cards">
-                    <div class="page-header">
-                        <h2>Your Cards</h2>
-                        <button class="btn btn-primary" id="purchaseCardBtn">
-                            <i class="fas fa-plus"></i> Purchase New Card
-                        </button>
-                    </div>
-                    <div class="cards-grid" id="cardsList">
-                        <!-- Cards will be loaded here -->
-                    </div>
-                </div>
-
-                <!-- Bills Page -->
-                <div class="page" id="page-bills">
-                    <div class="page-header">
-                        <h2>Bill Payments</h2>
-                        <button class="btn btn-outline" id="addBillBtn">
-                            <i class="fas fa-plus"></i> Add Bill
-                        </button>
-                    </div>
-                    <div class="bills-list" id="billsList">
-                        <!-- Bills will be loaded here -->
-                    </div>
-                </div>
-
-                <!-- Beneficiaries Page -->
-                <div class="page" id="page-beneficiaries">
-                    <div class="page-header">
-                        <h2>Beneficiaries</h2>
-                        <button class="btn btn-outline" id="addBeneficiaryBtn">
-                            <i class="fas fa-plus"></i> Add Beneficiary
-                        </button>
-                    </div>
-                    <div class="beneficiaries-grid" id="beneficiariesList">
-                        <!-- Beneficiaries will be loaded here -->
-                    </div>
-                </div>
-
-                <!-- Budgets Page -->
-                <div class="page" id="page-budgets">
-                    <div class="page-header">
-                        <h2>Budget Planning</h2>
-                        <button class="btn btn-outline" id="createBudgetBtn">
-                            <i class="fas fa-plus"></i> Create Budget
-                        </button>
-                    </div>
-                    <div class="budgets-grid" id="budgetsList">
-                        <!-- Budgets will be loaded here -->
-                    </div>
-                </div>
-
-                <!-- Support Page -->
-                <div class="page" id="page-support">
-                    <div class="support-container">
-                        <div class="support-sidebar">
-                            <h3>Support Tickets</h3>
-                            <button class="btn btn-primary" id="newTicketBtn">
-                                <i class="fas fa-plus"></i> New Ticket
-                            </button>
-                            <div class="tickets-list" id="ticketsList">
-                                <!-- Tickets will be loaded here -->
-                            </div>
-                        </div>
-                        <div class="chat-container" id="chatContainer">
-                            <div class="chat-header" id="chatHeader">
-                                <h4>Select a ticket to start chatting</h4>
-                            </div>
-                            <div class="chat-messages" id="chatMessages">
-                                <!-- Chat messages will be loaded here -->
-                            </div>
-                            <div class="chat-input" id="chatInput" style="display: none;">
-                                <input type="text" placeholder="Type your message...">
-                                <button class="btn btn-primary">Send</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Settings Page -->
-                <div class="page" id="page-settings">
-                    <h2>Settings</h2>
-                    <div class="settings-grid">
-                        <div class="settings-card">
-                            <h3>Profile Information</h3>
-                            <form id="profileForm">
-                                <div class="form-group">
-                                    <label>First Name</label>
-                                    <input type="text" id="profileFirstName" class="form-control">
-                                </div>
-                                <div class="form-group">
-                                    <label>Last Name</label>
-                                    <input type="text" id="profileLastName" class="form-control">
-                                </div>
-                                <div class="form-group">
-                                    <label>Phone</label>
-                                    <input type="tel" id="profilePhone" class="form-control">
-                                </div>
-                                <div class="form-group">
-                                    <label>Address</label>
-                                    <input type="text" id="profileAddress" class="form-control">
-                                </div>
-                                <button type="submit" class="btn btn-primary">Update Profile</button>
-                            </form>
-                        </div>
-                        <div class="settings-card">
-                            <h3>Security Settings</h3>
-                            <div class="security-option">
-                                <div>
-                                    <strong>Two-Factor Authentication</strong>
-                                    <p>Add an extra layer of security</p>
-                                </div>
-                                <label class="switch">
-                                    <input type="checkbox" id="enable2FA">
-                                    <span class="slider"></span>
-                                </label>
-                            </div>
-                            <div class="security-option">
-                                <div>
-                                    <strong>Change Password</strong>
-                                    <p>Update your password regularly</p>
-                                </div>
-                                <button class="btn btn-outline" id="changePasswordBtn">Change</button>
-                            </div>
-                            <div class="security-option">
-                                <div>
-                                    <strong>Login History</strong>
-                                    <p>Review recent account activity</p>
-                                </div>
-                                <button class="btn btn-outline">View</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+              </div>
             </div>
-        </main>
+          </div>
+
+          <!-- Cards Page -->
+          <div class="page" id="page-cards">
+            <div class="page-header">
+              <h2>Your Cards</h2>
+              <button class="btn btn-primary" id="purchaseCardBtn">
+                <i class="fas fa-plus"></i> Purchase New Card
+              </button>
+            </div>
+            <div class="cards-grid" id="cardsList">
+              <!-- Cards will be loaded here -->
+            </div>
+          </div>
+
+          <!-- Bills Page -->
+          <div class="page" id="page-bills">
+            <div class="page-header">
+              <h2>Bill Payments</h2>
+              <button class="btn btn-outline" id="addBillBtn">
+                <i class="fas fa-plus"></i> Add Bill
+              </button>
+            </div>
+            <div class="bills-list" id="billsList">
+              <!-- Bills will be loaded here -->
+            </div>
+          </div>
+
+          <!-- Beneficiaries Page -->
+          <div class="page" id="page-beneficiaries">
+            <div class="page-header">
+              <h2>Beneficiaries</h2>
+              <button class="btn btn-outline" id="addBeneficiaryBtn">
+                <i class="fas fa-plus"></i> Add Beneficiary
+              </button>
+            </div>
+            <div class="beneficiaries-grid" id="beneficiariesList">
+              <!-- Beneficiaries will be loaded here -->
+            </div>
+          </div>
+
+          <!-- Budgets Page -->
+          <div class="page" id="page-budgets">
+            <div class="page-header">
+              <h2>Budget Planning</h2>
+              <button class="btn btn-outline" id="createBudgetBtn">
+                <i class="fas fa-plus"></i> Create Budget
+              </button>
+            </div>
+            <div class="budgets-grid" id="budgetsList">
+              <!-- Budgets will be loaded here -->
+            </div>
+          </div>
+
+          <!-- Support Page -->
+          <div class="page" id="page-support">
+            <div class="support-container">
+              <div class="support-sidebar">
+                <h3>Support Tickets</h3>
+                <button class="btn btn-primary" id="newTicketBtn">
+                  <i class="fas fa-plus"></i> New Ticket
+                </button>
+                <div class="tickets-list" id="ticketsList">
+                  <!-- Tickets will be loaded here -->
+                </div>
+              </div>
+              <div class="chat-container" id="chatContainer">
+                <div class="chat-header" id="chatHeader">
+                  <h4>Select a ticket to start chatting</h4>
+                </div>
+                <div class="chat-messages" id="chatMessages">
+                  <!-- Chat messages will be loaded here -->
+                </div>
+                <div class="chat-input" id="chatInput" style="display: none">
+                  <input type="text" placeholder="Type your message..." />
+                  <button class="btn btn-primary">Send</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Settings Page -->
+          <div class="page" id="page-settings">
+            <h2>Settings</h2>
+            <div class="settings-grid">
+              <div class="settings-card">
+                <h3>Profile Information</h3>
+                <form id="profileForm">
+                  <div class="form-group">
+                    <label>First Name</label>
+                    <input
+                      type="text"
+                      id="profileFirstName"
+                      class="form-control"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label>Last Name</label>
+                    <input
+                      type="text"
+                      id="profileLastName"
+                      class="form-control"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label>Phone</label>
+                    <input type="tel" id="profilePhone" class="form-control" />
+                  </div>
+                  <div class="form-group">
+                    <label>Address</label>
+                    <input
+                      type="text"
+                      id="profileAddress"
+                      class="form-control"
+                    />
+                  </div>
+                  <button type="submit" class="btn btn-primary">
+                    Update Profile
+                  </button>
+                </form>
+              </div>
+              <div class="settings-card">
+                <h3>Security Settings</h3>
+                <div class="security-option">
+                  <div>
+                    <strong>Two-Factor Authentication</strong>
+                    <p>Add an extra layer of security</p>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="enable2FA" />
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="security-option">
+                  <div>
+                    <strong>Change Password</strong>
+                    <p>Update your password regularly</p>
+                  </div>
+                  <button class="btn btn-outline" id="changePasswordBtn">
+                    Change
+                  </button>
+                </div>
+                <div class="security-option">
+                  <div>
+                    <strong>Login History</strong>
+                    <p>Review recent account activity</p>
+                  </div>
+                  <button class="btn btn-outline">View</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
 
     <!-- Modals -->
     <div class="modal" id="otpModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Enter OTP Code</h3>
-                <button class="close-modal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <p>Please enter the OTP code sent to your registered contact method.</p>
-                <div class="otp-inputs">
-                    <input type="text" maxlength="1" pattern="[0-9]" class="otp-digit">
-                    <input type="text" maxlength="1" pattern="[0-9]" class="otp-digit">
-                    <input type="text" maxlength="1" pattern="[0-9]" class="otp-digit">
-                    <input type="text" maxlength="1" pattern="[0-9]" class="otp-digit">
-                    <input type="text" maxlength="1" pattern="[0-9]" class="otp-digit">
-                    <input type="text" maxlength="1" pattern="[0-9]" class="otp-digit">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" id="cancelOtp">Cancel</button>
-                <button class="btn btn-primary" id="verifyOtp">Verify</button>
-            </div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Enter OTP Code</h3>
+          <button class="close-modal">&times;</button>
         </div>
+        <div class="modal-body">
+          <p>
+            Please enter the OTP code sent to your registered contact method.
+          </p>
+          <div class="otp-inputs">
+            <input
+              type="text"
+              maxlength="1"
+              pattern="[0-9]"
+              class="otp-digit"
+            />
+            <input
+              type="text"
+              maxlength="1"
+              pattern="[0-9]"
+              class="otp-digit"
+            />
+            <input
+              type="text"
+              maxlength="1"
+              pattern="[0-9]"
+              class="otp-digit"
+            />
+            <input
+              type="text"
+              maxlength="1"
+              pattern="[0-9]"
+              class="otp-digit"
+            />
+            <input
+              type="text"
+              maxlength="1"
+              pattern="[0-9]"
+              class="otp-digit"
+            />
+            <input
+              type="text"
+              maxlength="1"
+              pattern="[0-9]"
+              class="otp-digit"
+            />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" id="cancelOtp">Cancel</button>
+          <button class="btn btn-primary" id="verifyOtp">Verify</button>
+        </div>
+      </div>
     </div>
 
     <div class="modal" id="purchaseCardModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Purchase Card</h3>
-                <button class="close-modal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <form id="purchaseCardForm">
-                    <div class="form-group">
-                        <label>Card Type</label>
-                        <select id="cardType" class="form-control">
-                            <option value="debit">Debit Card</option>
-                            <option value="credit">Credit Card</option>
-                            <option value="virtual">Virtual Card</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Payment Method</label>
-                        <div class="payment-methods">
-                            <label class="payment-option">
-                                <input type="radio" name="paymentMethod" value="crypto" checked>
-                                <i class="fab fa-bitcoin"></i>
-                                <span>Cryptocurrency</span>
-                            </label>
-                            <label class="payment-option">
-                                <input type="radio" name="paymentMethod" value="bank">
-                                <i class="fas fa-university"></i>
-                                <span>Bank Transfer</span>
-                            </label>
-                        </div>
-                    </div>
-                    <div class="card-price">
-                        <span>Card Price:</span>
-                        <strong>$10.00</strong>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" id="cancelPurchase">Cancel</button>
-                <button class="btn btn-primary" id="confirmPurchase">Purchase</button>
-            </div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Purchase Card</h3>
+          <button class="close-modal">&times;</button>
         </div>
+        <div class="modal-body">
+          <form id="purchaseCardForm">
+            <div class="form-group">
+              <label>Card Type</label>
+              <select id="cardType" class="form-control">
+                <option value="debit">Debit Card</option>
+                <option value="credit">Credit Card</option>
+                <option value="virtual">Virtual Card</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Payment Method</label>
+              <div class="payment-methods">
+                <label class="payment-option">
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="crypto"
+                    checked
+                  />
+                  <i class="fab fa-bitcoin"></i>
+                  <span>Cryptocurrency</span>
+                </label>
+                <label class="payment-option">
+                  <input type="radio" name="paymentMethod" value="bank" />
+                  <i class="fas fa-university"></i>
+                  <span>Bank Transfer</span>
+                </label>
+              </div>
+            </div>
+            <div class="card-price">
+              <span>Card Price:</span>
+              <strong>$10.00</strong>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" id="cancelPurchase">Cancel</button>
+          <button class="btn btn-primary" id="confirmPurchase">Purchase</button>
+        </div>
+      </div>
     </div>
 
     <div class="modal" id="newTicketModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>New Support Ticket</h3>
-                <button class="close-modal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <form id="newTicketForm">
-                    <div class="form-group">
-                        <label>Subject</label>
-                        <input type="text" id="ticketSubject" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Priority</label>
-                        <select id="ticketPriority" class="form-control">
-                            <option value="low">Low</option>
-                            <option value="medium" selected>Medium</option>
-                            <option value="high">High</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Message</label>
-                        <textarea id="ticketMessage" class="form-control" rows="5" required></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" id="cancelTicket">Cancel</button>
-                <button class="btn btn-primary" id="submitTicket">Submit</button>
-            </div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>New Support Ticket</h3>
+          <button class="close-modal">&times;</button>
         </div>
+        <div class="modal-body">
+          <form id="newTicketForm">
+            <div class="form-group">
+              <label>Subject</label>
+              <input
+                type="text"
+                id="ticketSubject"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label>Priority</label>
+              <select id="ticketPriority" class="form-control">
+                <option value="low">Low</option>
+                <option value="medium" selected>Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Message</label>
+              <textarea
+                id="ticketMessage"
+                class="form-control"
+                rows="5"
+                required
+              ></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" id="cancelTicket">Cancel</button>
+          <button class="btn btn-primary" id="submitTicket">Submit</button>
+        </div>
+      </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="./JAVASCRIPT/dashboard.js"></script>
-</body>
+  </body>
 </html>

@@ -1,70 +1,73 @@
-// ── Example of what your FREEZE handler probably looks like ──
-document.getElementById('confirmFreeze')?.addEventListener('click', async () => {
-  const userId = document.getElementById('freezeUserSelect').value;
-  const reason = document.getElementById('freezeReason').value.trim();
+// Add near the top of dashboard.js (or inside DOMContentLoaded)
 
-  if (!userId || !reason) {
-    showNotification("Please select user and provide reason", "error");
-    return;
-  }
+// Debounce helper (prevents calling API on every keystroke)
+function debounce(fn, delay = 600) {
+  let timeout;
+  return (...args) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => fn(...args), delay);
+  };
+}
 
-  try {
-    const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
-      method: 'PATCH',           // ← this is what works
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      },
-      body: JSON.stringify({
-        is_frozen: true,
-        freeze_reason: reason
-      })
-    });
+// ── Recipient name lookup ───────────────────────────────────────────────
+const toAccountInput = document.getElementById("toAccount");
+const feedbackEl    = document.getElementById("recipientFeedback");
 
-    if (!response.ok) throw new Error(await response.text());
-
-    const data = await response.json();
-    showNotification("Account frozen successfully", "success");
-    // close modal, refresh list, etc.
-  } catch (err) {
-    showNotification(err.message || "Failed to freeze account", "error");
-  }
-});
-
-// ── Now do ALMOST THE SAME for unfreeze ──
-document.getElementById('confirmUnfreeze')?.addEventListener('click', async () => {
-  const userId = document.getElementById('unfreezeUserSelect').value;
-  const note = document.getElementById('unfreezeReason').value.trim();  // optional
-
-  if (!userId) {
-    showNotification("Please select user", "error");
-    return;
-  }
-
-  try {
-    const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
-      method: 'PATCH',           // ← same method, same URL
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      },
-      body: JSON.stringify({
-        is_frozen: false,        // ← only this changes
-        // freeze_reason is automatically cleared in backend
-        // note: note               // optional: if you want to log the reason for unfreezing
-      })
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(errText || `Server error ${response.status}`);
+if (toAccountInput && feedbackEl) {
+  const lookupRecipient = debounce(async (accountNumber) => {
+    if (!accountNumber || accountNumber.length < 8) {
+      feedbackEl.textContent = "";
+      feedbackEl.className = "input-feedback";
+      return;
     }
 
-    const data = await response.json();
-    showNotification("Account unfrozen successfully", "success");
-    // close modal, refresh users table, etc.
-  } catch (err) {
-    console.error("Unfreeze error:", err);
-    showNotification(err.message || "Failed to unfreeze account", "error");
-  }
-});
+    feedbackEl.textContent = "Verifying account...";
+    feedbackEl.className = "input-feedback loading";
+
+    try {
+      const res = await fetch(
+        `${API_BASE_URL}/accounts/recipient?account_number=${encodeURIComponent(accountNumber)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+          }
+        }
+      );
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Verification failed");
+      }
+
+      const data = await res.json();
+
+      if (data.success) {
+        feedbackEl.textContent = `Recipient: ${data.name}`;
+        feedbackEl.className = "input-feedback success";
+        // Optional: store for transfer submission
+        toAccountInput.dataset.validRecipient = "true";
+        toAccountInput.dataset.recipientName  = data.name;
+        toAccountInput.dataset.accountId      = data.account_id;
+      } else {
+        throw new Error("Account not found");
+      }
+    } catch (err) {
+      feedbackEl.textContent = err.message.includes("not found")
+        ? "No account found with this number"
+        : "Could not verify account";
+      feedbackEl.className = "input-feedback error";
+      toAccountInput.dataset.validRecipient = "false";
+    }
+  }, 700); // 700ms delay — feels responsive but avoids spam
+
+  // Trigger on input + blur (good combo)
+  toAccountInput.addEventListener("input", (e) => {
+    const val = e.target.value.trim().replace(/\D/g, ""); // only digits
+    e.target.value = val; // enforce numbers only
+    lookupRecipient(val);
+  });
+
+  toAccountInput.addEventListener("blur", (e) => {
+    lookupRecipient(e.target.value.trim());
+  });
+}
