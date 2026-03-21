@@ -32,20 +32,7 @@ async function verifyToken(token) {
     }
 }
 
-/*function toggleMobileMenu() {
-  const navLinks = document.getElementById("nav-links");
-  navLinks.classList.toggle("active");
-}
 
-// Close mobile menu when clicking outside
-document.addEventListener("click", function (event) {
-  const navLinks = document.getElementById("nav-links");
-  const mobileBtn = document.querySelector("mobile-menu");
-
-  if (!navLinks.contains(event.target) && !mobileBtn.contains(event.target)) {
-    navLinks.classList.remove("active");
-  }
-});*/
 
 // Login Form Handler
 const loginForm = document.getElementById('loginForm');
@@ -392,29 +379,37 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
+
+
 // Mobile menu toggle
-/*const mobileMenuBtn = document.querySelector('.mobile-menu');
-if (mobileMenuBtn) {
-    mobileMenuBtn.addEventListener('click', () => {
-        const navLinks = document.querySelector('.nav-links');
-        navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
-    });
-}*/
-
 const mobileMenuBtn = document.querySelector('.mobile-menu');
+const navLinks = document.querySelector('.nav-links');
 
-if (mobileMenuBtn) {
+if (mobileMenuBtn && navLinks) {
     mobileMenuBtn.addEventListener('click', () => {
-        const navLinks = document.querySelector('.nav-links');
+        // Toggle a class instead of inline style (cleaner & easier to style with CSS)
+        navLinks.classList.toggle('active');
 
-        if (navLinks.style.display === 'flex') {
-            navLinks.style.display = 'none';
-        } else {
-            navLinks.style.display = 'flex';
-            navLinks.style.flexDirection = 'row'; // 👈 THIS is the fix
+        // Optional: change icon to X when open
+        const icon = mobileMenuBtn.querySelector('i');
+        if (icon) {
+            icon.classList.toggle('fa-bars');
+            icon.classList.toggle('fa-times');
         }
     });
 }
+
+// Optional: close menu when clicking a link (good UX)
+navLinks.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+        navLinks.classList.remove('active');
+        const icon = mobileMenuBtn.querySelector('i');
+        if (icon) {
+            icon.classList.add('fa-bars');
+            icon.classList.remove('fa-times');
+        }
+    });
+});
 
 // Smooth scroll for anchor links
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
