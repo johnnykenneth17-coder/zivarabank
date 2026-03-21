@@ -170,8 +170,6 @@ function initializeEventListeners() {
   });
 }
 
-
-
 function deleteUser(userId) {
   if (!confirm("Are you sure you want to delete this user?")) return;
   console.log(`Deleting user: ${userId}`);
@@ -988,35 +986,52 @@ window.closeEditUserModal = function () {
 
 // Save user changes
 window.saveUserChanges = async function (userId) {
-  const userData = {
-    first_name: document.getElementById("editFirstName").value,
-    last_name: document.getElementById("editLastName").value,
-    email: document.getElementById("editEmail").value,
-    phone: document.getElementById("editPhone").value,
-    date_of_birth: document.getElementById("editDob").value,
-    address: document.getElementById("editAddress").value,
-    city: document.getElementById("editCity").value,
-    country: document.getElementById("editCountry").value,
-    postal_code: document.getElementById("editPostalCode").value,
-    role: document.getElementById("editRole").value,
-    kyc_status: document.getElementById("editKycStatus").value,
-    id_type: document.getElementById("editIdType").value,
-    id_number: document.getElementById("editIdNumber").value,
-    is_active: document.getElementById("editIsActive").checked,
-    is_frozen: document.getElementById("editIsFrozen").checked,
-    two_factor_enabled: document.getElementById("editTwoFactor").checked,
-    freeze_reason: document.getElementById("editFreezeReason").value,
-  };
-
-  // Validate required fields
-  if (!userData.first_name || !userData.last_name || !userData.email) {
-    showNotification("First name, last name, and email are required", "error");
+  if (!userId) {
+    showNotification("No user ID found", "error");
     return;
   }
 
-  const saveBtn = event.target;
-  saveBtn.disabled = true;
-  saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+  // Get all form elements safely (some might not exist)
+  const getValue = (id) =>
+    document.getElementById(id)?.value?.trim() || undefined;
+  const getChecked = (id) => document.getElementById(id)?.checked ?? undefined;
+
+  const updates = {
+    first_name: getValue("editFirstName"),
+    last_name: getValue("editLastName"),
+    email: getValue("editEmail"),
+    phone: getValue("editPhone"),
+    date_of_birth: getValue("editDob") || null,
+    address: getValue("editAddress"),
+    city: getValue("editCity"),
+    country: getValue("editCountry"),
+    postal_code: getValue("editPostalCode"),
+    role: getValue("editRole"),
+    kyc_status: getValue("editKycStatus"),
+    id_type: getValue("editIdType"),
+    id_number: getValue("editIdNumber"),
+    is_active: getChecked("editIsActive"),
+    is_frozen: getChecked("editIsFrozen"),
+    two_factor_enabled: getChecked("editTwoFactor"),
+    freeze_reason: getChecked("editIsFrozen")
+      ? getValue("editFreezeReason")
+      : null,
+    updated_at: new Date().toISOString(),
+  };
+
+  // Remove fields that weren't changed / don't exist
+  Object.keys(updates).forEach((key) => {
+    if (updates[key] === undefined || updates[key] === "") {
+      delete updates[key];
+    }
+  });
+
+  // Show loading state on the button
+  const saveBtn = document.querySelector("#editUserModal .btn-primary");
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+  }
 
   try {
     const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
@@ -1025,27 +1040,33 @@ window.saveUserChanges = async function (userId) {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(userData),
+      body: JSON.stringify(updates),
     });
 
     const data = await response.json();
 
     if (response.ok) {
-      closeEditUserModal();
       showNotification("User updated successfully", "success");
-      await loadUsers(); // Refresh users list
 
-      // Also close details modal if open
-      closeUserDetailsModal();
+      // Close modal
+      const modal = document.getElementById("editUserModal");
+      if (modal) modal.remove();
+
+      // Refresh tables
+      await loadUsers();
+      await loadAccounts(); // if you have oversight tab open
     } else {
       showNotification(data.error || "Failed to update user", "error");
+      console.error("Backend error:", data);
     }
-  } catch (error) {
-    console.error("Error updating user:", error);
-    showNotification("Failed to update user", "error");
+  } catch (err) {
+    console.error("Save failed:", err);
+    showNotification("Network error – please try again", "error");
   } finally {
-    saveBtn.disabled = false;
-    saveBtn.innerHTML = "Save Changes";
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = "Save Changes";
+    }
   }
 };
 
@@ -1716,6 +1737,31 @@ async function populateUserSelects() {
           .join("");
     }
 
+    const unfreezeSelect = document.getElementById("unfreezeUserSelect");
+    /*if (unfreezeSelect) {
+      unfreezeSelect.innerHTML =
+        '<option value="">Select User</option>' +
+        users
+          .map(
+            (u) =>
+              `<option value="${u.id}">${u.first_name} ${u.last_name} (${u.email})</option>`,
+          )
+          .join("");
+    }*/
+
+    if (unfreezeSelect) {
+      unfreezeSelect.innerHTML = '<option value="">Select User</option>';
+      users.forEach((u) => {
+        // Optional: only show frozen users
+        if (u.is_frozen) {
+          const opt = document.createElement("option");
+          opt.value = u.id;
+          opt.textContent = `${u.first_name} ${u.last_name} (${u.email}) - Frozen`;
+          unfreezeSelect.appendChild(opt);
+        }
+      });
+    }
+
     // Update Balance modal
     const balanceUserSelect = document.getElementById("balanceUserSelect");
     if (balanceUserSelect) {
@@ -1734,6 +1780,73 @@ async function populateUserSelects() {
     console.error("Failed to populate user selects", e);
   }
 }
+
+// Open unfreeze modal (can be called with or without pre-selected user)
+window.openUnfreezeModal = async function (userId = null) {
+  await populateUserSelects(); // make sure dropdown is fresh
+
+  const modal = document.getElementById("unfreezeModal");
+  if (!modal) return;
+
+  if (userId) {
+    document.getElementById("unfreezeUserSelect").value = userId;
+  }
+
+  modal.classList.add("show");
+};
+
+// Close unfreeze modal
+document.getElementById("cancelUnfreeze")?.addEventListener("click", () => {
+  document.getElementById("unfreezeModal")?.classList.remove("show");
+});
+
+document.getElementById('confirmUnfreeze')?.addEventListener('click', async () => {
+  const userId = document.getElementById('unfreezeUserSelect').value;
+  const note = document.getElementById('unfreezeReason').value.trim();  // optional
+
+  if (!userId) {
+    showNotification("Please select user", "error");
+    return;
+  }
+
+  try {
+       const response = await fetch(
+      `${API_BASE_URL}/admin/users/${userId}/toggle-freeze`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ freeze: false }),
+      },
+    );
+
+    if (response.ok) {
+      showNotification("Account unfrozen successfully", "success");
+      await loadUsers();
+
+    } else {
+      const data = await response.json();
+      showNotification(data.error || "Failed to unfreeze account", "error");
+    }
+
+    //const data = await response.json();
+   // showNotification("Account unfrozen successfully", "success");
+    // close modal, refresh users table, etc.
+  } catch (err) {
+    console.error("Unfreeze error:", err);
+    showNotification(err.message || "Failed to unfreeze account", "error");
+  }
+});
+
+
+// Optional: close modal when clicking outside or ×
+document.querySelectorAll("#unfreezeModal .close-modal").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.getElementById("unfreezeModal").classList.remove("show");
+  });
+});
 
 // Show freeze modal
 function showFreezeModal(userId, userName) {
@@ -1838,9 +1951,9 @@ document.getElementById("updateBalanceBtn")?.addEventListener("click", () => {
         (u) =>
           `<option value="${u.id}">${u.first_name} ${u.last_name} (${u.email})</option>`,
       )
-      .join("");
+      .join("");*/
 
-  modal.classList.add("show");*/
+  modal.classList.add("show");
 });
 
 // Handle make it look like transfer checkbox

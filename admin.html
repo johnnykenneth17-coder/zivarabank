@@ -343,9 +343,15 @@
                 <button class="btn btn-warning" id="freezeAccountBtn">
                   <i class="fas fa-ban"></i> Freeze Account
                 </button>
-                <button class="btn btn-success" id="unfreezeAccountBtn">
-                  <i class="fas fa-check"></i> Unfreeze Account
+                <button
+                  class="btn btn-success btn-sm"
+                  onclick="openUnfreezeModal('${account.user_id || user.id}')"
+                >
+                  <i class="fas fa-lock-open"></i> Unfreeze
                 </button>
+                <!--<button class="btn btn-success" id="unfreezeAccountBtn">
+                  <i class="fas fa-check"></i> Unfreeze Account
+                </button>-->
                 <button class="btn btn-primary" id="updateBalanceBtn">
                   <i class="fas fa-dollar-sign"></i> Update Balance
                 </button>
@@ -912,6 +918,42 @@
           <button class="btn btn-outline" id="cancelFreeze">Cancel</button>
           <button class="btn btn-danger" id="confirmFreeze">
             Freeze Account
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Unfreeze Modal (separate from freeze) -->
+    <div class="modal" id="unfreezeModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Unfreeze User Account</h3>
+          <button class="close-modal">×</button>
+        </div>
+        <div class="modal-body">
+          <form id="unfreezeForm">
+            <div class="form-group">
+              <label>User</label>
+              <select id="unfreezeUserSelect" class="form-control" required>
+                <option value="">Select User</option>
+                <!-- populated dynamically -->
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Reason / Note for Unfreezing (optional)</label>
+              <textarea
+                id="unfreezeReason"
+                class="form-control"
+                rows="3"
+                placeholder="e.g. Issue resolved, user verified, appeal approved..."
+              ></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" id="cancelUnfreeze">Cancel</button>
+          <button class="btn btn-success" id="confirmUnfreeze">
+            Confirm Unfreeze
           </button>
         </div>
       </div>

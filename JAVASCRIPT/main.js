@@ -400,7 +400,7 @@ if (mobileMenuBtn && navLinks) {
 }
 
 // Optional: close menu when clicking a link (good UX)
-navLinks.querySelectorAll('a').forEach(link => {
+/*navLinks.querySelectorAll('a').forEach(link => {
     link.addEventListener('click', () => {
         navLinks.classList.remove('active');
         const icon = mobileMenuBtn.querySelector('i');
@@ -409,7 +409,7 @@ navLinks.querySelectorAll('a').forEach(link => {
             icon.classList.remove('fa-times');
         }
     });
-});
+});*/
 
 // Smooth scroll for anchor links
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
