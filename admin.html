@@ -60,6 +60,11 @@
             <i class="fas fa-key"></i>
             <span>OTP Management</span>
           </a>
+          <a href="#" class="nav-item" data-page="live-chat">
+            <i class="fas fa-comments"></i>
+            <span>Live Chat</span>
+            <span class="badge chat-unread-count" style="display: none">0</span>
+          </a>
           <a href="#" class="nav-item" data-page="support">
             <i class="fas fa-headset"></i>
             <span>Support Tickets</span>
@@ -440,6 +445,78 @@
                     <!-- Recent OTPs will be loaded here -->
                   </tbody>
                 </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-page" id="page-live-chat">
+            <div
+              class="chat-layout"
+              style="display: flex; height: calc(100vh - 140px)"
+            >
+              <!-- Left: User list -->
+              <div
+                class="chat-user-list"
+                id="chatListPanel"
+                style="
+                  width: 35%;
+                  border-right: 1px solid #e2e8f0;
+                  overflow-y: auto;
+                "
+              >
+                <div
+                  class="list-header"
+                  style="padding: 16px; border-bottom: 1px solid #e2e8f0"
+                >
+                  <h3 style="margin: 0">Messages</h3>
+                </div>
+                <div id="liveChatUserList" class="users-container"></div>
+              </div>
+
+              <div
+                class="chat-main"
+                id="chatViewPanel"
+                style="width: auto; display: flex; flex-direction: column"
+              >
+                <div
+                  class="chat-header"
+                  style="margin-top: -20px; padding-bottom: 4px; border-bottom: 1px solid #e2e8f0"
+                >
+                  <button class="back-btn" id="backToListBtn">←</button>
+                  <div class="chat-title">
+                    <h3>
+                      
+                      <span id="currentChatUserName"
+                        >Select a conversation</span
+                      >
+                    </h3>
+                    <small id="currentChatUserId" style="display: none"></small>
+                  </div>
+                </div>
+
+                <div
+                  id="adminChatMessages"
+                  class="chat-messages"
+                  style="flex: 1; overflow-y: auto; padding: 16px"
+                ></div>
+
+                <div
+                  class="chat-input-area"
+                  style="
+                    padding: 12px;
+                    border-top: 1px solid #e2e8f0;
+                    display: flex;
+                    gap: 8px;
+                  "
+                >
+                  <input
+                    type="text"
+                    id="adminChatInput"
+                    placeholder="Type your reply..."
+                    style="flex: 1; padding: 10px"
+                  />
+                  <button id="adminSendReply">Send</button>
+                </div>
               </div>
             </div>
           </div>

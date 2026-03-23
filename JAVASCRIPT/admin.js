@@ -3,6 +3,10 @@
 // API Base URL
 const API_BASE_URL = "https://bank-backend-blush.vercel.app/api";
 
+
+  //const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+
 // State management
 let currentAdmin = null;
 let users = [];
@@ -21,6 +25,7 @@ if (!token) {
 document.addEventListener("DOMContentLoaded", async () => {
   await loadAdminData();
   initializeEventListeners();
+  loadActiveChatUsers();
   startRealTimeUpdates();
   loadAdminStats();
 });
@@ -145,6 +150,12 @@ function initializeEventListeners() {
 
           case "otp":
             await loadOTPMode(); // if you have this section
+            break;
+
+          case "live-chat":
+            loadActiveChatUsers();
+            resetToUserListView();
+            document.getElementById("page-live-chat").classList.add("active");
             break;
 
           case "support":
@@ -1489,6 +1500,420 @@ function updateTransactionsTable(data) {
     .join("");
 }
 
+// Global variables
+let currentChatUserId = null;
+let adminChatSubscription = null;
+let currentChannel = null;
+
+// ────────────────────────────────────────────────
+//     LIVE SUPPORT – ADMIN SIDE (basic user list)
+// ────────────────────────────────────────────────
+
+// Load list of conversations
+async function loadActiveChatUsers() {
+  const container = document.getElementById("liveChatUserList");
+  if (!container) return;
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/admin/live-chat/users`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!res.ok) throw new Error(await res.text());
+
+    const { users } = await res.json();
+
+    if (users.length === 0) {
+      container.innerHTML =
+        '<div class="empty-state" style="padding: 40px; text-align: center; color: #64748b;">No active conversations yet</div>';
+      return;
+    }
+
+    container.innerHTML = users
+      .map(
+        (user) => `
+      <div class="user-row" data-user-id="${user.user_id}" style="
+        padding: 14px 16px;
+        border-bottom: 1px solid #f1f5f9;
+        cursor: pointer;
+        transition: background 0.2s;
+      ">
+        <div class="user-name" style="font-weight: 600; color: #1e293b;">${user.name}</div>
+        <div class="user-email" style="font-size: 13px; color: #64748b; margin-top: 4px;">${user.email}</div>
+        <!-- Optional: last message preview or timestamp can go here later -->
+      </div>
+    `,
+      )
+      .join("");
+
+    // Add hover effect via JS or just use CSS :hover
+  } catch (err) {
+    console.error("Failed to load users:", err);
+    container.innerHTML =
+      '<div style="padding: 20px; color: #ef4444;">Failed to load conversations</div>';
+  }
+}
+
+// ── Open specific user's chat ──────────────────────────────────────────
+/*async function openUserChat(userId, userInfo) {
+  currentChatUserId = userId;
+
+  // Update header
+  document.getElementById("currentChatInfo").innerHTML = `
+    <h3>${userInfo.first_name} ${userInfo.last_name}</h3>
+    <p>Customer Support Chat</p>
+  `;
+  document.querySelector(".back-to-list").style.display = "block";
+
+  const messagesDiv = document.getElementById("adminChatMessages");
+  messagesDiv.innerHTML = "";
+
+  // Load history
+  const res = await fetch(`${API_BASE_URL}/chat/live/${userId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const messages = await res.json();
+
+  messages.forEach((msg) => renderAdminMessage(msg));
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+  // Mark as read
+  await fetch(`${API_BASE_URL}/chat/live/mark-read`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ userId }),
+  });
+
+  // Realtime for this user only
+  if (adminChatSubscription) adminChatSubscription.unsubscribe();
+
+  adminChatSubscription = supabase
+    .channel(`admin-live-chat:${userId}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "live_support_messages",
+        filter: `user_id=eq.${userId}`,
+      },
+      (payload) => {
+        renderAdminMessage(payload.new);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      },
+    )
+    .subscribe();
+}*/
+
+// Render message (admin view — incoming from right, outgoing from left)
+function renderAdminMessage(msg) {
+  const div = document.createElement("div");
+  div.className = msg.is_from_admin ? "message sent" : "message received";
+  div.innerHTML = `
+    <div class="bubble">${msg.message}</div>
+    <div class="time">${new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
+    ${msg.is_from_admin && msg.status === "read" ? '<div class="status">✓✓</div>' : ""}
+  `;
+  document.getElementById("adminChatMessages").appendChild(div);
+}
+
+/*function subscribeToLiveChat(userId) {
+  // Clean up previous subscription if exists
+  /*if (currentChannel) {
+    supabase.removeChannel(currentChannel);
+    currentChannel = null;
+  }
+ if (currentChannel) currentChannel.unsubscribe();
+
+  currentChannel = supabase
+    .channel(`live-support:${userId}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "live_support_messages",
+        filter: `user_id=eq.${userId}`,
+      },
+      (payload) => {
+        const newMsg = payload.new;
+
+        // Decide if this is "sent by me" or "received"
+        const isFromMe =
+          (window.location.pathname.includes("admin") &&
+            newMsg.is_from_admin) ||
+          (!window.location.pathname.includes("admin") &&
+            !newMsg.is_from_admin);
+
+        appendMessage(newMsg, isFromMe);
+      },
+    )
+    .subscribe((status) => {
+      console.log(`Realtime status for user ${userId}: ${status}`);
+    });
+
+  // Optional cleanup when leaving chat / changing user
+  window.addEventListener("beforeunload", () =>
+    supabase.removeChannel(currentChannel),
+  );
+}*/
+
+
+
+
+document
+  .getElementById("adminSendReply")
+  ?.addEventListener("click", async () => {
+    const input = document.getElementById("adminChatInput");
+    const messageText = input?.value?.trim();
+
+    if (!messageText) return;
+
+    const userId = document.getElementById("currentChatUserId")?.textContent;
+    if (!userId) {
+      showNotification("No conversation selected", "error");
+      return;
+    }
+
+    const btn = document.getElementById("adminSendReply");
+    btn.disabled = true;
+
+    // ── Optimistic UI: show message immediately ─────────────────────────────
+    const optimisticMsg = {
+      message: messageText,
+      created_at: new Date().toISOString(),
+      is_from_admin: true, // admin side
+    };
+    appendMessage(optimisticMsg, true); // show it right away
+
+    // Clear input early
+    input.value = "";
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/live-chat/${userId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ message: messageText }),
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Send failed: ${res.status} – ${errorText}`);
+      }
+
+      showNotification("Message sent", "success");
+
+      // Realtime will bring admin's own message again → we can ignore duplicate
+      // or add a small id check later if it bothers you
+    } catch (err) {
+      console.error("Admin reply error:", err);
+      showNotification(`Failed to send: ${err.message}`, "error");
+
+      // Optional: remove optimistic message or mark as failed
+      // For simplicity we leave it (most apps do)
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+function appendMessage(msg, isFromMe = false) {
+  const container = document.getElementById(
+    window.location.pathname.includes("admin")
+      ? "adminChatMessages"
+      : "chatMessages",
+  );
+  if (!container) return;
+
+  const div = document.createElement("div");
+  div.className = `message ${isFromMe ? "from-admin" : "from-user"}`;
+  div.innerHTML = `
+    <div class="buble">${msg.message}</div>
+    <span class="time">
+      ${new Date(msg.created_at).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      })}
+    </span>
+  `;
+
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+// Back button
+/*document.querySelector(".back-to-list")?.addEventListener("click", () => {
+  currentChatUserId = null;
+  document.getElementById("currentChatInfo").innerHTML =
+    "<h3>Select a conversation</h3><p>No user selected</p>";
+  document.querySelector(".back-to-list").style.display = "none";
+  document.getElementById("adminChatMessages").innerHTML = "";
+  if (adminChatSubscription) adminChatSubscription.unsubscribe();
+});*/
+
+// Click anywhere on user row → load their chat
+document.addEventListener("click", async function (e) {
+  const row = e.target.closest(".user-row");
+  if (!row) return;
+
+  const userId = row.dataset.userId;
+  const userNameEl = row.querySelector(".user-name");
+  const userName = userNameEl ? userNameEl.textContent : "User";
+
+  // Highlight selected row
+  document
+    .querySelectorAll(".user-row")
+    .forEach((r) => (r.style.background = ""));
+  row.style.background = "#e0f2fe"; // light blue highlight (or use .active class)
+
+// ── Mobile: hide list, show chat ───────────────────────────────
+  if (window.innerWidth < 850) {
+    document.getElementById('chatListPanel').style.display = 'none';
+    const chatPanel = document.getElementById('chatViewPanel');
+    chatPanel.classList.add('open');
+    chatPanel.style.display = 'flex';
+  }
+  
+
+  // Show loading state
+  const chatContainer = document.getElementById("adminChatMessages");
+  const nameDisplay = document.getElementById("currentChatUserName");
+
+  if (nameDisplay) nameDisplay.textContent = userName;
+  if (document.getElementById("currentChatUserId")) {
+    document.getElementById("currentChatUserId").textContent = userId;
+  }
+
+  if (chatContainer) {
+    chatContainer.innerHTML =
+      '<div style="text-align:center; padding:40px; color:#64748b;">Loading messages...</div>';
+  }
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/admin/live-chat/${userId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!res.ok) throw new Error(await res.text());
+
+    const { messages } = await res.json();
+
+    if (chatContainer) {
+      chatContainer.innerHTML =
+        messages.length === 0
+          ? '<div style="text-align:center; padding:60px 20px; color:#94a3b8;">No messages yet with this user</div>'
+          : messages
+              .map(
+                (msg) => `
+            <div class="message ${msg.is_from_admin ? "from-admin" : "from-user"}" style="
+              margin: 12px 0;
+              text-align: ${msg.is_from_admin ? "right" : "left"};
+            ">
+              <div class="buble" style="
+                background: ${msg.is_from_admin ? "#3b82f6" : "#f1f5f9"};
+                color: ${msg.is_from_admin ? "white" : "#1e293b"};
+              ">
+                ${msg.message}
+              </div>
+              <div class="time">
+                ${new Date(msg.created_at).toLocaleString([], { hour: "2-digit", minute: "2-digit", month: "short", day: "numeric" })}
+              </div>
+            </div>
+          `,
+              )
+              .join("");
+
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+      //subscribeToLiveChat(userId);
+    }
+  } catch (err) {
+    console.error("Failed to load chat:", err);
+    if (chatContainer) {
+      chatContainer.innerHTML = `<div style="color:#ef4444; padding:20px;">Error loading chat: ${err.message}</div>`;
+    }
+  }
+});
+
+// Reset to list view when entering Live Chat section
+function resetToUserListView() {
+  const listPanel = document.getElementById('chatListPanel');
+  const chatPanel = document.getElementById('chatViewPanel');
+
+  if (!listPanel || !chatPanel) return;
+
+  // Always start with list visible
+  listPanel.style.display = 'block';
+
+  // Hide chat panel
+  chatPanel.style.display = 'none';
+  chatPanel.classList.remove('open');
+
+  // Optional: clear chat content & selected user
+  document.getElementById('adminChatMessages').innerHTML = '';
+  document.getElementById('currentChatUserName').textContent = 'Select a conversation';
+  document.getElementById('currentChatUserId').textContent = '';
+
+  // Reload user list (if needed)
+  loadActiveChatUsers();   // your function that populates #liveChatUserList
+}
+
+// When clicking a user in the list
+/*document.addEventListener("click", function (e) {
+  const row = e.target.closest(".user-row");
+  if (!row) return;
+
+  const userId = row.dataset.userId;
+  const userName = row.querySelector(".user-name")?.textContent || "Chat";
+
+  // ── Mobile: hide list, show chat ───────────────────────────────
+  if (window.innerWidth < 850) {
+    document.getElementById("chatListPanel").style.display = "none";
+    const chatPanel = document.getElementById("chatViewPanel");
+    chatPanel.classList.add("open");
+    chatPanel.style.display = "flex";
+  }
+
+  // Load messages, set name, etc.
+  document.getElementById("currentChatUserName").textContent = userName;
+  document.getElementById("currentChatUserId").textContent = userId;
+
+  //loadMessagesForUser(userId); // your existing load function
+  //subscribeToLiveChat(userId); // if using realtime
+});*/
+
+// Back button
+document.getElementById("backToListBtn")?.addEventListener("click", () => {
+  if (window.innerWidth < 850) {
+    document.getElementById("chatViewPanel").classList.remove("open");
+    document.getElementById("chatViewPanel").style.display = "none";
+    document.getElementById("chatListPanel").style.display = "block";
+  }
+});
+
+// Optional: handle browser back button / resize
+window.addEventListener("popstate", () => {
+  if (
+    window.innerWidth < 850 &&
+    document.getElementById("chatViewPanel").classList.contains("open")
+  ) {
+    document.getElementById("backToListBtn").click();
+  }
+});
+
+window.addEventListener("resize", () => {
+  // If window becomes wide → always show both panels
+  if (window.innerWidth >= 850) {
+    document.getElementById("chatListPanel").style.display = "block";
+    document.getElementById("chatViewPanel").style.display = "flex";
+    document.getElementById("chatViewPanel").classList.remove("open");
+  }
+});
+
 // Load tickets
 async function loadTickets(status = "", priority = "") {
   try {
@@ -1800,46 +2225,46 @@ document.getElementById("cancelUnfreeze")?.addEventListener("click", () => {
   document.getElementById("unfreezeModal")?.classList.remove("show");
 });
 
-document.getElementById('confirmUnfreeze')?.addEventListener('click', async () => {
-  const userId = document.getElementById('unfreezeUserSelect').value;
-  const note = document.getElementById('unfreezeReason').value.trim();  // optional
+document
+  .getElementById("confirmUnfreeze")
+  ?.addEventListener("click", async () => {
+    const userId = document.getElementById("unfreezeUserSelect").value;
+    const note = document.getElementById("unfreezeReason").value.trim(); // optional
 
-  if (!userId) {
-    showNotification("Please select user", "error");
-    return;
-  }
-
-  try {
-       const response = await fetch(
-      `${API_BASE_URL}/admin/users/${userId}/toggle-freeze`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ freeze: false }),
-      },
-    );
-
-    if (response.ok) {
-      showNotification("Account unfrozen successfully", "success");
-      await loadUsers();
-
-    } else {
-      const data = await response.json();
-      showNotification(data.error || "Failed to unfreeze account", "error");
+    if (!userId) {
+      showNotification("Please select user", "error");
+      return;
     }
 
-    //const data = await response.json();
-   // showNotification("Account unfrozen successfully", "success");
-    // close modal, refresh users table, etc.
-  } catch (err) {
-    console.error("Unfreeze error:", err);
-    showNotification(err.message || "Failed to unfreeze account", "error");
-  }
-});
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/admin/users/${userId}/toggle-freeze`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ freeze: false }),
+        },
+      );
 
+      if (response.ok) {
+        showNotification("Account unfrozen successfully", "success");
+        await loadUsers();
+      } else {
+        const data = await response.json();
+        showNotification(data.error || "Failed to unfreeze account", "error");
+      }
+
+      //const data = await response.json();
+      // showNotification("Account unfrozen successfully", "success");
+      // close modal, refresh users table, etc.
+    } catch (err) {
+      console.error("Unfreeze error:", err);
+      showNotification(err.message || "Failed to unfreeze account", "error");
+    }
+  });
 
 // Optional: close modal when clicking outside or ×
 document.querySelectorAll("#unfreezeModal .close-modal").forEach((btn) => {

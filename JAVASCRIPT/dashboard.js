@@ -198,6 +198,8 @@ function updateAccountsDisplay() {
     )
     .join("");
 
+  showPrimaryAccountNumber();
+
   // Update account select in transfer form
   const fromAccountSelect = document.getElementById("fromAccount");
   if (fromAccountSelect) {
@@ -240,6 +242,23 @@ async function loadTransactions(page = 1) {
     }
   } catch (error) {
     console.error("Error loading transactions:", error);
+  }
+}
+
+// Show primary account number under Total Balance
+function showPrimaryAccountNumber() {
+  if (!accounts || accounts.length === 0) return;
+
+  // Prefer checking account, fallback to first account
+  const primaryAccount =
+    accounts.find((acc) => acc.account_type === "checking") || accounts[0];
+
+  const el = document.getElementById("primaryAccountNumber");
+  if (el) {
+    el.innerHTML = `
+      Primary Account: 
+      <strong style="color:#1e2937">${primaryAccount.account_number}</strong>
+    `;
   }
 }
 
@@ -757,6 +776,159 @@ document.getElementById("newTicketBtn")?.addEventListener("click", () => {
   modal.classList.add("show");
 });
 
+//Live support
+let currentChatSubscription = null;
+
+async function loadLiveChat() {
+  const container = document.getElementById("chatMessages");
+  if (!container) return;
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/chat/live`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!res.ok) throw new Error("Failed to load chat");
+
+    const { messages } = await res.json();
+
+    container.innerHTML = messages
+      .map(
+        (msg) => `
+        <div class="message ${msg.is_from_admin ? "admin-message" : "user-message"}">
+          <div class="bubble">${msg.message}</div>
+          <div class="time">${new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
+        </div>
+      `,
+      )
+      .join("");
+
+    container.scrollTop = container.scrollHeight;
+  } catch (err) {
+    console.error(err);
+    container.innerHTML = `<p class="error">Could not load chat history</p>`;
+  }
+}
+
+function escapeHtml(unsafe) {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+// Render message (WhatsApp style)
+/*function renderMessage(msg) {
+  const div = document.createElement("div");
+  div.className = msg.is_from_admin ? "message received" : "message sent";
+  div.innerHTML = `
+    <div class="bubble">${msg.message}</div>
+    <div class="time">${new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
+    ${
+      !msg.is_from_admin
+        ? `
+      <div class="status">
+        ${msg.status === "read" ? "✓✓" : msg.status === "delivered" ? "✓" : ""}
+      </div>`
+        : ""
+    }
+  `;
+  document.getElementById("chatMessages").appendChild(div);
+}*/
+
+// Send message
+document.getElementById("sendChatBtn").addEventListener("click", async () => {
+  const input = document.getElementById("chatInput");
+  const text = input.value.trim();
+  //if (!text) return;
+
+  sendMessage();
+});
+
+// Send message - optimistic + API + realtime confirmation
+async function sendMessage() {
+  const input = document.getElementById("chatInput");
+  const sendBtn = document.getElementById("sendChatBtn");
+  if (!input || !sendBtn) return;
+
+  const message = input.value.trim();
+  if (!message) return;
+
+  // Disable button + visual feedback
+  sendBtn.disabled = true;
+  sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/chat/live`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: JSON.stringify({ message }),
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      console.warn("Send message failed:", res.status, text.substring(0, 150));
+      showNotification("Failed to send message. Try again.", "error");
+      return;
+    }
+
+    const data = await res.json();
+
+    // Clear input
+    input.value = "";
+
+    // Immediately show the message we just sent (optimistic UI)
+    appendMessageToChat({
+      message: message,
+      is_from_admin: false,
+      created_at: new Date().toISOString(),
+    });
+
+    // Optional: refresh full history or rely on realtime later
+    // await loadLiveChat();
+  } catch (err) {
+    console.error("sendMessage error:", err);
+    showNotification("Could not send message. Check connection.", "error");
+  } finally {
+    sendBtn.disabled = false;
+    sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send';
+  }
+}
+// Helper: append single message to chat UI (optimistic update)
+function appendMessageToChat(msg) {
+  const container = document.getElementById("chatMessages");
+  if (!container) return;
+
+  const div = document.createElement("div");
+  div.className = `message ${msg.is_from_admin ? "admin-message" : "user-message"}`;
+  div.innerHTML = `
+    <div class="bubble">${msg.message}</div>
+    <div class="time">${new Date(msg.created_at).toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"})}</div>
+  `;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+// Attach to button (example – adjust selector to match your HTML)
+/*document
+  .getElementById("live-chat-send-btn")
+  ?.addEventListener("click", sendMessage);*/
+
+// Optional: send on Enter key
+document
+  .getElementById("live-chat-input")
+  ?.addEventListener("keypress", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
 // Submit ticket
 document.getElementById("submitTicket")?.addEventListener("click", async () => {
   const subject = document.getElementById("ticketSubject").value;
@@ -1120,6 +1292,7 @@ document.querySelectorAll(".sidebar-nav .nav-item").forEach((item) => {
         case "overview":
           await updateTotalBalance();
           await loadSpendingByCategory();
+          showPrimaryAccountNumber();d
           // usually already loaded — but can refresh charts/notifications if needed
           break;
 
@@ -1148,6 +1321,11 @@ document.querySelectorAll(".sidebar-nav .nav-item").forEach((item) => {
 
         case "budgets":
           //await loadBudgets(); // refresh chart or list
+          break;
+
+        case "live-support":
+          document.getElementById("page-live-support").classList.add("active");
+          loadLiveChat();
           break;
 
         case "support":

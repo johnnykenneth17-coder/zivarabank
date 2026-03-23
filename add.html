@@ -1,12 +1,106 @@
-<!-- inside the transfers page / section -->
-<div class="form-group">
-  <label for="toAccount">Recipient Account Number</label>
-  <input 
-    type="text" 
-    id="toAccount" 
-    placeholder="Enter account number" 
-    maxlength="12" 
-    required
-  />
-  <div id="recipientFeedback" class="input-feedback" style="margin-top: 6px; font-size: 0.9rem;"></div>
+<div class="live-chat-wrapper">
+
+  <!-- Left / List panel -->
+  <div class="chat-list-panel" id="chatListPanel">
+    <div class="panel-header">
+      <h3>Messages</h3>
+    </div>
+    <div id="liveChatUserList" class="user-list-container"></div>
+  </div>
+
+  <!-- Right / Chat panel -->
+  <div class="chat-view-panel" id="chatViewPanel">
+    <div class="chat-header">
+      <button class="back-btn" id="backToListBtn">←</button>
+      <div class="chat-title">
+        <span id="currentChatUserName">Select a conversation</span>
+      </div>
+    </div>
+
+    <div id="adminChatMessages" class="chat-messages"></div>
+
+    <div class="chat-input-area">
+      <input type="text" id="adminChatInput" placeholder="Type a message..." />
+      <button id="adminSendReply">Send</button>
+    </div>
+  </div>
+
 </div>
+
+
+
+
+<style>
+
+  .chat-layout {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Default mobile: show only list ──────────────────────────────── */
+.chat-user-list {
+  flex: 1;
+  display: block;
+}
+
+.chat-main {
+  display: none;           /* hidden by default on mobile */
+  flex-direction: column;
+  height: 100%;
+}
+
+/* When a chat is open */
+.chat-main.open {
+  display: flex;
+}
+
+/* Back button visible only when chat is open */
+.back-btn {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 8px 12px;
+}
+
+/* ── Tablet / desktop ── side by side ────────────────────────────── */
+@media (min-width: 850px) {
+  .chat-layout {
+    flex-direction: row;
+  }
+
+  .chat-user-list {
+    width: 340px;
+    border-right: 1px solid #e5e7eb;
+    flex: 0 0 auto;
+  }
+
+  .chat-main {
+    flex: 1;
+    display: flex;          /* always visible */
+  }
+
+  /* Hide back button on wide screens */
+  .back-btn {
+    display: none !important;
+  }
+}
+
+/* ── Very small phones adjustments ───────────────────────────────── */
+@media (max-width: 380px) {
+  .chat-header {
+    padding: 10px 12px;
+  }
+
+  .chat-title {
+    font-size: 1.1rem;
+  }
+
+  .back-btn {
+    font-size: 1.6rem;
+    padding: 6px 10px;
+  }
+}
+</style>

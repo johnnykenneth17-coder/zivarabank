@@ -142,6 +142,8 @@ CREATE TABLE otps (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
+
+
 -- Support tickets table
 CREATE TABLE support_tickets (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -282,3 +284,38 @@ CREATE TRIGGER generate_ticket_number_trigger
     BEFORE INSERT ON support_tickets
     FOR EACH ROW
     EXECUTE FUNCTION generate_ticket_number();
+
+
+
+
+    -- 1. New table for live support chat
+CREATE TABLE live_support_messages (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+    admin_id UUID REFERENCES users(id),
+    message TEXT NOT NULL,
+    is_from_admin BOOLEAN DEFAULT false,
+    status VARCHAR(20) DEFAULT 'sent',          -- sent, delivered, read
+    read_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX idx_live_support_user ON live_support_messages(user_id);
+CREATE INDEX idx_live_support_created ON live_support_messages(created_at);
+
+-- Enable Realtime
+ALTER PUBLICATION supabase_realtime ADD TABLE live_support_messages;
+
+-- RLS Policies
+ALTER TABLE live_support_messages ENABLE ROW LEVEL SECURITY;
+
+-- Users can only see their own chat
+CREATE POLICY "Users see own live chat" ON live_support_messages
+    FOR ALL USING (user_id = auth.uid());
+
+-- Admins see everything
+CREATE POLICY "Admins see all live chats" ON live_support_messages
+    FOR ALL USING (
+        EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
+    );
