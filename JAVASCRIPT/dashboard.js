@@ -1292,7 +1292,7 @@ document.querySelectorAll(".sidebar-nav .nav-item").forEach((item) => {
         case "overview":
           await updateTotalBalance();
           await loadSpendingByCategory();
-          showPrimaryAccountNumber();d
+          showPrimaryAccountNumber();
           // usually already loaded — but can refresh charts/notifications if needed
           break;
 
