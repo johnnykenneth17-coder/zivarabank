@@ -102,7 +102,7 @@ if (!document.getElementById("notification-animations")) {
 }
 
 // Load user data
-async function loadUserData() {
+/*async function loadUserData() {
   try {
     // Load user profile
     const profileResponse = await fetch(`${API_BASE_URL}/user/profile`, {
@@ -148,6 +148,65 @@ async function loadUserData() {
       window.location.href = "login.html";
     }
   }
+}*/
+
+// Load user data - Updated to handle face image
+async function loadUserData() {
+    try {
+        // Load user profile
+        const profileResponse = await fetch(`${API_BASE_URL}/user/profile`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        if (!profileResponse.ok) {
+            throw new Error("Failed to load profile");
+        }
+
+        currentUser = await profileResponse.json();
+        //console.log('Loaded user data:', currentUser);
+        console.log('Face image exists:', currentUser.face_image ? 'Yes' : 'No');
+        
+        // Also check localStorage for backup
+        const storedFaceImage = localStorage.getItem('userFaceImage');
+        if (storedFaceImage && !currentUser.face_image) {
+            console.log('Using stored face image from localStorage');
+            currentUser.face_image = storedFaceImage;
+        }
+        
+        updateUserInterface();
+        
+        // Check if account is frozen
+        if (currentUser.is_frozen) {
+            showFreezeNotification(currentUser.freeze_reason);
+        }
+
+        // Load accounts
+        await loadAccounts();
+
+        // Load transactions
+        await loadTransactions();
+
+        // Load cards
+        await loadCards();
+
+        // Load notifications
+        await loadNotifications();
+
+        // Initialize charts
+        await loadSpendingByCategory();
+        
+    } catch (error) {
+        console.error("Error loading user data:", error);
+        showNotification("Failed to load user data", "error");
+
+        // Check if token expired
+        if (error.message.includes("401")) {
+            localStorage.removeItem("token");
+            window.location.href = "login.html";
+        }
+    }
 }
 
 // Update user interface with profile data
@@ -168,7 +227,7 @@ async function loadUserData() {
 }*/
 
 // Update user interface with profile data - Add face image display
-function updateUserInterface() {
+/*function updateUserInterface() {
     if (!currentUser) return;
 
     // Update user info
@@ -202,7 +261,81 @@ function updateUserInterface() {
             userMenuAvatar.src = `https://ui-avatars.com/api/?name=${initials}&background=2563eb&color=fff`;
         }
     }
+}*/
+
+// Update user interface with profile data - Enhanced for face images
+function updateUserInterface() {
+    if (!currentUser) return;
+
+    console.log('Updating UI with user:', currentUser.first_name, currentUser.last_name);
+    console.log('Face image available:', currentUser.face_image ? 'Yes' : 'No');
+
+    // Update user info text
+    document.getElementById("userName").textContent = 
+        `${currentUser.first_name} ${currentUser.last_name}`;
+    document.getElementById("userEmail").textContent = currentUser.email;
+    document.getElementById("welcomeName").textContent = currentUser.first_name;
+
+    // Update avatar - prioritize face image
+    const userAvatar = document.getElementById("userAvatar");
+    const userAvatarSpan = document.getElementById("userInitials");
+    const userMenuAvatar = document.getElementById("userMenuAvatar");
+    
+    const initials = currentUser.first_name[0] + currentUser.last_name[0];
+    
+    // Check for face image in currentUser
+    if (currentUser.face_image && currentUser.face_image.startsWith('data:image')) {
+        console.log('Setting face image in avatar');
+        
+        // Update the user avatar div
+        if (userAvatar) {
+            userAvatar.style.backgroundImage = `url(${currentUser.face_image})`;
+            userAvatar.style.backgroundSize = "cover";
+            userAvatar.style.backgroundPosition = "center";
+            userAvatar.style.backgroundColor = "transparent";
+            if (userAvatarSpan) {
+                userAvatarSpan.style.display = "none";
+            }
+        }
+        
+        // Update the user menu avatar image
+        if (userMenuAvatar) {
+            userMenuAvatar.src = currentUser.face_image;
+            userMenuAvatar.style.objectFit = "cover";
+            userMenuAvatar.style.display = "block";
+        }
+    } else {
+        console.log('Using fallback initials avatar');
+        
+        // Use initials as fallback
+        if (userAvatar) {
+            userAvatar.style.backgroundImage = "none";
+            userAvatar.style.backgroundColor = "var(--primary-color)";
+            if (userAvatarSpan) {
+                userAvatarSpan.textContent = initials;
+                userAvatarSpan.style.display = "flex";
+            }
+        }
+        
+        if (userMenuAvatar) {
+            userMenuAvatar.src = `https://ui-avatars.com/api/?name=${initials}&background=2563eb&color=fff`;
+        }
+    }
 }
+
+// Add this function to test face image display
+function testFaceImageDisplay() {
+    const testImage = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwAA8A/9k=";
+    const userAvatar = document.getElementById("userAvatar");
+    if (userAvatar) {
+        userAvatar.style.backgroundImage = `url(${testImage})`;
+        userAvatar.style.backgroundSize = "cover";
+        console.log('Test image applied');
+    }
+}
+
+// Call test function to verify the avatar can display images
+// testFaceImageDisplay();
 
 // Load accounts
 async function loadAccounts() {
