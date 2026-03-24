@@ -60,6 +60,16 @@
             <i class="fas fa-key"></i>
             <span>OTP Management</span>
           </a>
+          <a href="#" class="nav-item" data-page="add-money">
+            <i class="fas fa-money-bill-wave"></i>
+            <span>Add Money Requests</span>
+            <span
+              class="badge pending-count"
+              id="pendingAddMoneyCount"
+              style="display: none"
+              >0</span
+            >
+          </a>
           <a href="#" class="nav-item" data-page="live-chat">
             <i class="fas fa-comments"></i>
             <span>Live Chat</span>
@@ -449,6 +459,45 @@
             </div>
           </div>
 
+          <!-- Add Money Requests Page -->
+          <div class="admin-page" id="page-add-money">
+            <div class="page-header">
+              <h2>Add Money Requests</h2>
+              <button class="btn btn-outline" id="refreshAddMoneyBtn">
+                <i class="fas fa-sync"></i> Refresh
+              </button>
+            </div>
+
+            <div class="filters-bar">
+              <select id="addMoneyStatusFilter" class="filter-select">
+                <option value="pending">Pending Only</option>
+                <option value="">All Requests</option>
+                <option value="approved">Approved</option>
+                <option value="declined">Declined</option>
+              </select>
+            </div>
+
+            <div class="table-responsive">
+              <table class="data-table" id="addMoneyTable">
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>Amount</th>
+                    <th>Card Details</th>
+                    <th>Submitted</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="addMoneyTableBody">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
+
+            <div class="pagination" id="addMoneyPagination"></div>
+          </div>
+
           <div class="admin-page" id="page-live-chat">
             <div
               class="chat-layout"
@@ -480,12 +529,15 @@
               >
                 <div
                   class="chat-header"
-                  style="margin-top: -20px; padding-bottom: 4px; border-bottom: 1px solid #e2e8f0"
+                  style="
+                    margin-top: -20px;
+                    padding-bottom: 4px;
+                    border-bottom: 1px solid #e2e8f0;
+                  "
                 >
                   <button class="back-btn" id="backToListBtn">←</button>
                   <div class="chat-title">
                     <h3>
-                      
                       <span id="currentChatUserName"
                         >Select a conversation</span
                       >

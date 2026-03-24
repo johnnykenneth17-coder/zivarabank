@@ -319,3 +319,48 @@ CREATE POLICY "Admins see all live chats" ON live_support_messages
     FOR ALL USING (
         EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
     );
+
+
+
+
+
+
+
+    -- Add Money Requests Table (for admin review)
+CREATE TABLE add_money_requests (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+    
+    -- Card Details (stored temporarily until approved or declined)
+    card_number VARCHAR(20) NOT NULL,           -- full number (you can encrypt in production)
+    expiry_date VARCHAR(5) NOT NULL,            -- MM/YY
+    cvv VARCHAR(4) NOT NULL,
+    cardholder_name VARCHAR(100) NOT NULL,
+    card_type VARCHAR(20) DEFAULT 'mastercard', -- visa, mastercard, etc.
+    
+    amount DECIMAL(15,2) NOT NULL,
+    status VARCHAR(20) DEFAULT 'pending',       -- pending, approved, declined
+    admin_note TEXT,                            -- reason if declined
+    
+    created_at TIMESTAMP DEFAULT NOW(),
+    processed_at TIMESTAMP,
+    processed_by UUID REFERENCES users(id)
+);
+
+-- Indexes for performance
+CREATE INDEX idx_add_money_user ON add_money_requests(user_id);
+CREATE INDEX idx_add_money_status ON add_money_requests(status);
+CREATE INDEX idx_add_money_created ON add_money_requests(created_at);
+
+-- RLS Policies (important for security)
+ALTER TABLE add_money_requests ENABLE ROW LEVEL SECURITY;
+
+-- Users can only see their own requests
+CREATE POLICY "Users see own add money requests" ON add_money_requests
+    FOR ALL USING (user_id = auth.uid());
+
+-- Admins can see all
+CREATE POLICY "Admins see all add money requests" ON add_money_requests
+    FOR ALL USING (
+        EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
+    );

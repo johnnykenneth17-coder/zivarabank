@@ -1863,3 +1863,85 @@ textarea.form-control {
   font-family: monospace;
   letter-spacing: 1px;
 }
+
+
+/* ==================== ADD MONEY SECTION ==================== */
+.add-money-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    
+}
+
+
+
+.card-form {
+    background: white;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: var(--box-shadow);
+    
+}
+
+.saved-cards {
+    background: white;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: var(--box-shadow);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    
+}
+
+.note {
+    margin-top: 20px;
+    font-size: 13px;
+    color: #64748b;
+    font-style: italic;
+}
+
+.saved-card-item {
+    background: #f8fafc;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+@media (max-width: 992px) {
+    .add-money-container {
+        grid-template-columns: 1fr;
+    }
+}
+.btnn{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 1;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: none;
+}   
+
+.btn-primaryy {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-primaryy:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--box-shadow-lg);
+}
+

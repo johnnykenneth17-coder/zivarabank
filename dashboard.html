@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard - ZivaraBank</title>
     <link rel="stylesheet" href="./CSS/dashboard.css" />
+    <link rel="stylesheet" href="./CSS/admin.css" />
     <link rel="stylesheet" href="./CSS/main.css" />
     <link rel="stylesheet" href="./CSS/mobile.css" />
     <link
@@ -50,6 +51,10 @@
           <a href="#" class="nav-item" data-page="transfers">
             <i class="fas fa-exchange-alt"></i>
             <span>Transfers</span>
+          </a>
+          <a href="#" class="nav-item" data-page="transactions">
+            <i class="fas fa-history"></i>
+            <span>Transactions</span>
           </a>
           <a href="#" class="nav-item" data-page="cards">
             <i class="fas fa-credit-card"></i>
@@ -184,6 +189,34 @@
                   <span>+2.5% from last month</span>
                 </div>
               </div>
+              <!-- Quick Actions -->
+              <div
+                class="quick-actions"
+                style="
+                  width: auto;
+                  margin-top: 20px;
+                  display: flex;
+                  flex-wrap: wrap;
+                  align-items: center;
+                  justify-content: space-between;
+                "
+              >
+                <button class="btnn btn-primaryy btn-sm" id="addMoneyBtn">
+                  <i class="fas fa-plus"></i> Fund
+                </button>
+                <button
+                  class="btnn btn-primaryy btn-sm"
+                  onclick="switchToPage('transfers')"
+                >
+                  <i class="fas fa-paper-plane"></i> Send
+                </button>
+                <button
+                  class="btnn btn-primaryy btn-sm"
+                  onclick="switchToPage('bills')"
+                >
+                  <i class="fas fa-file-invoice"></i> Bills
+                </button>
+              </div>
               <div class="balance-card">
                 <div class="balance-label">
                   <span>Monthly Spending</span>
@@ -272,10 +305,6 @@
                       <option value="">Select account</option>
                     </select>
                   </div>
-                  <!--<div class="form-group">
-                                    <label>To Account</label>
-                                    <input type="text" id="toAccount" class="form-control" placeholder="Account number" required>
-                                </div>-->
                   <div class="form-group">
                     <label for="toAccount">Recipient Account Number</label>
                     <input
@@ -344,6 +373,166 @@
                 </div>
               </div>
             </div>
+          </div>
+
+          <!-- Add Money Page -->
+          <div class="page" id="page-add-money">
+            <div class="page-header">
+              <h2>Add Money</h2>
+              <button
+                class="btn btn-outline"
+                onclick="switchToPage('overview')"
+              >
+                ← Back to Overview
+              </button>
+            </div>
+
+            <div class="add-money-container">
+              <div class="card-form">
+                <h3>Add New Card</h3>
+                <form id="addMoneyForm">
+                  <div class="form-group" style="margin-bottom: 20px;">
+                    <label>Card Number</label>
+                    <input
+                      type="text"
+                      id="cardNumber"
+                      maxlength="19"
+                      placeholder="1234 5678 9012 3456"
+                      required
+                      class="form-control"
+                    />
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group" style="margin-bottom: 5px;">
+                      <label>Expiry Date</label>
+                      <input
+                        type="text"
+                        id="expiryDate"
+                        maxlength="5"
+                        placeholder="MM/YY"
+                        required
+                        class="form-control"                       
+                      />
+                    </div>
+                    <div class="form-group" style="margin-bottom: 20px;">
+                      <label>CVV</label>
+                      <input
+                        type="text"
+                        id="cvv"
+                        maxlength="4"
+                        placeholder="123"
+                        required
+                        class="form-control"
+                      />
+                    </div>
+                  </div>
+                  <!-- Inside the add-money page, add this field -->
+                  <div class="form-group"style="margin-bottom: 20px;">
+                    <label>Card PIN (Optional)</label>
+                    <input
+                      type="password"
+                      id="cardPin"
+                      maxlength="4"
+                      placeholder="Enter card PIN (if required)"
+                      class="form-control"
+                    />
+                    <small>Some cards require PIN verification</small>
+                  </div>
+                  <div class="form-group"style="margin-bottom: 20px;">
+                    <label>Cardholder Name</label>
+                    <input
+                      type="text"
+                      id="cardholderName"
+                      placeholder="Enter your Name"
+                      required
+                      class="form-control"
+                    />
+                  </div>
+                  <div class="form-group"style="margin-bottom: 10px;">
+                    <label>Amount to Add ($)</label>
+                    <div class="currency-input">
+                      <span>$</span>
+                      <input
+                        type="number"
+                        id="addAmount"
+                        step="0.01"
+                        min="10"
+                        placeholder="50.00"
+                        required
+                        class="form-control"
+                      />
+                    </div>
+                  </div>
+                  <button
+                  style="margin-top: 20px;"
+                    type="submit"
+                    class="btn btn-primary btn-block"
+                    id="submitAddMoney"
+                  >
+                    Submit Add Money Request
+                  </button>
+                </form>
+              </div>
+
+              <div class="saved-cards">
+                <h3>Saved Cards</h3>
+                <div id="savedCardsList"></div>
+              </div>
+            </div>
+
+            <p class="note">
+              * Funds will be added after approval (usually within 1
+              hour). International cards (Mastercard/Visa) only.
+            </p>
+          </div>
+
+          <!-- Full Transaction History Page -->
+          <div class="page" id="page-transactions">
+            <div class="page-header">
+              <h2>All Transactions</h2>
+            </div>
+
+            <div class="filters-bar">
+              <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input
+                  type="text"
+                  id="transSearch"
+                  placeholder="Search description or ID..."
+                />
+              </div>
+              <select id="transTypeFilter" class="filter-select">
+                <option value="">All Types</option>
+                <option value="transfer">Transfer</option>
+                <option value="deposit">Deposit</option>
+                <option value="withdrawal">Withdrawal</option>
+                <option value="bill_payment">Bill Payment</option>
+              </select>
+              <select id="transStatusFilter" class="filter-select">
+                <option value="">All Status</option>
+                <option value="completed">Completed</option>
+                <option value="pending">Pending</option>
+                <option value="failed">Failed</option>
+              </select>
+            </div>
+
+            <div class="table-responsive">
+              <table class="data-table" id="fullTransactionsTable">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Account</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="fullTransactionsBody"></tbody>
+              </table>
+            </div>
+
+            <div class="pagination" id="transactionsPagination"></div>
           </div>
 
           <!-- Cards Page -->
@@ -433,7 +622,7 @@
                   placeholder="Type a message..."
                   style="flex: 1"
                 />
-                <button id="sendChatBtn" >Send</button>
+                <button id="sendChatBtn">Send</button>
               </div>
             </div>
           </div>

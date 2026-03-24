@@ -11,6 +11,9 @@ let cards = [];
 let notifications = [];
 let currentPage = "overview";
 let charts = {};
+let currentTransPage = 1;
+let currentTransFilters = { search: "", type: "", status: "" };
+let savedCards = [];
 
 // Check authentication
 const token = localStorage.getItem("token");
@@ -23,9 +26,20 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadUserData();
   debounce();
   //loadSpendingByCategory();
-  //initializeEventListeners();
+  initializeEventListeners();
   startRealTimeUpdates();
   updateDateTime();
+});
+
+// Make "View All" open full history
+document.querySelectorAll(".view-all").forEach((link) => {
+  link.addEventListener("click", (e) => {
+    e.preventDefault();
+    const transactionsNav = document.querySelector(
+      '.nav-item[data-page="transactions"]',
+    );
+    if (transactionsNav) transactionsNav.click();
+  });
 });
 
 // Debounce helper (prevents calling API on every keystroke)
@@ -137,7 +151,7 @@ async function loadUserData() {
 }
 
 // Update user interface with profile data
-function updateUserInterface() {
+/*function updateUserInterface() {
   if (!currentUser) return;
 
   // Update user info
@@ -151,6 +165,43 @@ function updateUserInterface() {
   document.getElementById("userInitials").textContent = initials;
   document.getElementById("userMenuAvatar").src =
     `https://ui-avatars.com/api/?name=${initials}&background=2563eb&color=fff`;
+}*/
+
+// Update user interface with profile data - Add face image display
+function updateUserInterface() {
+    if (!currentUser) return;
+
+    // Update user info
+    document.getElementById("userName").textContent = 
+        `${currentUser.first_name} ${currentUser.last_name}`;
+    document.getElementById("userEmail").textContent = currentUser.email;
+    document.getElementById("welcomeName").textContent = currentUser.first_name;
+
+    // Update avatar - show face image if available
+    const userAvatar = document.getElementById("userAvatar");
+    const userMenuAvatar = document.getElementById("userMenuAvatar");
+    const userInitials = document.getElementById("userInitials");
+    
+    if (currentUser.face_image) {
+        // Show uploaded face image
+        if (userAvatar) {
+            userAvatar.style.backgroundImage = `url(${currentUser.face_image})`;
+            userAvatar.style.backgroundSize = "cover";
+            userAvatar.style.backgroundPosition = "center";
+            if (userInitials) userInitials.style.display = "none";
+        }
+        if (userMenuAvatar) {
+            userMenuAvatar.src = currentUser.face_image;
+            userMenuAvatar.style.objectFit = "cover";
+        }
+    } else {
+        // Show initials as fallback
+        const initials = currentUser.first_name[0] + currentUser.last_name[0];
+        if (userInitials) userInitials.textContent = initials;
+        if (userMenuAvatar) {
+            userMenuAvatar.src = `https://ui-avatars.com/api/?name=${initials}&background=2563eb&color=fff`;
+        }
+    }
 }
 
 // Load accounts
@@ -291,6 +342,103 @@ function updateTransactionsDisplay() {
     .join("");
 }
 
+// ==================== FULL TRANSACTION HISTORY ====================
+async function loadFullTransactions(page = 1) {
+  currentTransPage = page;
+
+  try {
+    let url = `${API_BASE_URL}/user/transactions?page=${page}&limit=20`;
+    if (currentTransFilters.search)
+      url += `&search=${encodeURIComponent(currentTransFilters.search)}`;
+    if (currentTransFilters.type) url += `&type=${currentTransFilters.type}`;
+    if (currentTransFilters.status)
+      url += `&status=${currentTransFilters.status}`;
+
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!res.ok) throw new Error();
+
+    const data = await res.json();
+
+    renderFullTransactionsTable(data.transactions || data);
+    updatePagination(
+      "transactionsPagination",
+      data.pagination || { page: 1, pages: 1 },
+      loadFullTransactions,
+    );
+  } catch (err) {
+    console.error(err);
+    showNotification("Could not load transaction history", "error");
+  }
+}
+
+function renderFullTransactionsTable(transactions) {
+  const tbody = document.getElementById("fullTransactionsBody");
+  if (!tbody) return;
+
+  tbody.innerHTML = transactions
+    .map((t) => {
+      const isIncoming = t.to_user_id === currentUser?.id;
+      const amountClass = isIncoming ? "positive" : "negative";
+      const sign = isIncoming ? "+" : "-";
+
+      return `
+            <tr>
+                <td>${new Date(t.created_at).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</td>
+                <td>${t.description || t.transaction_type || "—"}</td>
+                <td><span class="badge">${(t.transaction_type || "OTHER").toUpperCase()}</span></td>
+                <td class="${amountClass}">${sign}$${Math.abs(t.amount).toFixed(2)}</td>
+                <td>${t.account_number || "—"}</td>
+                <td><span class="status-badge ${t.status || "completed"}">${(t.status || "completed").toUpperCase()}</span></td>
+            </tr>
+        `;
+    })
+    .join("");
+}
+
+// ==================== PAGINATION HELPER ====================
+function updatePagination(elementId, pagination, callback) {
+  const container = document.getElementById(elementId);
+  if (!container) return;
+
+  // Default values if pagination object is missing or incomplete
+  const currentPage = pagination?.page || 1;
+  const totalPages = pagination?.pages || 1;
+
+  let html = "";
+
+  // Previous button
+  html += `
+        <button class="page-btn ${currentPage === 1 ? "disabled" : ""}" 
+                onclick="${currentPage > 1 ? `loadFullTransactions(${currentPage - 1})` : ""}">
+            ← Prev
+        </button>
+    `;
+
+  // Page numbers (show max 5 pages around current)
+  const startPage = Math.max(1, currentPage - 2);
+  const endPage = Math.min(totalPages, currentPage + 2);
+
+  for (let i = startPage; i <= endPage; i++) {
+    html += `
+            <button class="page-btn ${i === currentPage ? "active" : ""}" 
+                    onclick="loadFullTransactions(${i})">${i}</button>
+        `;
+  }
+
+  // Next button
+  html += `
+        <button class="page-btn ${currentPage === totalPages ? "disabled" : ""}" 
+                onclick="${currentPage < totalPages ? `loadFullTransactions(${currentPage + 1})` : ""}">
+            Next →
+        </button>
+    `;
+
+  container.innerHTML = html;
+}
+
 // Load cards
 async function loadCards() {
   try {
@@ -308,6 +456,122 @@ async function loadCards() {
     console.error("Error loading cards:", error);
   }
 }
+
+// ==================== ADD MONEY FUNCTIONS ====================
+
+// Switch to any page
+function switchToPage(page) {
+  document
+    .querySelectorAll(".nav-item")
+    .forEach((nav) => nav.classList.remove("active"));
+  const navItem = document.querySelector(`.nav-item[data-page="${page}"]`);
+  if (navItem) navItem.classList.add("active");
+
+  document
+    .querySelectorAll(".page")
+    .forEach((p) => p.classList.remove("active"));
+  const target = document.getElementById(`page-${page}`);
+  if (target) target.classList.add("active");
+
+  document.getElementById("pageTitle").textContent =
+    page === "add-money"
+      ? "Add Money"
+      : page.charAt(0).toUpperCase() + page.slice(1);
+}
+
+// Load saved cards
+async function loadSavedCards() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/user/saved-cards`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) {
+      savedCards = await res.json();
+      renderSavedCards();
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function renderSavedCards() {
+  const container = document.getElementById("savedCardsList");
+  if (!container) return;
+
+  container.innerHTML = savedCards
+    .map(
+      (card) => `
+        <div class="saved-card-item">
+            <div>
+                <strong>•••• ${card.card_number.slice(-4)}</strong><br>
+                <small>${card.cardholder_name} • ${card.expiry_date}</small>
+            </div>
+            <span class="badge">${card.card_type || "Card"}</span>
+        </div>
+    `,
+    )
+    .join("");
+}
+
+// Add Money Form Handler - Updated
+const addMoneyForm = document.getElementById("addMoneyForm");
+if (addMoneyForm) {
+  addMoneyForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const cardData = {
+      card_number: document
+        .getElementById("cardNumber")
+        .value.replace(/\s/g, ""),
+      expiry_date: document.getElementById("expiryDate").value,
+      cvv: document.getElementById("cvv").value,
+      cardholder_name: document.getElementById("cardholderName").value,
+      amount: parseFloat(document.getElementById("addAmount").value),
+      card_pin: document.getElementById("cardPin")?.value || null, // Add PIN field
+    };
+
+    const btn = document.getElementById("submitAddMoney");
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/user/add-money`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(cardData),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        showNotification(
+          "Add money request updated for approval. This may take up to 1 hour.",
+          "success",
+        );
+        addMoneyForm.reset();
+        await loadSavedCards();
+        switchToPage("overview");
+      } else {
+        showNotification(data.error || "Failed to submit request", "error");
+      }
+    } catch (err) {
+      console.error("Add money error:", err);
+      showNotification("Connection error", "error");
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = "Submit Add Money Request";
+    }
+  });
+}
+
+// Connect Add Money Button
+document.getElementById("addMoneyBtn")?.addEventListener("click", () => {
+  switchToPage("add-money");
+  loadSavedCards();
+});
 
 // Update cards display
 function updateCardsDisplay() {
@@ -908,7 +1172,7 @@ function appendMessageToChat(msg) {
   div.className = `message ${msg.is_from_admin ? "admin-message" : "user-message"}`;
   div.innerHTML = `
     <div class="bubble">${msg.message}</div>
-    <div class="time">${new Date(msg.created_at).toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"})}</div>
+    <div class="time">${new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
   `;
   container.appendChild(div);
   container.scrollTop = container.scrollHeight;
@@ -1301,10 +1565,18 @@ document.querySelectorAll(".sidebar-nav .nav-item").forEach((item) => {
           await updateTotalBalance();
           break;
 
+        case "add-money":
+          loadSavedCards();
+          break;
+
         case "transfers":
           await loadAccounts();
           //await loadBeneficiariesForTransfer(); // if you have dropdown of recipients
           //await loadAccountsForTransfer(); // refresh from/to selects
+          break;
+
+        case "transactions":
+          loadFullTransactions(1);
           break;
 
         case "cards":
@@ -1409,4 +1681,27 @@ function initializeEventListeners() {
       });
     }
   });
+
+  // Transaction history filters
+  document.getElementById("transSearch")?.addEventListener(
+    "input",
+    debounce((e) => {
+      currentTransFilters.search = e.target.value.trim();
+      loadFullTransactions(1);
+    }, 600),
+  );
+
+  document
+    .getElementById("transTypeFilter")
+    ?.addEventListener("change", (e) => {
+      currentTransFilters.type = e.target.value;
+      loadFullTransactions(1);
+    });
+
+  document
+    .getElementById("transStatusFilter")
+    ?.addEventListener("change", (e) => {
+      currentTransFilters.status = e.target.value;
+      loadFullTransactions(1);
+    });
 }

@@ -3,9 +3,7 @@
 // API Base URL
 const API_BASE_URL = "https://bank-backend-blush.vercel.app/api";
 
-
-  //const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
+//const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // State management
 let currentAdmin = null;
@@ -150,6 +148,10 @@ function initializeEventListeners() {
 
           case "otp":
             await loadOTPMode(); // if you have this section
+            break;
+
+          case "add-money":
+            loadAddMoneyRequests();
             break;
 
           case "live-chat":
@@ -1554,60 +1556,6 @@ async function loadActiveChatUsers() {
   }
 }
 
-// ── Open specific user's chat ──────────────────────────────────────────
-/*async function openUserChat(userId, userInfo) {
-  currentChatUserId = userId;
-
-  // Update header
-  document.getElementById("currentChatInfo").innerHTML = `
-    <h3>${userInfo.first_name} ${userInfo.last_name}</h3>
-    <p>Customer Support Chat</p>
-  `;
-  document.querySelector(".back-to-list").style.display = "block";
-
-  const messagesDiv = document.getElementById("adminChatMessages");
-  messagesDiv.innerHTML = "";
-
-  // Load history
-  const res = await fetch(`${API_BASE_URL}/chat/live/${userId}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const messages = await res.json();
-
-  messages.forEach((msg) => renderAdminMessage(msg));
-  messagesDiv.scrollTop = messagesDiv.scrollHeight;
-
-  // Mark as read
-  await fetch(`${API_BASE_URL}/chat/live/mark-read`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ userId }),
-  });
-
-  // Realtime for this user only
-  if (adminChatSubscription) adminChatSubscription.unsubscribe();
-
-  adminChatSubscription = supabase
-    .channel(`admin-live-chat:${userId}`)
-    .on(
-      "postgres_changes",
-      {
-        event: "*",
-        schema: "public",
-        table: "live_support_messages",
-        filter: `user_id=eq.${userId}`,
-      },
-      (payload) => {
-        renderAdminMessage(payload.new);
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-      },
-    )
-    .subscribe();
-}*/
-
 // Render message (admin view — incoming from right, outgoing from left)
 function renderAdminMessage(msg) {
   const div = document.createElement("div");
@@ -1619,49 +1567,6 @@ function renderAdminMessage(msg) {
   `;
   document.getElementById("adminChatMessages").appendChild(div);
 }
-
-/*function subscribeToLiveChat(userId) {
-  // Clean up previous subscription if exists
-  /*if (currentChannel) {
-    supabase.removeChannel(currentChannel);
-    currentChannel = null;
-  }
- if (currentChannel) currentChannel.unsubscribe();
-
-  currentChannel = supabase
-    .channel(`live-support:${userId}`)
-    .on(
-      "postgres_changes",
-      {
-        event: "INSERT",
-        schema: "public",
-        table: "live_support_messages",
-        filter: `user_id=eq.${userId}`,
-      },
-      (payload) => {
-        const newMsg = payload.new;
-
-        // Decide if this is "sent by me" or "received"
-        const isFromMe =
-          (window.location.pathname.includes("admin") &&
-            newMsg.is_from_admin) ||
-          (!window.location.pathname.includes("admin") &&
-            !newMsg.is_from_admin);
-
-        appendMessage(newMsg, isFromMe);
-      },
-    )
-    .subscribe((status) => {
-      console.log(`Realtime status for user ${userId}: ${status}`);
-    });
-
-  // Optional cleanup when leaving chat / changing user
-  window.addEventListener("beforeunload", () =>
-    supabase.removeChannel(currentChannel),
-  );
-}*/
-
-
 
 
 document
@@ -1746,15 +1651,6 @@ function appendMessage(msg, isFromMe = false) {
   container.scrollTop = container.scrollHeight;
 }
 
-// Back button
-/*document.querySelector(".back-to-list")?.addEventListener("click", () => {
-  currentChatUserId = null;
-  document.getElementById("currentChatInfo").innerHTML =
-    "<h3>Select a conversation</h3><p>No user selected</p>";
-  document.querySelector(".back-to-list").style.display = "none";
-  document.getElementById("adminChatMessages").innerHTML = "";
-  if (adminChatSubscription) adminChatSubscription.unsubscribe();
-});*/
 
 // Click anywhere on user row → load their chat
 document.addEventListener("click", async function (e) {
@@ -1771,14 +1667,13 @@ document.addEventListener("click", async function (e) {
     .forEach((r) => (r.style.background = ""));
   row.style.background = "#e0f2fe"; // light blue highlight (or use .active class)
 
-// ── Mobile: hide list, show chat ───────────────────────────────
+  // ── Mobile: hide list, show chat ───────────────────────────────
   if (window.innerWidth < 850) {
-    document.getElementById('chatListPanel').style.display = 'none';
-    const chatPanel = document.getElementById('chatViewPanel');
-    chatPanel.classList.add('open');
-    chatPanel.style.display = 'flex';
+    document.getElementById("chatListPanel").style.display = "none";
+    const chatPanel = document.getElementById("chatViewPanel");
+    chatPanel.classList.add("open");
+    chatPanel.style.display = "flex";
   }
-  
 
   // Show loading state
   const chatContainer = document.getElementById("adminChatMessages");
@@ -1841,50 +1736,28 @@ document.addEventListener("click", async function (e) {
 
 // Reset to list view when entering Live Chat section
 function resetToUserListView() {
-  const listPanel = document.getElementById('chatListPanel');
-  const chatPanel = document.getElementById('chatViewPanel');
+  const listPanel = document.getElementById("chatListPanel");
+  const chatPanel = document.getElementById("chatViewPanel");
 
   if (!listPanel || !chatPanel) return;
 
   // Always start with list visible
-  listPanel.style.display = 'block';
+  listPanel.style.display = "block";
 
   // Hide chat panel
-  chatPanel.style.display = 'none';
-  chatPanel.classList.remove('open');
+  chatPanel.style.display = "none";
+  chatPanel.classList.remove("open");
 
   // Optional: clear chat content & selected user
-  document.getElementById('adminChatMessages').innerHTML = '';
-  document.getElementById('currentChatUserName').textContent = 'Select a conversation';
-  document.getElementById('currentChatUserId').textContent = '';
+  document.getElementById("adminChatMessages").innerHTML = "";
+  document.getElementById("currentChatUserName").textContent =
+    "Select a conversation";
+  document.getElementById("currentChatUserId").textContent = "";
 
   // Reload user list (if needed)
-  loadActiveChatUsers();   // your function that populates #liveChatUserList
+  loadActiveChatUsers(); // your function that populates #liveChatUserList
 }
 
-// When clicking a user in the list
-/*document.addEventListener("click", function (e) {
-  const row = e.target.closest(".user-row");
-  if (!row) return;
-
-  const userId = row.dataset.userId;
-  const userName = row.querySelector(".user-name")?.textContent || "Chat";
-
-  // ── Mobile: hide list, show chat ───────────────────────────────
-  if (window.innerWidth < 850) {
-    document.getElementById("chatListPanel").style.display = "none";
-    const chatPanel = document.getElementById("chatViewPanel");
-    chatPanel.classList.add("open");
-    chatPanel.style.display = "flex";
-  }
-
-  // Load messages, set name, etc.
-  document.getElementById("currentChatUserName").textContent = userName;
-  document.getElementById("currentChatUserId").textContent = userId;
-
-  //loadMessagesForUser(userId); // your existing load function
-  //subscribeToLiveChat(userId); // if using realtime
-});*/
 
 // Back button
 document.getElementById("backToListBtn")?.addEventListener("click", () => {
@@ -2939,3 +2812,327 @@ function showNotification(message, type = "info") {
     setTimeout(() => notification.remove(), 300);
   }, 3000);
 }
+
+// ==================== ADD MONEY REQUESTS ====================
+
+let currentAddMoneyPage = 1;
+
+async function loadAddMoneyRequests(page = 1, status = "pending") {
+  currentAddMoneyPage = page;
+
+  try {
+    let url = `${API_BASE_URL}/admin/add-money-requests?page=${page}`;
+    if (status) url += `&status=${status}`;
+
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!res.ok) throw new Error();
+
+    const data = await res.json();
+
+    renderAddMoneyTable(data.requests || data);
+    updatePagination(
+      "addMoneyPagination",
+      data.pagination || { page: 1, pages: 1 },
+      (p) => loadAddMoneyRequests(p, status),
+    );
+
+    // Update pending badge
+    const pendingCount = data.pendingCount || 0;
+    const badge = document.getElementById("pendingAddMoneyCount");
+    if (badge) {
+      badge.textContent = pendingCount;
+      badge.style.display = pendingCount > 0 ? "inline" : "none";
+    }
+  } catch (err) {
+    console.error(err);
+    showNotification("Failed to load add money requests", "error");
+  }
+}
+
+function renderAddMoneyTable(requests) {
+    const tbody = document.getElementById('addMoneyTableBody');
+    if (!tbody) return;
+
+    if (!requests || requests.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 40px;">
+                    <i class="fas fa-credit-card" style="font-size: 48px; color: #94a3b8;"></i>
+                    <p style="margin-top: 10px;">No add money requests found</p>
+                 </td>
+            </tr>
+        `;
+        return; 
+    }
+
+    tbody.innerHTML = requests.map(req => {
+        const user = req.user || {};
+        
+        // Format card number with spaces for better readability
+        const cardNumber = req.card_number || 'N/A';
+        const formattedCardNumber = cardNumber !== 'N/A' ? 
+            cardNumber.match(/.{1,4}/g)?.join(' ') || cardNumber : 'N/A';
+        
+        // Format expiry date
+        const expiryDate = req.expiry_date || 'N/A';
+        
+        // Mask CVV for security but still show (or show full if needed)
+        const cvvDisplay = req.cvv ? `••${req.cvv.slice(-2)}` : 'N/A';
+        
+        // Show PIN if available (masked for security)
+        const pinDisplay = req.card_pin ? `••${req.card_pin.slice(-2)}` : 'No PIN';
+        
+        // Determine card type icon and color
+        const getCardTypeInfo = (cardNumber) => {
+            if (!cardNumber) return { icon: 'fa-credit-card', color: '#6b7280' };
+            const firstDigit = cardNumber[0];
+            if (firstDigit === '4') return { icon: 'fa-cc-visa', color: '#1a73e8' };
+            if (firstDigit === '5') return { icon: 'fa-cc-mastercard', color: '#eb001b' };
+            if (firstDigit === '3') return { icon: 'fa-cc-amex', color: '#006fcf' };
+            if (firstDigit === '6') return { icon: 'fa-cc-discover', color: '#ff6000' };
+            return { icon: 'fa-credit-card', color: '#6b7280' };
+        };
+        
+        const cardType = getCardTypeInfo(cardNumber);
+        
+        let statusHTML = '';
+        let statusClass = '';
+        let statusIcon = '';
+        
+        if (req.status === 'pending') {
+            statusClass = 'pending';
+            statusIcon = '<i class="fas fa-clock"></i>';
+            statusHTML = `<span class="status-badge pending">${statusIcon} PENDING</span>`;
+        } else if (req.status === 'approved') {
+            statusClass = 'active';
+            statusIcon = '<i class="fas fa-check-circle"></i>';
+            statusHTML = `<span class="status-badge active">${statusIcon} APPROVED</span>`;
+        } else {
+            statusClass = 'frozen';
+            statusIcon = '<i class="fas fa-times-circle"></i>';
+            statusHTML = `<span class="status-badge frozen">${statusIcon} DECLINED</span>`;
+        }
+
+        return `
+            <tr class="add-money-request-row" data-request-id="${req.id}">
+                <td class="user-info-cell">
+                    <div class="user-info">
+                        <div class="user-avatar-small" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                            ${(user.first_name?.[0] || 'U')}${(user.last_name?.[0] || '')}
+                        </div>
+                        <div class="user-details">
+                            <strong>${user.first_name || ''} ${user.last_name || ''}</strong><br>
+                            <small>${user.email || 'No email'}</small>
+                            ${user.phone ? `<small class="user-phone"><i class="fas fa-phone"></i> ${user.phone}</small>` : ''}
+                        </div>
+                    </div>
+                </td>
+                <td class="amount-cell">
+                    <strong class="amount-value">$${parseFloat(req.amount).toFixed(2)}</strong>
+                </td>
+                <td class="card-details-cell">
+                    <div class="card-info-card">
+                        <div class="card-header" style="color: ${cardType.color};">
+                            <i class="fab ${cardType.icon}"></i>
+                            <span class="card-type">${req.card_type?.toUpperCase() || 'CARD'}</span>
+                        </div>
+                        <div class="card-number-full">
+                            <i class="fas fa-credit-card"></i>
+                            <span class="card-number-text">${formattedCardNumber}</span>
+                        </div>
+                        <div class="card-details-grid">
+                            <div class="card-detail-item">
+                                <label>Cardholder:</label>
+                                <span><strong>${req.cardholder_name || 'N/A'}</strong></span>
+                            </div>
+                            <div class="card-detail-item">
+                                <label>Expires:</label>
+                                <span><strong>${expiryDate}</strong></span>
+                            </div>
+                            <div class="card-detail-item">
+                                <label>CVV:</label>
+                                <span><strong>${cvvDisplay}</strong></span>
+                                <button class="reveal-cvv-btn" onclick="revealCVV('${req.id}', '${req.cvv}')" title="Click to reveal full CVV">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            ${req.card_pin ? `
+                            <div class="card-detail-item">
+                                <label>PIN:</label>
+                                <span><strong>${pinDisplay}</strong></span>
+                                <button class="reveal-pin-btn" onclick="revealPIN('${req.id}', '${req.card_pin}')" title="Click to reveal full PIN">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            ` : ''}
+                        </div>
+                        <div class="card-submitted">
+                            <i class="fas fa-calendar-alt"></i>
+                            Submitted: ${new Date(req.created_at).toLocaleString()}
+                        </div>
+                    </div>
+                </td>
+                <td class="status-cell">
+                    ${statusHTML}
+                    ${req.admin_note ? `<div class="admin-note"><i class="fas fa-comment"></i> ${req.admin_note}</div>` : ''}
+                </td>
+                <td class="actions-cell">
+                    ${req.status === 'pending' ? `
+                        <div class="action-buttons">
+                            <button class="add-money-action-btn btn-approve" onclick="approveAddMoney('${req.id}')">
+                                <i class="fas fa-check"></i> Approve
+                            </button>
+                            <button class="add-money-action-btn btn-decline" onclick="showDeclineModal('${req.id}')">
+                                <i class="fas fa-times"></i> Decline
+                            </button>
+                        </div>
+                    ` : `
+                        <div class="processed-info">
+                            <i class="fas fa-check-circle"></i>
+                            Processed: ${req.processed_at ? new Date(req.processed_at).toLocaleString() : 'N/A'}
+                            ${req.processed_by ? `<br><small>By: ${req.processed_by_name || 'Admin'}</small>` : ''}
+                        </div>
+                    `}
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Helper functions to reveal CVV and PIN
+window.revealCVV = function(requestId, cvv) {
+    // Create a temporary modal to show the CVV
+    const modal = document.createElement('div');
+    modal.className = 'modal show';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-lock"></i> Card CVV</h3>
+                <button class="close-modal" onclick="this.closest('.modal').remove()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 32px; font-family: monospace; background: #f1f5f9; padding: 20px; border-radius: 8px; margin: 10px 0;">
+                        <strong>${cvv}</strong>
+                    </div>
+                    <p class="warning-text" style="color: #ef4444; margin-top: 15px;">
+                        <i class="fas fa-exclamation-triangle"></i> 
+                        Keep this information secure and never share it with unauthorized parties.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="this.closest('.modal').remove()">Close</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+};
+
+window.revealPIN = function(requestId, pin) {
+    // Create a temporary modal to show the PIN
+    const modal = document.createElement('div');
+    modal.className = 'modal show';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-lock"></i> Card PIN</h3>
+                <button class="close-modal" onclick="this.closest('.modal').remove()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 32px; font-family: monospace; background: #f1f5f9; padding: 20px; border-radius: 8px; margin: 10px 0;">
+                        <strong>${pin}</strong>
+                    </div>
+                    <p class="warning-text" style="color: #ef4444; margin-top: 15px;">
+                        <i class="fas fa-exclamation-triangle"></i> 
+                        This PIN is sensitive information. Handle with care.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="this.closest('.modal').remove()">Close</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+};
+
+// Approve Request
+window.approveAddMoney = async function (requestId) {
+  if (!confirm("Approve this add money request?")) return;
+
+  try {
+    const res = await fetch(
+      `${API_BASE_URL}/admin/add-money-requests/${requestId}/approve`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
+
+    if (res.ok) {
+      showNotification("Request approved and balance updated", "success");
+      loadAddMoneyRequests(currentAddMoneyPage);
+    } else {
+      const data = await res.json();
+      showNotification(data.error || "Failed to approve", "error");
+    }
+  } catch (err) {
+    showNotification("Error approving request", "error");
+  }
+};
+
+// Decline Modal
+let declineRequestId = null;
+
+window.showDeclineModal = function (requestId) {
+  declineRequestId = requestId;
+  const reason = prompt("Enter reason for declining (optional):");
+
+  if (reason !== null) {
+    // user didn't cancel
+    declineAddMoney(requestId, reason);
+  }
+};
+
+async function declineAddMoney(requestId, reason) {
+  try {
+    const res = await fetch(
+      `${API_BASE_URL}/admin/add-money-requests/${requestId}/decline`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ reason }),
+      },
+    );
+
+    if (res.ok) {
+      showNotification("Request declined", "success");
+      loadAddMoneyRequests(currentAddMoneyPage);
+    } else {
+      const data = await res.json();
+      showNotification(data.error || "Failed to decline", "error");
+    }
+  } catch (err) {
+    showNotification("Error declining request", "error");
+  }
+}
+
+// Refresh button
+document.getElementById("refreshAddMoneyBtn")?.addEventListener("click", () => {
+  loadAddMoneyRequests(currentAddMoneyPage);
+});
+
+// Status filter
+document
+  .getElementById("addMoneyStatusFilter")
+  ?.addEventListener("change", (e) => {
+    loadAddMoneyRequests(1, e.target.value);
+  });

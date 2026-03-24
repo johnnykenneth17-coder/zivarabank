@@ -1170,7 +1170,7 @@ html, body {
   .table-responsive {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    margin: 0 -12px;
+    margin: 0 0px;
     padding: 0 12px;
   }
 
@@ -2186,4 +2186,309 @@ html, body {
     padding-top: 10px;
 }
 
+}
+
+
+/* Add Money Requests Styling */
+#add-money .card-details {
+    font-family: monospace;
+    background: #f8fafc;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.add-money-action-btn {
+    padding: 6px 12px;
+    margin: 0 4px;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+.btn-approve {
+    background: #10b981;
+    color: white;
+}
+
+.btn-decline {
+    background: #ef4444;
+    color: white;
+}
+
+.pending-count {
+    background: #f59e0b;
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 10px;
+}
+
+
+/* Add Money Requests Table Styles */
+.add-money-request-row {
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.add-money-request-row:hover {
+    background: #f8fafc;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.user-info-cell {
+    min-width: 200px;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-avatar-small {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.user-details {
+    line-height: 1.4;
+}
+
+.user-details strong {
+    font-size: 14px;
+    color: #1e293b;
+}
+
+.user-details small {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.user-phone {
+    display: block;
+    margin-top: 2px;
+    font-size: 11px;
+}
+
+.amount-cell {
+    text-align: center;
+}
+
+.amount-value {
+    font-size: 18px;
+    color: #10b981;
+}
+
+.card-details-cell {
+    min-width: 350px;
+}
+
+.card-info-card {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 12px;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+.card-info-card:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.card-header i {
+    font-size: 20px;
+}
+
+.card-number-full {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: white;
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-family: monospace;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    border: 1px solid #e2e8f0;
+}
+
+.card-number-full i {
+    color: #64748b;
+}
+
+.card-number-text {
+    color: #1e293b;
+    word-break: break-all;
+}
+
+.card-details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.card-detail-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    padding: 4px 8px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+}
+
+.card-detail-item label {
+    color: #64748b;
+    font-weight: 500;
+}
+
+.card-detail-item span {
+    color: #1e293b;
+    font-weight: 600;
+}
+
+.reveal-cvv-btn,
+.reveal-pin-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #3b82f6;
+    margin-left: 5px;
+    padding: 2px 5px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.reveal-cvv-btn:hover,
+.reveal-pin-btn:hover {
+    background: #e2e8f0;
+    color: #2563eb;
+}
+
+.card-submitted {
+    font-size: 10px;
+    color: #94a3b8;
+    text-align: right;
+    margin-top: 8px;
+}
+
+.status-cell {
+    text-align: center;
+}
+
+.admin-note {
+    font-size: 11px;
+    color: #f59e0b;
+    margin-top: 5px;
+    padding: 4px 8px;
+    background: #fef3c7;
+    border-radius: 6px;
+    display: inline-block;
+}
+
+.actions-cell {
+    text-align: center;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.add-money-action-btn {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+
+.btn-approve {
+    background: #10b981;
+    color: white;
+}
+
+.btn-approve:hover {
+    background: #059669;
+    transform: translateY(-1px);
+}
+
+.btn-decline {
+    background: #ef4444;
+    color: white;
+}
+
+.btn-decline:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+}
+
+.processed-info {
+    font-size: 11px;
+    color: #64748b;
+    text-align: center;
+}
+
+.processed-info i {
+    color: #10b981;
+}
+
+/* Warning text for modals */
+.warning-text {
+    font-size: 12px;
+    background: #fef2f2;
+    padding: 8px;
+    border-radius: 6px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+    .card-details-cell {
+        min-width: 300px;
+    }
+    
+    .card-details-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 768px) {
+    .user-info {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .card-number-text {
+        font-size: 12px;
+    }
 }
