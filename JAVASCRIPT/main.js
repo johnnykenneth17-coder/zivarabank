@@ -93,8 +93,8 @@ if (loginForm) {
 }
 
 // Register Form Handler
-const registerForm = document.getElementById("registerForm");
-if (registerForm) {
+//const registerForm = document.getElementById("registerForm");
+/*if (registerForm) {
   // Password strength checker
   const passwordInput = document.getElementById("password");
   const strengthBar = document.querySelector(".strength-bar");
@@ -168,51 +168,9 @@ if (registerForm) {
         '<span>Create Account</span><i class="fas fa-user-plus"></i>';
     }
   });
-}
+}*/
 
-// Password strength checker
-function checkPasswordStrength(password) {
-  let score = 0;
-  const checks = {
-    length: password.length >= 8,
-    uppercase: /[A-Z]/.test(password),
-    lowercase: /[a-z]/.test(password),
-    numbers: /[0-9]/.test(password),
-    special: /[^A-Za-z0-9]/.test(password),
-  };
 
-  score = Object.values(checks).filter(Boolean).length;
-
-  let strength = "weak";
-  if (score >= 4) strength = "strong";
-  else if (score >= 3) strength = "medium";
-
-  return { score, strength, checks };
-}
-
-function updatePasswordStrength({ strength, checks }) {
-  const strengthBar = document.querySelector(".strength-bar");
-  const strengthText = document.querySelector(".strength-text");
-
-  if (strengthBar) {
-    strengthBar.setAttribute("data-strength", strength);
-  }
-
-  if (strengthText) {
-    const texts = {
-      weak: "Weak password",
-      medium: "Medium password",
-      strong: "Strong password",
-    };
-    strengthText.textContent = texts[strength] || "";
-    strengthText.style.color =
-      strength === "weak"
-        ? "#ef4444"
-        : strength === "medium"
-          ? "#f59e0b"
-          : "#10b981";
-  }
-}
 
 // Toggle password visibility
 document.querySelectorAll(".toggle-password").forEach((button) => {
@@ -389,7 +347,8 @@ function initializeFaceVerification() {
   });
 
   // Capture Photo
-  capturePhotoBtn.addEventListener("click", () => {
+  // Capture Photo - Updated with compression
+  capturePhotoBtn.addEventListener("click", async () => {
     if (!currentStream) {
       faceStatus.innerHTML =
         '<i class="fas fa-exclamation-triangle"></i> Please start camera first';
@@ -402,8 +361,24 @@ function initializeFaceVerification() {
     const context = canvas.getContext("2d");
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    capturedImageData = canvas.toDataURL("image/jpeg", 0.9);
-    capturedImage.src = capturedImageData;
+    // Get original capture
+    const originalDataUrl = canvas.toDataURL("image/jpeg", 0.9);
+
+    // Show compression status
+    faceStatus.style.display = "block";
+    faceStatus.className = "face-status info";
+    faceStatus.innerHTML =
+      '<i class="fas fa-spinner fa-spin"></i> Processing image...';
+
+    // Compress the image
+    const compressedDataUrl = await compressImage(
+      originalDataUrl,
+      300,
+      300,
+      0.6,
+    );
+    capturedImageData = compressedDataUrl;
+    capturedImage.src = compressedDataUrl;
 
     // Stop camera
     stopCamera();
@@ -418,13 +393,13 @@ function initializeFaceVerification() {
     uploadPhotoBtn.style.display = "inline-block";
     startCameraBtn.style.display = "none";
 
-    // Validate face (simplified - you can add actual face detection API here)
-    validateFaceImage(capturedImageData);
+    // Validate and compress
+    validateFaceImage(compressedDataUrl);
 
     faceStatus.style.display = "block";
     faceStatus.className = "face-status success";
     faceStatus.innerHTML =
-      '<i class="fas fa-check-circle"></i> Photo captured successfully!';
+      '<i class="fas fa-check-circle"></i> Photo captured and optimized!';
     faceVerifiedCheckbox.checked = true;
   });
 
@@ -445,18 +420,48 @@ function initializeFaceVerification() {
     faceVerifiedCheckbox.checked = false;
   });
 
-  // Upload Photo
+  // Upload Photo - Updated with compression
   uploadPhotoBtn.addEventListener("click", () => {
     photoUpload.click();
   });
 
-  photoUpload.addEventListener("change", (e) => {
+  photoUpload.addEventListener("change", async (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Check file size (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        faceStatus.style.display = "block";
+        faceStatus.className = "face-status error";
+        faceStatus.innerHTML =
+          '<i class="fas fa-exclamation-triangle"></i> File too large. Maximum 2MB.';
+        return;
+      }
+
+      // Check file type
+      if (!file.type.startsWith("image/")) {
+        faceStatus.style.display = "block";
+        faceStatus.className = "face-status error";
+        faceStatus.innerHTML =
+          '<i class="fas fa-exclamation-triangle"></i> Please upload an image file.';
+        return;
+      }
+
+      faceStatus.style.display = "block";
+      faceStatus.className = "face-status info";
+      faceStatus.innerHTML =
+        '<i class="fas fa-spinner fa-spin"></i> Processing image...';
+
       const reader = new FileReader();
-      reader.onload = function (event) {
-        capturedImageData = event.target.result;
-        capturedImage.src = capturedImageData;
+      reader.onload = async function (event) {
+        // Compress the uploaded image
+        const compressed = await compressImage(
+          event.target.result,
+          300,
+          300,
+          0.6,
+        );
+        capturedImageData = compressed;
+        capturedImage.src = compressed;
 
         if (currentStream) {
           stopCamera();
@@ -471,12 +476,12 @@ function initializeFaceVerification() {
         retakePhotoBtn.style.display = "inline-block";
         uploadPhotoBtn.style.display = "inline-block";
 
-        validateFaceImage(capturedImageData);
+        validateFaceImage(compressed);
 
         faceStatus.style.display = "block";
         faceStatus.className = "face-status success";
         faceStatus.innerHTML =
-          '<i class="fas fa-check-circle"></i> Photo uploaded successfully!';
+          '<i class="fas fa-check-circle"></i> Photo uploaded and optimized!';
         faceVerifiedCheckbox.checked = true;
       };
       reader.readAsDataURL(file);
@@ -491,42 +496,91 @@ function stopCamera() {
   }
 }
 
+// Updated face image validation with size check
 function validateFaceImage(imageData) {
-  // This is a placeholder for actual face detection
-  // You can integrate with a face detection API like Face++ or AWS Rekognition
-  // For now, we'll just do basic validation
-
   const img = new Image();
-  img.onload = () => {
-    // Check if image has reasonable dimensions
+  img.onload = async () => {
+    // Check dimensions
     if (img.width < 100 || img.height < 100) {
       const faceStatus = document.getElementById("faceStatus");
       faceStatus.className = "face-status error";
       faceStatus.innerHTML =
         '<i class="fas fa-exclamation-triangle"></i> Image too small. Please use a clearer photo.';
       document.getElementById("faceVerified").checked = false;
-    } else {
-      // In production, you'd send this to your backend for actual face detection
-      console.log(
-        "Face image validated - dimensions:",
-        img.width,
-        "x",
-        img.height,
-      );
+      return false;
     }
+
+    // Check aspect ratio (should be roughly portrait)
+    const aspectRatio = img.width / img.height;
+    if (aspectRatio > 1.5 || aspectRatio < 0.5) {
+      const faceStatus = document.getElementById("faceStatus");
+      faceStatus.className = "face-status warning";
+      faceStatus.innerHTML =
+        '<i class="fas fa-exclamation-triangle"></i> Photo orientation looks off. Please use a front-facing photo.';
+    }
+
+    console.log(
+      "Face image validated - dimensions:",
+      img.width,
+      "x",
+      img.height,
+    );
+
+    // Compress the image
+    const compressed = await compressImage(imageData, 300, 300, 0.6);
+    capturedImageData = compressed;
+
+    // Update preview with compressed version
+    const capturedImage = document.getElementById("capturedImage");
+    if (capturedImage) {
+      capturedImage.src = compressed;
+    }
+
+    const faceStatus = document.getElementById("faceStatus");
+    faceStatus.className = "face-status success";
+    faceStatus.innerHTML =
+      '<i class="fas fa-check-circle"></i> Photo accepted!';
+
+    return true;
   };
   img.src = imageData;
 }
-
+const registerForm = document.getElementById("registerForm");
 // Update the register form submission
 if (registerForm) {
   registerForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
+    const passwordInput = document.getElementById("password");
+    //const strengthBar = document.querySelector(".strength-bar");
+    //const strengthText = document.querySelector(".strength-text");
+
+    if (passwordInput) {
+      passwordInput.addEventListener("input", () => {
+        const strength = checkPasswordStrength(passwordInput.value);
+        updatePasswordStrength(strength);
+      });
+    }
+
+    const registerBtn = document.getElementById("registerBtn");
+    const originalBtnText = registerBtn.innerHTML;
+
     // Validate face verification
     if (!capturedImageData) {
       showNotification(
         "Please complete face verification before registering",
+        "error",
+      );
+      return;
+    }
+
+    // Check image size before sending (should be under 500KB after compression)
+    const imageSize = Math.ceil(capturedImageData.length * 0.75); // Approximate size in bytes
+    console.log("Compressed image size:", Math.round(imageSize / 1024), "KB");
+
+    if (imageSize > 500 * 1024) {
+      showNotification(
+        "Face image is still too large. Please try capturing again with better lighting.",
         "error",
       );
       return;
@@ -544,11 +598,13 @@ if (registerForm) {
     // Validate password strength
     const strength = checkPasswordStrength(password);
     if (strength.score < 2) {
-      showNotification("Please use a stronger password", "error");
+      showNotification(
+        "Please use a stronger password (at least 8 characters with numbers and symbols)",
+        "error",
+      );
       return;
     }
 
-    const registerBtn = document.getElementById("registerBtn");
     registerBtn.disabled = true;
     registerBtn.innerHTML =
       '<i class="fas fa-spinner fa-spin"></i> Creating account...';
@@ -556,22 +612,32 @@ if (registerForm) {
     try {
       // Prepare user data
       const userData = {
-        first_name: document.getElementById("first_name").value,
-        last_name: document.getElementById("last_name").value,
-        email: document.getElementById("email").value,
-        phone: document.getElementById("phone").value,
+        first_name: document.getElementById("first_name").value.trim(),
+        last_name: document.getElementById("last_name").value.trim(),
+        email: document.getElementById("email").value.trim(),
+        phone: document.getElementById("phone").value.trim(),
         country: document.getElementById("country").value,
-        city: document.getElementById("city").value,
-        address: document.getElementById("address").value,
+        city: document.getElementById("city").value.trim(),
+        address: document.getElementById("address").value.trim(),
         security_question_1: document.getElementById("security_question_1")
           .value,
-        security_answer_1: document.getElementById("security_answer_1").value,
+        security_answer_1: document
+          .getElementById("security_answer_1")
+          .value.trim(),
         security_question_2: document.getElementById("security_question_2")
           .value,
-        security_answer_2: document.getElementById("security_answer_2").value,
+        security_answer_2: document
+          .getElementById("security_answer_2")
+          .value.trim(),
         password: password,
-        face_image: capturedImageData, // Base64 encoded image
+        face_image: capturedImageData, // Already compressed
       };
+
+      console.log(
+        "Sending registration with compressed image size:",
+        Math.round(capturedImageData.length / 1024),
+        "KB",
+      );
 
       const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: "POST",
@@ -586,23 +652,189 @@ if (registerForm) {
       if (response.ok) {
         localStorage.setItem("token", data.token);
         localStorage.setItem("userFaceImage", capturedImageData);
-        showNotification("Account created successfully!", "success");
+        localStorage.setItem("userData", JSON.stringify(data.user));
+        showNotification(
+          "Account created successfully! Redirecting...",
+          "success",
+        );
         setTimeout(() => {
           window.location.href = "dashboard.html";
         }, 1500);
       } else {
         showNotification(data.error || "Registration failed", "error");
+        registerBtn.disabled = false;
+        registerBtn.innerHTML = originalBtnText;
       }
     } catch (error) {
       console.error("Registration error:", error);
-      showNotification("Connection error. Please try again.", "error");
-    } finally {
+      if (error.message.includes("413")) {
+        showNotification(
+          "Image too large. Please try capturing with better lighting for a smaller file size.",
+          "error",
+        );
+      } else {
+        showNotification("Connection error. Please try again.", "error");
+      }
       registerBtn.disabled = false;
-      registerBtn.innerHTML =
-        '<span>Create Account</span><i class="fas fa-user-plus"></i>';
+      registerBtn.innerHTML = originalBtnText;
     }
   });
 }
+
+// Password strength checker - Enhanced version
+function checkPasswordStrength(password) {
+    let score = 0;
+    const checks = {
+        length: password.length >= 8,
+        uppercase: /[A-Z]/.test(password),
+        lowercase: /[a-z]/.test(password),
+        numbers: /[0-9]/.test(password),
+        special: /[^A-Za-z0-9]/.test(password)
+    };
+    
+    // Calculate score
+    if (checks.length) score++;
+    if (checks.uppercase) score++;
+    if (checks.lowercase) score++;
+    if (checks.numbers) score++;
+    if (checks.special) score++;
+    
+    let strength = 'weak';
+    let message = '';
+    
+    if (score >= 4) {
+        strength = 'strong';
+        message = 'Strong password';
+    } else if (score >= 3) {
+        strength = 'medium';
+        message = 'Medium password';
+    } else {
+        strength = 'weak';
+        message = 'Weak password';
+    }
+    
+    return { 
+        score, 
+        strength, 
+        message,
+        checks 
+    };
+}
+
+// Update password strength display
+function updatePasswordStrength(strengthData) {
+    const strengthBar = document.querySelector('.strength-bar');
+    const strengthText = document.querySelector('.strength-text');
+    
+    if (strengthBar) {
+        strengthBar.setAttribute('data-strength', strengthData.strength);
+    }
+    
+    if (strengthText) {
+        strengthText.textContent = strengthData.message;
+        strengthText.className = `strength-text ${strengthData.strength}`;
+    }
+    
+    // Update requirements list if it exists
+    updatePasswordRequirements(strengthData.checks);
+}
+
+// Create and update password requirements list
+function updatePasswordRequirements(checks) {
+    // Check if requirements list exists, if not create it
+    let requirementsList = document.querySelector('.password-requirements');
+    const passwordGroup = document.querySelector('#password').closest('.form-group');
+    
+    if (!requirementsList && passwordGroup) {
+        requirementsList = document.createElement('div');
+        requirementsList.className = 'password-requirements';
+        requirementsList.innerHTML = `
+            <ul>
+                <li id="req-length"><i class="fas fa-times-circle"></i> At least 8 characters</li>
+                <li id="req-uppercase"><i class="fas fa-times-circle"></i> At least one uppercase letter</li>
+                <li id="req-lowercase"><i class="fas fa-times-circle"></i> At least one lowercase letter</li>
+                <li id="req-numbers"><i class="fas fa-times-circle"></i> At least one number</li>
+                <li id="req-special"><i class="fas fa-times-circle"></i> At least one special character (!@#$%^&*)</li>
+            </ul>
+        `;
+        passwordGroup.appendChild(requirementsList);
+    }
+    
+    // Update each requirement
+    if (requirementsList) {
+        const reqLength = document.getElementById('req-length');
+        const reqUppercase = document.getElementById('req-uppercase');
+        const reqLowercase = document.getElementById('req-lowercase');
+        const reqNumbers = document.getElementById('req-numbers');
+        const reqSpecial = document.getElementById('req-special');
+        
+        if (reqLength) {
+            reqLength.className = checks.length ? 'valid' : 'invalid';
+            reqLength.innerHTML = checks.length ? 
+                '<i class="fas fa-check-circle"></i> At least 8 characters' : 
+                '<i class="fas fa-times-circle"></i> At least 8 characters';
+        }
+        
+        if (reqUppercase) {
+            reqUppercase.className = checks.uppercase ? 'valid' : 'invalid';
+            reqUppercase.innerHTML = checks.uppercase ? 
+                '<i class="fas fa-check-circle"></i> At least one uppercase letter' : 
+                '<i class="fas fa-times-circle"></i> At least one uppercase letter';
+        }
+        
+        if (reqLowercase) {
+            reqLowercase.className = checks.lowercase ? 'valid' : 'invalid';
+            reqLowercase.innerHTML = checks.lowercase ? 
+                '<i class="fas fa-check-circle"></i> At least one lowercase letter' : 
+                '<i class="fas fa-times-circle"></i> At least one lowercase letter';
+        }
+        
+        if (reqNumbers) {
+            reqNumbers.className = checks.numbers ? 'valid' : 'invalid';
+            reqNumbers.innerHTML = checks.numbers ? 
+                '<i class="fas fa-check-circle"></i> At least one number' : 
+                '<i class="fas fa-times-circle"></i> At least one number';
+        }
+        
+        if (reqSpecial) {
+            reqSpecial.className = checks.special ? 'valid' : 'invalid';
+            reqSpecial.innerHTML = checks.special ? 
+                '<i class="fas fa-check-circle"></i> At least one special character (!@#$%^&*)' : 
+                '<i class="fas fa-times-circle"></i> At least one special character (!@#$%^&*)';
+        }
+    }
+}
+
+// Initialize password strength listener
+function initPasswordStrength() {
+    const passwordInput = document.getElementById('password');
+    if (passwordInput) {
+        passwordInput.addEventListener('input', () => {
+            const strength = checkPasswordStrength(passwordInput.value);
+            updatePasswordStrength(strength);
+        });
+        
+        // Initial check if password already has value
+        if (passwordInput.value) {
+            const strength = checkPasswordStrength(passwordInput.value);
+            updatePasswordStrength(strength);
+        }
+    }
+}
+
+// Call this when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    initPasswordStrength();
+
+        // Also initialize other form elements
+    const passwordInput = document.getElementById('password');
+    if (passwordInput && passwordInput.value === '') {
+        // Show initial requirements
+        const strength = checkPasswordStrength('');
+        updatePasswordStrength(strength);
+    }
+});
+
 
 // Clean up camera when leaving page
 window.addEventListener("beforeunload", () => {
@@ -687,6 +919,46 @@ if (mobileMenuBtn && navLinks) {
       icon.classList.toggle("fa-bars");
       icon.classList.toggle("fa-times");
     }
+  });
+}
+
+// Add this function to main.js - Image compression
+async function compressImage(
+  dataUrl,
+  maxWidth = 300,
+  maxHeight = 300,
+  quality = 0.7,
+) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      // Calculate new dimensions
+      let width = img.width;
+      let height = img.height;
+
+      if (width > maxWidth) {
+        height = (height * maxWidth) / width;
+        width = maxWidth;
+      }
+
+      if (height > maxHeight) {
+        width = (width * maxHeight) / height;
+        height = maxHeight;
+      }
+
+      // Create canvas and compress
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // Compress to JPEG with specified quality
+      const compressedDataUrl = canvas.toDataURL("image/jpeg", quality);
+      resolve(compressedDataUrl);
+    };
+    img.onerror = reject;
+    img.src = dataUrl;
   });
 }
 

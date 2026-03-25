@@ -844,3 +844,141 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+/* Smooth transitions */
+.password-strength .strength-bar::before {
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
+}
+
+.password-requirements li {
+    transition: color 0.2s ease;
+}
+
+.password-requirements li i {
+    transition: all 0.2s ease;
+}
+
+.password-requirements li.valid i {
+    transform: scale(1.1);
+}
+
+/* Password input focus effect */
+#password:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Strength indicator animations */
+@keyframes strengthPulse {
+    0% { opacity: 0.6; }
+    100% { opacity: 1; }
+}
+
+.strength-bar[data-strength]::before {
+    animation: strengthPulse 0.3s ease;
+}
+
+
+
+
+/* Password Strength Styles */
+.password-strength {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.strength-bar {
+    flex: 1;
+    height: 4px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+    transition: all 0.3s;
+}
+
+.strength-bar::before {
+    content: '';
+    display: block;
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.strength-bar[data-strength="weak"]::before {
+    width: 33%;
+    background: #ef4444;
+}
+
+.strength-bar[data-strength="medium"]::before {
+    width: 66%;
+    background: #f59e0b;
+}
+
+.strength-bar[data-strength="strong"]::before {
+    width: 100%;
+    background: #10b981;
+}
+
+.strength-text {
+    font-size: 12px;
+    font-weight: 500;
+    min-width: 80px;
+}
+
+.strength-text.weak {
+    color: #ef4444;
+}
+
+.strength-text.medium {
+    color: #f59e0b;
+}
+
+.strength-text.strong {
+    color: #10b981;
+}
+
+/* Password Requirements List */
+.password-requirements {
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+    font-size: 12px;
+}
+
+.password-requirements ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.password-requirements li {
+    margin: 4px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #64748b;
+}
+
+.password-requirements li i {
+    font-size: 12px;
+    width: 16px;
+}
+
+.password-requirements li.valid {
+    color: #10b981;
+}
+
+.password-requirements li.invalid {
+    color: #ef4444;
+}
+
+.password-requirements li i.fa-check-circle {
+    color: #10b981;
+}
+
+.password-requirements li i.fa-times-circle {
+    color: #ef4444;
+}

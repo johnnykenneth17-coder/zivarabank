@@ -1,106 +1,14 @@
-<div class="live-chat-wrapper">
-
-  <!-- Left / List panel -->
-  <div class="chat-list-panel" id="chatListPanel">
-    <div class="panel-header">
-      <h3>Messages</h3>
+<div class="form-group">
+    <label for="password">Password</label>
+    <div class="input-icon">
+        <i class="fas fa-lock"></i>
+        <input type="password" id="password" name="password" placeholder="Create a strong password" required>
+        <button type="button" class="toggle-password">
+            <i class="fas fa-eye"></i>
+        </button>
     </div>
-    <div id="liveChatUserList" class="user-list-container"></div>
-  </div>
-
-  <!-- Right / Chat panel -->
-  <div class="chat-view-panel" id="chatViewPanel">
-    <div class="chat-header">
-      <button class="back-btn" id="backToListBtn">←</button>
-      <div class="chat-title">
-        <span id="currentChatUserName">Select a conversation</span>
-      </div>
+    <div class="password-strength">
+        <div class="strength-bar"></div>
+        <span class="strength-text"></span>
     </div>
-
-    <div id="adminChatMessages" class="chat-messages"></div>
-
-    <div class="chat-input-area">
-      <input type="text" id="adminChatInput" placeholder="Type a message..." />
-      <button id="adminSendReply">Send</button>
-    </div>
-  </div>
-
 </div>
-
-
-
-
-<style>
-
-  .chat-layout {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-/* ── Default mobile: show only list ──────────────────────────────── */
-.chat-user-list {
-  flex: 1;
-  display: block;
-}
-
-.chat-main {
-  display: none;           /* hidden by default on mobile */
-  flex-direction: column;
-  height: 100%;
-}
-
-/* When a chat is open */
-.chat-main.open {
-  display: flex;
-}
-
-/* Back button visible only when chat is open */
-.back-btn {
-  display: none;
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  padding: 8px 12px;
-}
-
-/* ── Tablet / desktop ── side by side ────────────────────────────── */
-@media (min-width: 850px) {
-  .chat-layout {
-    flex-direction: row;
-  }
-
-  .chat-user-list {
-    width: 340px;
-    border-right: 1px solid #e5e7eb;
-    flex: 0 0 auto;
-  }
-
-  .chat-main {
-    flex: 1;
-    display: flex;          /* always visible */
-  }
-
-  /* Hide back button on wide screens */
-  .back-btn {
-    display: none !important;
-  }
-}
-
-/* ── Very small phones adjustments ───────────────────────────────── */
-@media (max-width: 380px) {
-  .chat-header {
-    padding: 10px 12px;
-  }
-
-  .chat-title {
-    font-size: 1.1rem;
-  }
-
-  .back-btn {
-    font-size: 1.6rem;
-    padding: 6px 10px;
-  }
-}
-</style>

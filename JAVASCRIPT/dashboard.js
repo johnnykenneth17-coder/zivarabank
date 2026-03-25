@@ -25,6 +25,7 @@ if (!token) {
 document.addEventListener("DOMContentLoaded", async () => {
   await loadUserData();
   debounce();
+  //initMobileSidebarBehavior();
   //loadSpendingByCategory();
   initializeEventListeners();
   startRealTimeUpdates();
@@ -1750,6 +1751,8 @@ document.querySelectorAll(".sidebar-nav .nav-item").forEach((item) => {
     }
   });
 });
+
+
 
 // Sidebar toggle
 const sidebar = document.getElementById("sidebar");
