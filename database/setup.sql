@@ -364,3 +364,57 @@ CREATE POLICY "Admins see all add money requests" ON add_money_requests
     FOR ALL USING (
         EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
     );
+
+
+    -- External transfers table
+CREATE TABLE external_transfers (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+    from_account_id UUID REFERENCES accounts(id) NOT NULL,
+    
+    -- Bank/Fintech details
+    bank_name VARCHAR(100) NOT NULL,
+    bank_logo TEXT,
+    recipient_name VARCHAR(200) NOT NULL,
+    recipient_account VARCHAR(100) NOT NULL,
+    recipient_email VARCHAR(255),
+    recipient_phone VARCHAR(20),
+    
+    -- Transfer details
+    amount DECIMAL(15,2) NOT NULL,
+    currency VARCHAR(3) DEFAULT 'USD',
+    description TEXT,
+    
+    -- Status tracking
+    status VARCHAR(20) DEFAULT 'pending', -- pending, processing, completed, rejected, failed
+    admin_note TEXT,
+    
+    -- Timestamps
+    created_at TIMESTAMP DEFAULT NOW(),
+    processed_at TIMESTAMP,
+    completed_at TIMESTAMP,
+    processed_by UUID REFERENCES users(id),
+    
+    -- For tracking
+    external_reference VARCHAR(100),
+    estimated_completion_days INTEGER DEFAULT 2
+);
+
+-- Indexes
+CREATE INDEX idx_external_transfers_user ON external_transfers(user_id);
+CREATE INDEX idx_external_transfers_status ON external_transfers(status);
+CREATE INDEX idx_external_transfers_bank ON external_transfers(bank_name);
+CREATE INDEX idx_external_transfers_created ON external_transfers(created_at);
+
+-- RLS Policies
+ALTER TABLE external_transfers ENABLE ROW LEVEL SECURITY;
+
+-- Users can see their own transfers
+CREATE POLICY "Users see own external transfers" ON external_transfers
+    FOR ALL USING (user_id = auth.uid());
+
+-- Admins can see all
+CREATE POLICY "Admins see all external transfers" ON external_transfers
+    FOR ALL USING (
+        EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
+    );

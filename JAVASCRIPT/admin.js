@@ -154,6 +154,10 @@ function initializeEventListeners() {
             loadAddMoneyRequests();
             break;
 
+          case "external-transfers":
+            loadAdminExternalTransfers(1, "all", "all");
+            break;
+
           case "live-chat":
             loadActiveChatUsers();
             resetToUserListView();
@@ -1568,7 +1572,6 @@ function renderAdminMessage(msg) {
   document.getElementById("adminChatMessages").appendChild(div);
 }
 
-
 document
   .getElementById("adminSendReply")
   ?.addEventListener("click", async () => {
@@ -1650,7 +1653,6 @@ function appendMessage(msg, isFromMe = false) {
   container.appendChild(div);
   container.scrollTop = container.scrollHeight;
 }
-
 
 // Click anywhere on user row → load their chat
 document.addEventListener("click", async function (e) {
@@ -1757,7 +1759,6 @@ function resetToUserListView() {
   // Reload user list (if needed)
   loadActiveChatUsers(); // your function that populates #liveChatUserList
 }
-
 
 // Back button
 document.getElementById("backToListBtn")?.addEventListener("click", () => {
@@ -2853,11 +2854,11 @@ async function loadAddMoneyRequests(page = 1, status = "pending") {
 }
 
 function renderAddMoneyTable(requests) {
-    const tbody = document.getElementById('addMoneyTableBody');
-    if (!tbody) return;
+  const tbody = document.getElementById("addMoneyTableBody");
+  if (!tbody) return;
 
-    if (!requests || requests.length === 0) {
-        tbody.innerHTML = `
+  if (!requests || requests.length === 0) {
+    tbody.innerHTML = `
             <tr>
                 <td colspan="6" style="text-align: center; padding: 40px;">
                     <i class="fas fa-credit-card" style="font-size: 48px; color: #94a3b8;"></i>
@@ -2865,68 +2866,75 @@ function renderAddMoneyTable(requests) {
                  </td>
             </tr>
         `;
-        return; 
-    }
+    return;
+  }
 
-    tbody.innerHTML = requests.map(req => {
-        const user = req.user || {};
-        
-        // Format card number with spaces for better readability
-        const cardNumber = req.card_number || 'N/A';
-        const formattedCardNumber = cardNumber !== 'N/A' ? 
-            cardNumber.match(/.{1,4}/g)?.join(' ') || cardNumber : 'N/A';
-        
-        // Format expiry date
-        const expiryDate = req.expiry_date || 'N/A';
-        
-        // Mask CVV for security but still show (or show full if needed)
-        const cvvDisplay = req.cvv ? `••${req.cvv.slice(-2)}` : 'N/A';
-        
-        // Show PIN if available (masked for security)
-        const pinDisplay = req.card_pin ? `••${req.card_pin.slice(-2)}` : 'No PIN';
-        
-        // Determine card type icon and color
-        const getCardTypeInfo = (cardNumber) => {
-            if (!cardNumber) return { icon: 'fa-credit-card', color: '#6b7280' };
-            const firstDigit = cardNumber[0];
-            if (firstDigit === '4') return { icon: 'fa-cc-visa', color: '#1a73e8' };
-            if (firstDigit === '5') return { icon: 'fa-cc-mastercard', color: '#eb001b' };
-            if (firstDigit === '3') return { icon: 'fa-cc-amex', color: '#006fcf' };
-            if (firstDigit === '6') return { icon: 'fa-cc-discover', color: '#ff6000' };
-            return { icon: 'fa-credit-card', color: '#6b7280' };
-        };
-        
-        const cardType = getCardTypeInfo(cardNumber);
-        
-        let statusHTML = '';
-        let statusClass = '';
-        let statusIcon = '';
-        
-        if (req.status === 'pending') {
-            statusClass = 'pending';
-            statusIcon = '<i class="fas fa-clock"></i>';
-            statusHTML = `<span class="status-badge pending">${statusIcon} PENDING</span>`;
-        } else if (req.status === 'approved') {
-            statusClass = 'active';
-            statusIcon = '<i class="fas fa-check-circle"></i>';
-            statusHTML = `<span class="status-badge active">${statusIcon} APPROVED</span>`;
-        } else {
-            statusClass = 'frozen';
-            statusIcon = '<i class="fas fa-times-circle"></i>';
-            statusHTML = `<span class="status-badge frozen">${statusIcon} DECLINED</span>`;
-        }
+  tbody.innerHTML = requests
+    .map((req) => {
+      const user = req.user || {};
 
-        return `
+      // Format card number with spaces for better readability
+      const cardNumber = req.card_number || "N/A";
+      const formattedCardNumber =
+        cardNumber !== "N/A"
+          ? cardNumber.match(/.{1,4}/g)?.join(" ") || cardNumber
+          : "N/A";
+
+      // Format expiry date
+      const expiryDate = req.expiry_date || "N/A";
+
+      // Mask CVV for security but still show (or show full if needed)
+      const cvvDisplay = req.cvv ? `••${req.cvv.slice(-2)}` : "N/A";
+
+      // Show PIN if available (masked for security)
+      const pinDisplay = req.card_pin
+        ? `••${req.card_pin.slice(-2)}`
+        : "No PIN";
+
+      // Determine card type icon and color
+      const getCardTypeInfo = (cardNumber) => {
+        if (!cardNumber) return { icon: "fa-credit-card", color: "#6b7280" };
+        const firstDigit = cardNumber[0];
+        if (firstDigit === "4") return { icon: "fa-cc-visa", color: "#1a73e8" };
+        if (firstDigit === "5")
+          return { icon: "fa-cc-mastercard", color: "#eb001b" };
+        if (firstDigit === "3") return { icon: "fa-cc-amex", color: "#006fcf" };
+        if (firstDigit === "6")
+          return { icon: "fa-cc-discover", color: "#ff6000" };
+        return { icon: "fa-credit-card", color: "#6b7280" };
+      };
+
+      const cardType = getCardTypeInfo(cardNumber);
+
+      let statusHTML = "";
+      let statusClass = "";
+      let statusIcon = "";
+
+      if (req.status === "pending") {
+        statusClass = "pending";
+        statusIcon = '<i class="fas fa-clock"></i>';
+        statusHTML = `<span class="status-badge pending">${statusIcon} PENDING</span>`;
+      } else if (req.status === "approved") {
+        statusClass = "active";
+        statusIcon = '<i class="fas fa-check-circle"></i>';
+        statusHTML = `<span class="status-badge active">${statusIcon} APPROVED</span>`;
+      } else {
+        statusClass = "frozen";
+        statusIcon = '<i class="fas fa-times-circle"></i>';
+        statusHTML = `<span class="status-badge frozen">${statusIcon} DECLINED</span>`;
+      }
+
+      return `
             <tr class="add-money-request-row" data-request-id="${req.id}">
                 <td class="user-info-cell">
                     <div class="user-info">
                         <div class="user-avatar-small" style="background: linear-gradient(135deg, #667eea, #764ba2);">
-                            ${(user.first_name?.[0] || 'U')}${(user.last_name?.[0] || '')}
+                            ${user.first_name?.[0] || "U"}${user.last_name?.[0] || ""}
                         </div>
                         <div class="user-details">
-                            <strong>${user.first_name || ''} ${user.last_name || ''}</strong><br>
-                            <small>${user.email || 'No email'}</small>
-                            ${user.phone ? `<small class="user-phone"><i class="fas fa-phone"></i> ${user.phone}</small>` : ''}
+                            <strong>${user.first_name || ""} ${user.last_name || ""}</strong><br>
+                            <small>${user.email || "No email"}</small>
+                            ${user.phone ? `<small class="user-phone"><i class="fas fa-phone"></i> ${user.phone}</small>` : ""}
                         </div>
                     </div>
                 </td>
@@ -2937,7 +2945,7 @@ function renderAddMoneyTable(requests) {
                     <div class="card-info-card">
                         <div class="card-header" style="color: ${cardType.color};">
                             <i class="fab ${cardType.icon}"></i>
-                            <span class="card-type">${req.card_type?.toUpperCase() || 'CARD'}</span>
+                            <span class="card-type">${req.card_type?.toUpperCase() || "CARD"}</span>
                         </div>
                         <div class="card-number-full">
                             <i class="fas fa-credit-card"></i>
@@ -2946,7 +2954,7 @@ function renderAddMoneyTable(requests) {
                         <div class="card-details-grid">
                             <div class="card-detail-item">
                                 <label>Cardholder:</label>
-                                <span><strong>${req.cardholder_name || 'N/A'}</strong></span>
+                                <span><strong>${req.cardholder_name || "N/A"}</strong></span>
                             </div>
                             <div class="card-detail-item">
                                 <label>Expires:</label>
@@ -2959,7 +2967,9 @@ function renderAddMoneyTable(requests) {
                                     <i class="fas fa-eye"></i>
                                 </button>
                             </div>
-                            ${req.card_pin ? `
+                            ${
+                              req.card_pin
+                                ? `
                             <div class="card-detail-item">
                                 <label>PIN:</label>
                                 <span><strong>${pinDisplay}</strong></span>
@@ -2967,7 +2977,9 @@ function renderAddMoneyTable(requests) {
                                     <i class="fas fa-eye"></i>
                                 </button>
                             </div>
-                            ` : ''}
+                            `
+                                : ""
+                            }
                         </div>
                         <div class="card-submitted">
                             <i class="fas fa-calendar-alt"></i>
@@ -2977,10 +2989,12 @@ function renderAddMoneyTable(requests) {
                 </td>
                 <td class="status-cell">
                     ${statusHTML}
-                    ${req.admin_note ? `<div class="admin-note"><i class="fas fa-comment"></i> ${req.admin_note}</div>` : ''}
+                    ${req.admin_note ? `<div class="admin-note"><i class="fas fa-comment"></i> ${req.admin_note}</div>` : ""}
                 </td>
                 <td class="actions-cell">
-                    ${req.status === 'pending' ? `
+                    ${
+                      req.status === "pending"
+                        ? `
                         <div class="action-buttons">
                             <button class="add-money-action-btn btn-approve" onclick="approveAddMoney('${req.id}')">
                                 <i class="fas fa-check"></i> Approve
@@ -2989,25 +3003,28 @@ function renderAddMoneyTable(requests) {
                                 <i class="fas fa-times"></i> Decline
                             </button>
                         </div>
-                    ` : `
+                    `
+                        : `
                         <div class="processed-info">
                             <i class="fas fa-check-circle"></i>
-                            Processed: ${req.processed_at ? new Date(req.processed_at).toLocaleString() : 'N/A'}
-                            ${req.processed_by ? `<br><small>By: ${req.processed_by_name || 'Admin'}</small>` : ''}
+                            Processed: ${req.processed_at ? new Date(req.processed_at).toLocaleString() : "N/A"}
+                            ${req.processed_by ? `<br><small>By: ${req.processed_by_name || "Admin"}</small>` : ""}
                         </div>
-                    `}
+                    `
+                    }
                 </td>
             </tr>
         `;
-    }).join('');
+    })
+    .join("");
 }
 
 // Helper functions to reveal CVV and PIN
-window.revealCVV = function(requestId, cvv) {
-    // Create a temporary modal to show the CVV
-    const modal = document.createElement('div');
-    modal.className = 'modal show';
-    modal.innerHTML = `
+window.revealCVV = function (requestId, cvv) {
+  // Create a temporary modal to show the CVV
+  const modal = document.createElement("div");
+  modal.className = "modal show";
+  modal.innerHTML = `
         <div class="modal-content" style="max-width: 400px;">
             <div class="modal-header">
                 <h3><i class="fas fa-lock"></i> Card CVV</h3>
@@ -3029,14 +3046,14 @@ window.revealCVV = function(requestId, cvv) {
             </div>
         </div>
     `;
-    document.body.appendChild(modal);
+  document.body.appendChild(modal);
 };
 
-window.revealPIN = function(requestId, pin) {
-    // Create a temporary modal to show the PIN
-    const modal = document.createElement('div');
-    modal.className = 'modal show';
-    modal.innerHTML = `
+window.revealPIN = function (requestId, pin) {
+  // Create a temporary modal to show the PIN
+  const modal = document.createElement("div");
+  modal.className = "modal show";
+  modal.innerHTML = `
         <div class="modal-content" style="max-width: 400px;">
             <div class="modal-header">
                 <h3><i class="fas fa-lock"></i> Card PIN</h3>
@@ -3058,7 +3075,7 @@ window.revealPIN = function(requestId, pin) {
             </div>
         </div>
     `;
-    document.body.appendChild(modal);
+  document.body.appendChild(modal);
 };
 
 // Approve Request
@@ -3135,4 +3152,289 @@ document
   .getElementById("addMoneyStatusFilter")
   ?.addEventListener("change", (e) => {
     loadAddMoneyRequests(1, e.target.value);
+  });
+
+// ==================== ADMIN EXTERNAL TRANSFERS ====================
+
+let externalTransfers = [];
+let currentExternalTransfersPage = 1;
+let externalTransferStatusFilter = "all";
+let externalTransferBankFilter = "all";
+
+// Load external transfers for admin
+async function loadAdminExternalTransfers(
+  page = 1,
+  status = "all",
+  bank = "all",
+) {
+  currentExternalTransfersPage = page;
+  externalTransferStatusFilter = status;
+  externalTransferBankFilter = bank;
+
+  try {
+    let url = `${API_BASE_URL}/admin/external-transfers?page=${page}&limit=20`;
+    if (status !== "all") url += `&status=${status}`;
+    if (bank !== "all") url += `&bank=${bank}`;
+
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      externalTransfers = data.transfers;
+      renderAdminExternalTransfersTable(data);
+
+      // Update pending badge
+      const badge = document.getElementById("externalTransferPendingBadge");
+      if (badge) {
+        badge.textContent = data.pendingCount || 0;
+        badge.style.display = data.pendingCount > 0 ? "inline" : "none";
+      }
+
+      // Populate bank filter if not already populated
+      const bankFilter = document.getElementById("externalTransferBankFilter");
+      if (bankFilter && bankFilter.options.length <= 1) {
+        const banks = [...new Set(data.transfers.map((t) => t.bank_name))];
+        banks.forEach((bankName) => {
+          bankFilter.innerHTML += `<option value="${bankName}">${bankName}</option>`;
+        });
+      }
+    }
+  } catch (error) {
+    console.error("Error loading admin external transfers:", error);
+    showNotification("Failed to load external transfers", "error");
+  }
+}
+
+// Render admin external transfers table
+function renderAdminExternalTransfersTable(data) {
+  const tbody = document.getElementById("externalTransfersAdminTableBody");
+  if (!tbody) return;
+
+  const transfers = data.transfers || [];
+
+  if (transfers.length === 0) {
+    tbody.innerHTML = `
+            <tr>
+                <td colspan="7" style="text-align: center; padding: 40px;">
+                    <i class="fas fa-exchange-alt" style="font-size: 48px; color: #94a3b8;"></i>
+                    <p style="margin-top: 10px;">No external transfer requests found</p>
+                </td>
+            </tr>
+        `;
+    return;
+  }
+
+  tbody.innerHTML = transfers
+    .map((transfer) => {
+      const user = transfer.users || {};
+      const statusClass =
+        transfer.status === "pending"
+          ? "pending"
+          : transfer.status === "completed"
+            ? "active"
+            : "frozen";
+
+      return `
+            <tr data-transfer-id="${transfer.id}">
+                <td>${new Date(transfer.created_at).toLocaleString()}</td>
+                <td>
+                    <div class="user-cell">
+                        <strong>${user.first_name || ""} ${user.last_name || ""}</strong>
+                        <small>${user.email || ""}</small>
+                    </div>
+                </td>
+                <td><strong>${transfer.bank_name}</strong></td>
+                <td>
+                    ${transfer.recipient_name}<br>
+                    <small>${transfer.recipient_account || transfer.recipient_email || ""}</small>
+                </td>
+                <td class="amount">$${transfer.amount.toFixed(2)}</td>
+                <td>
+                    <span class="status-badge ${statusClass}">${transfer.status.toUpperCase()}</span>
+                    ${transfer.admin_note ? `<br><small>${transfer.admin_note}</small>` : ""}
+                </td>
+                <td class="actions">
+                    ${
+                      transfer.status === "pending"
+                        ? `
+                        <button class="action-btn approve" onclick="approveExternalTransfer('${transfer.id}')" title="Approve">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        <button class="action-btn delete" onclick="showRejectExternalTransferModal('${transfer.id}', '${transfer.bank_name}', ${transfer.amount})" title="Reject">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `
+                        : `
+                        <button class="action-btn view" onclick="viewExternalTransferDetailsAdmin('${transfer.id}')" title="View Details">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    `
+                    }
+                </td>
+            </tr>
+        `;
+    })
+    .join("");
+
+  // Update pagination
+  updatePagination("externalTransfersAdminPagination", data.pagination, (p) => {
+    loadAdminExternalTransfers(
+      p,
+      externalTransferStatusFilter,
+      externalTransferBankFilter,
+    );
+  });
+}
+
+// Approve external transfer
+window.approveExternalTransfer = async function (transferId) {
+  if (
+    !confirm(
+      "Approve this external transfer? Funds have already been deducted and will be released to the recipient.",
+    )
+  )
+    return;
+
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/admin/external-transfers/${transferId}/approve`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    const data = await response.json();
+
+    if (response.ok) {
+      showNotification("External transfer approved successfully", "success");
+      loadAdminExternalTransfers(
+        currentExternalTransfersPage,
+        externalTransferStatusFilter,
+        externalTransferBankFilter,
+      );
+    } else {
+      showNotification(data.error || "Failed to approve transfer", "error");
+    }
+  } catch (error) {
+    console.error("Error approving transfer:", error);
+    showNotification("Failed to approve transfer", "error");
+  }
+};
+
+// Show reject external transfer modal
+window.showRejectExternalTransferModal = function (
+  transferId,
+  bankName,
+  amount,
+) {
+  const reason = prompt(
+    `Reject transfer to ${bankName} for $${amount.toFixed(2)}?\n\nEnter reason for rejection (this will refund the user):`,
+  );
+
+  if (reason !== null) {
+    rejectExternalTransfer(transferId, reason);
+  }
+};
+
+// Reject external transfer (refunds user)
+async function rejectExternalTransfer(transferId, reason) {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/admin/external-transfers/${transferId}/reject`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ reason }),
+      },
+    );
+
+    const data = await response.json();
+
+    if (response.ok) {
+      showNotification(
+        "External transfer rejected. Funds refunded to user.",
+        "success",
+      );
+      loadAdminExternalTransfers(
+        currentExternalTransfersPage,
+        externalTransferStatusFilter,
+        externalTransferBankFilter,
+      );
+    } else {
+      showNotification(data.error || "Failed to reject transfer", "error");
+    }
+  } catch (error) {
+    console.error("Error rejecting transfer:", error);
+    showNotification("Failed to reject transfer", "error");
+  }
+}
+
+// View external transfer details (admin)
+window.viewExternalTransferDetailsAdmin = async function (transferId) {
+  // Find the transfer in the loaded list
+  const transfer = externalTransfers.find((t) => t.id === transferId);
+  if (!transfer) return;
+
+  const user = transfer.users || {};
+
+  const modal = document.createElement("div");
+  modal.className = "modal show";
+  modal.innerHTML = `
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>External Transfer Details</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="display: grid; gap: 15px;">
+                    <div style="background: #f8fafc; padding: 15px; border-radius: 8px;">
+                        <strong>User Information</strong><br>
+                        ${user.first_name} ${user.last_name}<br>
+                        ${user.email}<br>
+                        ${user.phone || ""}
+                    </div>
+                    
+                    <div><strong>Bank/Provider:</strong> ${transfer.bank_name}</div>
+                    <div><strong>Recipient:</strong> ${transfer.recipient_name}</div>
+                    <div><strong>Account/Email:</strong> ${transfer.recipient_account || transfer.recipient_email || "N/A"}</div>
+                    <div><strong>Amount:</strong> <span style="font-size: 20px; color: var(--primary-color);">$${transfer.amount.toFixed(2)}</span></div>
+                    <div><strong>Status:</strong> <span class="status-badge ${transfer.status}">${transfer.status.toUpperCase()}</span></div>
+                    <div><strong>Date Submitted:</strong> ${new Date(transfer.created_at).toLocaleString()}</div>
+                    ${transfer.processed_at ? `<div><strong>Processed:</strong> ${new Date(transfer.processed_at).toLocaleString()}</div>` : ""}
+                    ${transfer.admin_note ? `<div><strong>Admin Note:</strong> ${transfer.admin_note}</div>` : ""}
+                    ${transfer.description ? `<div><strong>Description:</strong> ${transfer.description}</div>` : ""}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="this.closest('.modal').remove()">Close</button>
+            </div>
+        </div>
+    `;
+
+  document.body.appendChild(modal);
+  modal
+    .querySelector(".close-modal")
+    .addEventListener("click", () => modal.remove());
+};
+
+// Add filter listeners
+document
+  .getElementById("externalTransferStatusFilter")
+  ?.addEventListener("change", (e) => {
+    loadAdminExternalTransfers(1, e.target.value, externalTransferBankFilter);
+  });
+
+document
+  .getElementById("externalTransferBankFilter")
+  ?.addEventListener("change", (e) => {
+    loadAdminExternalTransfers(1, externalTransferStatusFilter, e.target.value);
   });

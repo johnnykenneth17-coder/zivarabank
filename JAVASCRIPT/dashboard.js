@@ -153,61 +153,60 @@ if (!document.getElementById("notification-animations")) {
 
 // Load user data - Updated to handle face image
 async function loadUserData() {
-    try {
-        // Load user profile
-        const profileResponse = await fetch(`${API_BASE_URL}/user/profile`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+  try {
+    // Load user profile
+    const profileResponse = await fetch(`${API_BASE_URL}/user/profile`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-        if (!profileResponse.ok) {
-            throw new Error("Failed to load profile");
-        }
-
-        currentUser = await profileResponse.json();
-        //console.log('Loaded user data:', currentUser);
-        console.log('Face image exists:', currentUser.face_image ? 'Yes' : 'No');
-        
-        // Also check localStorage for backup
-        const storedFaceImage = localStorage.getItem('userFaceImage');
-        if (storedFaceImage && !currentUser.face_image) {
-            console.log('Using stored face image from localStorage');
-            currentUser.face_image = storedFaceImage;
-        }
-        
-        updateUserInterface();
-        
-        // Check if account is frozen
-        if (currentUser.is_frozen) {
-            showFreezeNotification(currentUser.freeze_reason);
-        }
-
-        // Load accounts
-        await loadAccounts();
-
-        // Load transactions
-        await loadTransactions();
-
-        // Load cards
-        await loadCards();
-
-        // Load notifications
-        await loadNotifications();
-
-        // Initialize charts
-        await loadSpendingByCategory();
-        
-    } catch (error) {
-        console.error("Error loading user data:", error);
-        showNotification("Failed to load user data", "error");
-
-        // Check if token expired
-        if (error.message.includes("401")) {
-            localStorage.removeItem("token");
-            window.location.href = "login.html";
-        }
+    if (!profileResponse.ok) {
+      throw new Error("Failed to load profile");
     }
+
+    currentUser = await profileResponse.json();
+    //console.log('Loaded user data:', currentUser);
+    console.log("Face image exists:", currentUser.face_image ? "Yes" : "No");
+
+    // Also check localStorage for backup
+    const storedFaceImage = localStorage.getItem("userFaceImage");
+    if (storedFaceImage && !currentUser.face_image) {
+      console.log("Using stored face image from localStorage");
+      currentUser.face_image = storedFaceImage;
+    }
+
+    updateUserInterface();
+
+    // Check if account is frozen
+    if (currentUser.is_frozen) {
+      showFreezeNotification(currentUser.freeze_reason);
+    }
+
+    // Load accounts
+    await loadAccounts();
+
+    // Load transactions
+    await loadTransactions();
+
+    // Load cards
+    await loadCards();
+
+    // Load notifications
+    await loadNotifications();
+
+    // Initialize charts
+    await loadSpendingByCategory();
+  } catch (error) {
+    console.error("Error loading user data:", error);
+    showNotification("Failed to load user data", "error");
+
+    // Check if token expired
+    if (error.message.includes("401")) {
+      localStorage.removeItem("token");
+      window.location.href = "login.html";
+    }
+  }
 }
 
 // Update user interface with profile data
@@ -266,73 +265,81 @@ async function loadUserData() {
 
 // Update user interface with profile data - Enhanced for face images
 function updateUserInterface() {
-    if (!currentUser) return;
+  if (!currentUser) return;
 
-    console.log('Updating UI with user:', currentUser.first_name, currentUser.last_name);
-    console.log('Face image available:', currentUser.face_image ? 'Yes' : 'No');
+  console.log(
+    "Updating UI with user:",
+    currentUser.first_name,
+    currentUser.last_name,
+  );
+  console.log("Face image available:", currentUser.face_image ? "Yes" : "No");
 
-    // Update user info text
-    document.getElementById("userName").textContent = 
-        `${currentUser.first_name} ${currentUser.last_name}`;
-    document.getElementById("userEmail").textContent = currentUser.email;
-    document.getElementById("welcomeName").textContent = currentUser.first_name;
+  // Update user info text
+  document.getElementById("userName").textContent =
+    `${currentUser.first_name} ${currentUser.last_name}`;
+  document.getElementById("userEmail").textContent = currentUser.email;
+  document.getElementById("welcomeName").textContent = currentUser.first_name;
 
-    // Update avatar - prioritize face image
-    const userAvatar = document.getElementById("userAvatar");
-    const userAvatarSpan = document.getElementById("userInitials");
-    const userMenuAvatar = document.getElementById("userMenuAvatar");
-    
-    const initials = currentUser.first_name[0] + currentUser.last_name[0];
-    
-    // Check for face image in currentUser
-    if (currentUser.face_image && currentUser.face_image.startsWith('data:image')) {
-        console.log('Setting face image in avatar');
-        
-        // Update the user avatar div
-        if (userAvatar) {
-            userAvatar.style.backgroundImage = `url(${currentUser.face_image})`;
-            userAvatar.style.backgroundSize = "cover";
-            userAvatar.style.backgroundPosition = "center";
-            userAvatar.style.backgroundColor = "transparent";
-            if (userAvatarSpan) {
-                userAvatarSpan.style.display = "none";
-            }
-        }
-        
-        // Update the user menu avatar image
-        if (userMenuAvatar) {
-            userMenuAvatar.src = currentUser.face_image;
-            userMenuAvatar.style.objectFit = "cover";
-            userMenuAvatar.style.display = "block";
-        }
-    } else {
-        console.log('Using fallback initials avatar');
-        
-        // Use initials as fallback
-        if (userAvatar) {
-            userAvatar.style.backgroundImage = "none";
-            userAvatar.style.backgroundColor = "var(--primary-color)";
-            if (userAvatarSpan) {
-                userAvatarSpan.textContent = initials;
-                userAvatarSpan.style.display = "flex";
-            }
-        }
-        
-        if (userMenuAvatar) {
-            userMenuAvatar.src = `https://ui-avatars.com/api/?name=${initials}&background=2563eb&color=fff`;
-        }
+  // Update avatar - prioritize face image
+  const userAvatar = document.getElementById("userAvatar");
+  const userAvatarSpan = document.getElementById("userInitials");
+  const userMenuAvatar = document.getElementById("userMenuAvatar");
+
+  const initials = currentUser.first_name[0] + currentUser.last_name[0];
+
+  // Check for face image in currentUser
+  if (
+    currentUser.face_image &&
+    currentUser.face_image.startsWith("data:image")
+  ) {
+    console.log("Setting face image in avatar");
+
+    // Update the user avatar div
+    if (userAvatar) {
+      userAvatar.style.backgroundImage = `url(${currentUser.face_image})`;
+      userAvatar.style.backgroundSize = "cover";
+      userAvatar.style.backgroundPosition = "center";
+      userAvatar.style.backgroundColor = "transparent";
+      if (userAvatarSpan) {
+        userAvatarSpan.style.display = "none";
+      }
     }
+
+    // Update the user menu avatar image
+    if (userMenuAvatar) {
+      userMenuAvatar.src = currentUser.face_image;
+      userMenuAvatar.style.objectFit = "cover";
+      userMenuAvatar.style.display = "block";
+    }
+  } else {
+    console.log("Using fallback initials avatar");
+
+    // Use initials as fallback
+    if (userAvatar) {
+      userAvatar.style.backgroundImage = "none";
+      userAvatar.style.backgroundColor = "var(--primary-color)";
+      if (userAvatarSpan) {
+        userAvatarSpan.textContent = initials;
+        userAvatarSpan.style.display = "flex";
+      }
+    }
+
+    if (userMenuAvatar) {
+      userMenuAvatar.src = `https://ui-avatars.com/api/?name=${initials}&background=2563eb&color=fff`;
+    }
+  }
 }
 
 // Add this function to test face image display
 function testFaceImageDisplay() {
-    const testImage = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwAA8A/9k=";
-    const userAvatar = document.getElementById("userAvatar");
-    if (userAvatar) {
-        userAvatar.style.backgroundImage = `url(${testImage})`;
-        userAvatar.style.backgroundSize = "cover";
-        console.log('Test image applied');
-    }
+  const testImage =
+    "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwAA8A/9k=";
+  const userAvatar = document.getElementById("userAvatar");
+  if (userAvatar) {
+    userAvatar.style.backgroundImage = `url(${testImage})`;
+    userAvatar.style.backgroundSize = "cover";
+    console.log("Test image applied");
+  }
 }
 
 // Call test function to verify the avatar can display images
@@ -866,7 +873,7 @@ function showFreezeNotification(reason) {
 }
 
 // Transfer form handler
-const transferForm = document.getElementById("transferForm");
+/*const transferForm = document.getElementById("transferForm");
 if (transferForm) {
   transferForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -911,6 +918,135 @@ if (transferForm) {
     } catch (error) {
       console.error("Transfer error:", error);
       showNotification("Transfer failed", "error");
+    } finally {
+      transferBtn.disabled = false;
+      transferBtn.innerHTML =
+        '<span>Continue Transfer</span><i class="fas fa-arrow-right"></i>';
+    }
+  });
+}*/
+
+// Transfer form handler - COMPLETE VERSION WITH SELF-TRANSFER CHECK
+const transferForm = document.getElementById("transferForm");
+if (transferForm) {
+  transferForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const fromAccountId = document.getElementById("fromAccount").value;
+    const toAccountNumberRaw = document.getElementById("toAccount").value;
+    const amount = parseFloat(document.getElementById("amount").value);
+    const description = document.getElementById("description").value;
+
+    // Clean the account number (remove spaces)
+    const toAccountNumber = toAccountNumberRaw.replace(/\s/g, "");
+
+    // ========== FRONTEND SELF-TRANSFER PREVENTION ==========
+    // Get the selected source account details
+    const selectedSourceAccount = accounts.find(
+      (acc) => acc.id === fromAccountId,
+    );
+
+    // Check if trying to send to own account
+    if (
+      selectedSourceAccount &&
+      selectedSourceAccount.account_number === toAccountNumber
+    ) {
+      showNotification(
+        "You cannot transfer money to your own account",
+        "error",
+      );
+      return;
+    }
+
+    // Also check using the stored primary account number
+    const primaryAccountNumberEl = document.getElementById(
+      "primaryAccountNumber",
+    );
+    if (primaryAccountNumberEl) {
+      const primaryAccountNumber =
+        primaryAccountNumberEl.textContent.match(/\d+/)?.[0];
+      if (primaryAccountNumber === toAccountNumber) {
+        showNotification(
+          "Cannot transfer money to yourself. Please enter a different account number.",
+          "error",
+        );
+        return;
+      }
+    }
+    // ======================================================
+
+    // Validate amount
+    if (isNaN(amount) || amount <= 0) {
+      showNotification("Please enter a valid amount", "error");
+      return;
+    }
+
+    // Validate recipient was verified
+    const recipientFeedback = document.getElementById("recipientFeedback");
+    if (!recipientFeedback || recipientFeedback.classList.contains("error")) {
+      showNotification(
+        "Please enter a valid recipient account number",
+        "error",
+      );
+      return;
+    }
+
+    const transferData = {
+      from_account_id: fromAccountId,
+      to_account_number: toAccountNumber,
+      amount: amount,
+      description: description,
+    };
+
+    const transferBtn = document.getElementById("transferBtn");
+    transferBtn.disabled = true;
+    transferBtn.innerHTML =
+      '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/user/transfer`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(transferData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        if (data.requires_otp) {
+          // Show OTP modal
+          showOTPModal(data.transaction_id, "transfer");
+        } else {
+          showNotification("Transfer completed successfully", "success");
+          transferForm.reset();
+          // Clear recipient feedback
+          if (recipientFeedback) {
+            recipientFeedback.textContent = "";
+            recipientFeedback.className = "input-feedback";
+          }
+          // Reset the toAccount input dataset
+          const toAccountInput = document.getElementById("toAccount");
+          if (toAccountInput) {
+            delete toAccountInput.dataset.validRecipient;
+            delete toAccountInput.dataset.recipientName;
+            delete toAccountInput.dataset.accountId;
+          }
+          await loadAccounts();
+          await loadTransactions();
+          // Refresh the full transactions page if it's visible
+          if (currentPage === "transactions") {
+            await loadFullTransactions(1);
+          }
+        }
+      } else {
+        showNotification(data.error || "Transfer failed", "error");
+      }
+    } catch (error) {
+      console.error("Transfer error:", error);
+      showNotification("Transfer failed. Please try again.", "error");
     } finally {
       transferBtn.disabled = false;
       transferBtn.innerHTML =
@@ -981,6 +1117,384 @@ if (toAccountInput && feedbackEl) {
     lookupRecipient(e.target.value.trim());
   });
 }
+
+// ==================== EXTERNAL TRANSFER FUNCTIONS ====================
+
+let externalProviders = [];
+let selectedProvider = null;
+
+// Load external transfer history
+async function loadExternalTransfers(page = 1, status = "all") {
+  try {
+    let url = `${API_BASE_URL}/user/external-transfers?page=${page}`;
+    if (status !== "all") {
+      url += `&status=${status}`;
+    }
+
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      renderExternalTransfersTable(data.transfers);
+      updatePagination("externalTransfersPagination", data.pagination, (p) =>
+        loadExternalTransfers(p, status),
+      );
+    }
+  } catch (error) {
+    console.error("Error loading external transfers:", error);
+  }
+}
+
+// Render external transfers table
+function renderExternalTransfersTable(transfers) {
+  const tbody = document.getElementById("externalTransfersTableBody");
+  if (!tbody) return;
+
+  if (!transfers || transfers.length === 0) {
+    tbody.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 40px;">
+                    <i class="fas fa-exchange-alt" style="font-size: 48px; color: #94a3b8;"></i>
+                    <p style="margin-top: 10px;">No external transfers found</p>
+                </td>
+            </tr>
+        `;
+    return;
+  }
+
+  tbody.innerHTML = transfers
+    .map((transfer) => {
+      let statusClass = "";
+      let statusText = "";
+
+      switch (transfer.status) {
+        case "pending":
+          statusClass = "status-pending";
+          statusText = "Pending Approval";
+          break;
+        case "completed":
+          statusClass = "status-completed";
+          statusText = "Completed";
+          break;
+        case "rejected":
+          statusClass = "status-rejected";
+          statusText = "Rejected";
+          break;
+        default:
+          statusClass = "status-pending";
+          statusText = transfer.status;
+      }
+
+      return `
+            <tr>
+                <td>${new Date(transfer.created_at).toLocaleDateString()}</td>
+                <td><strong>${transfer.bank_name}</strong></td>
+                <td>${transfer.recipient_name}<br><small>${transfer.recipient_account || transfer.recipient_email || ""}</small></td>
+                <td class="amount">$${transfer.amount.toFixed(2)}</td>
+                <td><span class="external-transfer-status ${statusClass}">${statusText}</span></td>
+                <td>
+                    <button class="action-btn view" onclick="viewExternalTransferDetails('${transfer.id}')">
+                        <i class="fas fa-info-circle"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    })
+    .join("");
+}
+
+// View external transfer details
+window.viewExternalTransferDetails = async function (transferId) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/user/external-transfers`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    // Since we don't have a single transfer endpoint, we'll show a modal with info
+    showExternalTransferInfoModal(transferId);
+  } catch (error) {
+    console.error("Error fetching transfer details:", error);
+  }
+};
+
+function showExternalTransferInfoModal(transferId) {
+  // Fetch the specific transfer from the list
+  fetch(`${API_BASE_URL}/user/external-transfers`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      const transfer = data.transfers.find((t) => t.id === transferId);
+      if (!transfer) return;
+
+      const modal = document.createElement("div");
+      modal.className = "modal show";
+      modal.innerHTML = `
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h3>External Transfer Details</h3>
+                    <button class="close-modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div style="margin-bottom: 15px;">
+                        <strong>Bank/Provider:</strong> ${transfer.bank_name}
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <strong>Recipient:</strong> ${transfer.recipient_name}<br>
+                        <small>${transfer.recipient_account || transfer.recipient_email || "N/A"}</small>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <strong>Amount:</strong> <span style="font-size: 20px; color: var(--primary-color);">$${transfer.amount.toFixed(2)}</span>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <strong>Status:</strong> <span class="external-transfer-status status-${transfer.status}">${transfer.status.toUpperCase()}</span>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <strong>Date:</strong> ${new Date(transfer.created_at).toLocaleString()}
+                    </div>
+                    ${
+                      transfer.admin_note
+                        ? `
+                        <div style="margin-bottom: 15px;">
+                            <strong>Admin Note:</strong> ${transfer.admin_note}
+                        </div>
+                    `
+                        : ""
+                    }
+                    ${
+                      transfer.status === "pending"
+                        ? `
+                        <div class="warning-box" style="background: #fef3c7; padding: 12px; border-radius: 8px;">
+                            <i class="fas fa-clock"></i>
+                            This transfer is pending admin approval. Funds have been deducted and will be processed once approved.
+                        </div>
+                    `
+                        : transfer.status === "rejected"
+                          ? `
+                        <div class="warning-box" style="background: #fee2e2; padding: 12px; border-radius: 8px;">
+                            <i class="fas fa-exclamation-circle"></i>
+                            This transfer was rejected. Funds have been refunded to your account.
+                        </div>
+                    `
+                          : `
+                        <div class="warning-box" style="background: #d1fae5; padding: 12px; border-radius: 8px;">
+                            <i class="fas fa-check-circle"></i>
+                            Transfer completed. Funds should arrive within 2-3 business days.
+                        </div>
+                    `
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline" onclick="this.closest('.modal').remove()">Close</button>
+                </div>
+            </div>
+        `;
+
+      document.body.appendChild(modal);
+      modal
+        .querySelector(".close-modal")
+        .addEventListener("click", () => modal.remove());
+    });
+}
+
+// Load providers for external transfer
+async function loadExternalProviders() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/external/providers`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (response.ok) {
+      externalProviders = await response.json();
+      renderProvidersGrid();
+    }
+  } catch (error) {
+    console.error("Error loading providers:", error);
+  }
+}
+
+// Render providers grid
+function renderProvidersGrid() {
+  const grid = document.getElementById("providersGrid");
+  if (!grid) return;
+
+  grid.innerHTML = externalProviders
+    .map(
+      (provider) => `
+        <div class="provider-card" data-provider='${JSON.stringify(provider)}' onclick="selectProvider(this, '${provider.id}')"> 
+           <div class="provider-logo">
+            <img src="${provider.logo}" 
+            alt="${provider.name}"
+            onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22 viewBox=%220 0 24 24%22 fill=%22%234f46e5%22%3E%3Ctext x=%2250%25%22 y=%2250%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-size=%2212%22 fill=%22white%22%3E${provider.name[0]}%3C/text%3E%3C/svg%3E'">
+        </div>
+            <div class="provider-name">${provider.name}</div>
+        </div>
+    `,
+    )
+    .join("");
+}
+
+// Select provider
+window.selectProvider = function (element, providerId) {
+  // Remove selected class from all
+  document.querySelectorAll(".provider-card").forEach((card) => {
+    card.classList.remove("selected");
+  });
+  element.classList.add("selected");
+
+  const provider = externalProviders.find((p) => p.id === providerId);
+  if (provider) {
+    selectedProvider = provider;
+    showProviderDetailsForm(provider);
+  }
+};
+
+// Show provider details form
+function showProviderDetailsForm(provider) {
+  document.getElementById("stepProviderSelection").style.display = "none";
+  document.getElementById("stepProviderDetails").style.display = "block";
+  document.getElementById("selectedProviderName").textContent = provider.name;
+  document.getElementById("externalProviderId").value = provider.id;
+  document.getElementById("externalProviderName").value = provider.name;
+
+  // Generate dynamic fields based on provider
+  const dynamicFields = document.getElementById("dynamicFields");
+  dynamicFields.innerHTML = "";
+
+  provider.fields.forEach((field) => {
+    const fieldHtml = `
+            <div class="form-group">
+                <label>${field.label} ${field.required ? "*" : ""}</label>
+                <input type="${field.type}" id="ext_${field.name}" class="form-control" ${field.required ? "required" : ""}>
+            </div>
+        `;
+    dynamicFields.insertAdjacentHTML("beforeend", fieldHtml);
+  });
+
+  // Populate accounts dropdown
+  const accountSelect = document.getElementById("externalFromAccount");
+  accountSelect.innerHTML = '<option value="">Select account</option>';
+  accounts.forEach((account) => {
+    accountSelect.innerHTML += `
+            <option value="${account.id}">${account.account_type} (${account.account_number}) - $${account.available_balance.toFixed(2)}</option>
+        `;
+  });
+}
+
+// Back to providers
+document.getElementById("backToProvidersBtn")?.addEventListener("click", () => {
+  document.getElementById("stepProviderSelection").style.display = "block";
+  document.getElementById("stepProviderDetails").style.display = "none";
+  selectedProvider = null;
+});
+
+// Submit external transfer
+document
+  .getElementById("externalTransferForm")
+  ?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const fromAccountId = document.getElementById("externalFromAccount").value;
+    const amount = parseFloat(document.getElementById("externalAmount").value);
+    const description = document.getElementById("externalDescription").value;
+    const providerId = document.getElementById("externalProviderId").value;
+    const providerName = document.getElementById("externalProviderName").value;
+
+    // Collect dynamic fields
+    const dynamicData = {};
+    if (selectedProvider) {
+      selectedProvider.fields.forEach((field) => {
+        const input = document.getElementById(`ext_${field.name}`);
+        if (input) {
+          dynamicData[field.name] = input.value;
+        }
+      });
+    }
+
+    // Validate amount
+    if (isNaN(amount) || amount < 10 || amount > 10000) {
+      showNotification("Amount must be between $10 and $10,000", "error");
+      return;
+    }
+
+    // Validate required fields
+    const missingFields = selectedProvider.fields.filter(
+      (f) => f.required && !dynamicData[f.name],
+    );
+    if (missingFields.length > 0) {
+      showNotification(
+        `Please fill in: ${missingFields.map((f) => f.label).join(", ")}`,
+        "error",
+      );
+      return;
+    }
+
+    const submitBtn = document.getElementById("submitExternalTransfer");
+    submitBtn.disabled = true;
+    submitBtn.innerHTML =
+      '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+    try {
+      const transferData = {
+        from_account_id: fromAccountId,
+        provider_id: providerId,
+        bank_name: providerName,
+        recipient_name:
+          dynamicData.recipient_name || dynamicData.recipient_email || "N/A",
+        recipient_account: dynamicData.recipient_account || null,
+        recipient_email: dynamicData.recipient_email || null,
+        recipient_phone: dynamicData.recipient_phone || null,
+        amount: amount,
+        description: description,
+      };
+
+      const response = await fetch(`${API_BASE_URL}/user/external-transfer`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(transferData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        showNotification(data.message, "success");
+        // Close modal
+        document
+          .getElementById("externalTransferModal")
+          .classList.remove("show");
+        // Reset form
+        document.getElementById("externalTransferForm").reset();
+        document.getElementById("stepProviderSelection").style.display =
+          "block";
+        document.getElementById("stepProviderDetails").style.display = "none";
+        // Refresh accounts and transfers
+        await loadAccounts();
+        await loadExternalTransfers(1, "all");
+      } else {
+        showNotification(data.error || "Transfer failed", "error");
+      }
+    } catch (error) {
+      console.error("External transfer error:", error);
+      showNotification("Transfer failed. Please try again.", "error");
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML =
+        '<i class="fas fa-paper-plane"></i> Initiate Transfer';
+    }
+  });
+
+// Open external transfer modal
+document
+  .getElementById("newExternalTransferBtn")
+  ?.addEventListener("click", async () => {
+    await loadExternalProviders();
+    document.getElementById("externalTransferModal").classList.add("show");
+  });
 
 // OTP Modal
 function showOTPModal(transactionId, type) {
@@ -1709,6 +2223,10 @@ document.querySelectorAll(".sidebar-nav .nav-item").forEach((item) => {
           //await loadAccountsForTransfer(); // refresh from/to selects
           break;
 
+        case "external-transfers":
+          loadExternalTransfers(1, "all");
+          break;
+
         case "transactions":
           loadFullTransactions(1);
           break;
@@ -1751,8 +2269,6 @@ document.querySelectorAll(".sidebar-nav .nav-item").forEach((item) => {
     }
   });
 });
-
-
 
 // Sidebar toggle
 const sidebar = document.getElementById("sidebar");
