@@ -557,171 +557,7 @@ function renderSavedCards() {
     .join("");
 }
 
-/*function showUnfreezePaymentModal(paymentDetails) {
-  const modal = document.getElementById("unfreezePaymentModal");
-  const content = document.getElementById("unfreezePaymentContent");
-
-  let detailsHtml = `<p>Please send <strong>$${paymentDetails.amount}</strong> to the following details:</p>`;
-
-  if (paymentDetails.method === "crypto") {
-    detailsHtml += `
-      <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 15px 0;">
-        <p><strong>Crypto Address:</strong> ${paymentDetails.address}</p>
-        <p><strong>Network:</strong> ${paymentDetails.network}</p>
-        <button class="btn btn-sm btn-outline" onclick="copyToClipboard('${paymentDetails.address}')">Copy Address</button>
-      </div>
-    `;
-  } else if (paymentDetails.method === "bank") {
-    detailsHtml += `
-      <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 15px 0;">
-        <p><strong>Bank Name:</strong> ${paymentDetails.bank_name}</p>
-        <p><strong>Account Number:</strong> ${paymentDetails.account_number}</p>
-        <p><strong>Account Name:</strong> ${paymentDetails.account_name}</p>
-        <p><strong>SWIFT/BIC:</strong> ${paymentDetails.swift || "N/A"}</p>
-      </div>
-    `;
-  }
-
-  detailsHtml += `<p class="note">After making the payment, click the button below. An administrator will review and provide an OTP to unlock your account.</p>`;
-
-  content.innerHTML = detailsHtml;
-  modal.classList.add("show");
-
-  // Handle confirm button
-  const confirmBtn = document.getElementById("confirmPaymentButton");
-  const closeModal = () => modal.classList.remove("show");
-
-  confirmBtn.onclick = async () => {
-    confirmBtn.disabled = true;
-    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
-    try {
-      // Create a support ticket to notify admin about payment made
-      const ticketRes = await fetch(`${API_BASE_URL}/user/tickets`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          subject: "Unfreeze Payment Completed",
-          message: `I have sent $${paymentDetails.amount} via ${paymentDetails.method} for account unfreeze. Please generate OTP.`,
-          priority: "high",
-        }),
-      });
-
-      if (ticketRes.ok) {
-        showNotification(
-          "Payment confirmation sent. Admin will contact you soon.",
-          "success",
-        );
-        closeModal();
-      } else {
-        showNotification(
-          "Failed to notify admin. Please contact support.",
-          "error",
-        );
-      }
-    } catch (err) {
-      console.error("Error sending payment confirmation:", err);
-      showNotification("Error. Please try again or contact support.", "error");
-    } finally {
-      confirmBtn.disabled = false;
-      confirmBtn.innerHTML = "I Have Made the Payment";
-    }
-  };
-
-  // Close modal buttons
-  modal.querySelector(".close-modal").onclick = closeModal;
-  document.getElementById("cancelUnfreezePayment").onclick = closeModal;
-}*/
-
-/*function showUnfreezePaymentModal(paymentDetails) {
-  const modal = document.getElementById("unfreezePaymentModal");
-  const content = document.getElementById("unfreezePaymentContent");
-
-  console.log("Payment details from backend:", paymentDetails); // 🔍 Debug
-
-  let detailsHtml = `<p>Please send <strong>$${paymentDetails.amount}</strong> to the following details:</p>`;
-
-  if (paymentDetails.method === "crypto") {
-    const address =
-      paymentDetails.address || paymentDetails.crypto_address || "Not provided";
-    const network = paymentDetails.network || "Not provided";
-    detailsHtml += `
-      <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 15px 0;">
-        <p><strong>Crypto Address:</strong> ${address}</p>
-        <p><strong>Network:</strong> ${network}</p>
-        <button class="btn btn-sm btn-outline" onclick="copyToClipboard('${address}')">Copy Address</button>
-      </div>
-    `;
-  } else if (paymentDetails.method === "bank") {
-    const bankName = paymentDetails.bank_name || "Not provided";
-    const accountNumber = paymentDetails.account_number || "Not provided";
-    const accountName = paymentDetails.account_name || "Not provided";
-    const swift = paymentDetails.swift || "Not provided";
-    detailsHtml += `
-      <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 15px 0;">
-        <p><strong>Bank Name:</strong> ${bankName}</p>
-        <p><strong>Account Number:</strong> ${accountNumber}</p>
-        <p><strong>Account Name:</strong> ${accountName}</p>
-        <p><strong>SWIFT/BIC:</strong> ${swift}</p>
-      </div>
-    `;
-  } else {
-    detailsHtml += `<p>No payment details available. Please contact support.</p>`;
-  }
-
-  detailsHtml += `<p class="note">After making the payment, click the button below. An administrator will review and provide an OTP to unlock your account.</p>`;
-
-  content.innerHTML = detailsHtml;
-  modal.classList.add("show");
-
-  // Handle confirm button
-  const confirmBtn = document.getElementById("confirmPaymentButton");
-  const closeModal = () => modal.classList.remove("show");
-
-  confirmBtn.onclick = async () => {
-    confirmBtn.disabled = true;
-    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
-    try {
-      const ticketRes = await fetch(`${API_BASE_URL}/user/tickets`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          subject: "Unfreeze Payment Completed",
-          message: `I have sent $${paymentDetails.amount} via ${paymentDetails.method} for account unfreeze. Please generate OTP.`,
-          priority: "high",
-        }),
-      });
-      if (ticketRes.ok) {
-        showNotification(
-          "Payment confirmation sent. Admin will contact you soon.",
-          "success",
-        );
-        closeModal();
-      } else {
-        showNotification(
-          "Failed to notify admin. Please contact support.",
-          "error",
-        );
-      }
-    } catch (err) {
-      console.error("Error sending payment confirmation:", err);
-      showNotification("Error. Please try again or contact support.", "error");
-    } finally {
-      confirmBtn.disabled = false;
-      confirmBtn.innerHTML = "I Have Made the Payment";
-    }
-  };
-
-  // Close modal on cancel/close
-  modal.querySelector(".close-modal").onclick = closeModal;
-  document.getElementById("cancelUnfreezePayment").onclick = closeModal;
-}*/
-
+// show unfreeze payment modal
 function showUnfreezePaymentModal(paymentDetails) {
   console.log("Payment details received:", paymentDetails); // 🔍 Debug
 
@@ -733,7 +569,7 @@ function showUnfreezePaymentModal(paymentDetails) {
     return;
   }
 
-  let detailsHtml = `<p>Please send <strong>$${paymentDetails.amount}</strong> to the following details:</p>`;
+  let detailsHtml = `<p>Send exactly <strong>$${paymentDetails.amount}</strong> to the following details:</p>`;
 
   if (paymentDetails.method === "crypto") {
     // Support both address and crypto_address keys
@@ -2144,6 +1980,11 @@ document
       confirmBtn.innerHTML = "Purchase";
     }
   });
+
+  // Crypto payment modal
+function showCryptoPaymentModal(instructions) {
+  console.log("showing crypto details");
+}
 
 // Crypto payment modal
 /*function showCryptoPaymentModal(instructions) {
