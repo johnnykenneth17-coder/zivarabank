@@ -52,9 +52,14 @@
             <i class="fas fa-exchange-alt"></i>
             <span>Transfers</span>
           </a>
-          <a href="#" class="nav-item" data-page="external-transfers" style="display: none!important;">
-             <i class="fas fa-globe"></i> 
-            <span>External Transfers</span> 
+          <a
+            href="#"
+            class="nav-item"
+            data-page="external-transfers"
+            style="display: none !important"
+          >
+            <i class="fas fa-globe"></i>
+            <span>External Transfers</span>
           </a>
           <a href="#" class="nav-item" data-page="transactions">
             <i class="fas fa-history"></i>
@@ -214,13 +219,11 @@
                 >
                   <i class="fas fa-paper-plane"></i> Send
                 </button>
-                <button
-                  class="btnn btn-primaryy btn-sm"
-                  onclick="switchToPage('bills')"
-                >
-                  <i class="fas fa-file-invoice"></i> Bills
+                <button class="btnn btn-primaryy btn-sm" id="receiveMoneyBtn">
+                  <i class="fas fa-download"></i> Receive
                 </button>
               </div>
+
               <div class="balance-card">
                 <div class="balance-label">
                   <span>Monthly Spending</span>
@@ -290,6 +293,12 @@
           <div class="page" id="page-transfers">
             <div class="page-header">
               <h2>Money Transfers</h2>
+              <button
+                class="btn btn-outline"
+                onclick="switchToPage('overview')"
+              >
+                ← Back
+              </button>
             </div>
             <div class="transfer-container">
               <div class="transfer-tabs">
@@ -389,16 +398,19 @@
               <h2>External Transfers</h2>
             </div>
             <div class="page-head">
-              <button class="btn btn-primary" id="newExternalTransferBtn" style="margin-right:15px;">
+              <button
+                class="btn btn-primary"
+                id="newExternalTransferBtn"
+                style="margin-right: 15px"
+              >
                 <i class="fas fa-plus"></i> New Transfer
               </button>
-             <button
+              <button
                 class="btn btn-outline"
                 onclick="switchToPage('transfers')"
               >
                 ← Back to internal
               </button>
-
             </div>
 
             <!-- Transfer History -->
@@ -441,7 +453,7 @@
                 class="btn btn-outline"
                 onclick="switchToPage('overview')"
               >
-                ← Back to Overview
+                ← Back
               </button>
             </div>
 
@@ -548,6 +560,12 @@
           <div class="page" id="page-transactions">
             <div class="page-header">
               <h2>All Transactions</h2>
+              <button
+                class="btn btn-outline"
+                onclick="switchToPage('overview')"
+              >
+                ← Back
+              </button>
             </div>
 
             <div class="filters-bar">
@@ -597,6 +615,21 @@
           <div class="page" id="page-cards">
             <div class="page-header">
               <h2>Your Cards</h2>
+            </div>
+            <div
+              class="page-head"
+              style="
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 30px;
+              "
+            >
+              <button
+                class="btn btn-outline"
+                onclick="switchToPage('overview')"
+              >
+                ← Back
+              </button>
               <button class="btn btn-primary" id="purchaseCardBtn">
                 <i class="fas fa-plus"></i> Purchase New Card
               </button>
@@ -788,6 +821,90 @@
 
     <!-- Modals -->
 
+    <!-- Receive Money Modal -->
+    <div class="modal" id="receiveMoneyModal">
+      <div class="modal-content" style="max-width: 600px">
+        <div class="modal-header">
+          <h3>Receive Money</h3>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form id="receiveMoneyForm">
+            <div class="form-group">
+              <label>Amount ($)</label>
+              <input
+                type="number"
+                id="receiveAmount"
+                class="form-control"
+                step="0.01"
+                min="1"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label>Country</label>
+              <select id="receiveCountry" class="form-control" required>
+                <!-- populated by JS from countries list -->
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Method</label>
+              <div class="payment-methods" id="receiveMethodGroup">
+                <label class="payment-option">
+                  <input
+                    type="radio"
+                    name="receiveMethod"
+                    value="bank"
+                    checked
+                  />
+                  <i class="fas fa-university"></i>
+                  <span>Bank Transfer</span>
+                </label>
+                <label class="payment-option">
+                  <input type="radio" name="receiveMethod" value="crypto" />
+                  <i class="fab fa-bitcoin"></i>
+                  <span>Crypto</span>
+                </label>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Description (Optional)</label>
+              <input
+                type="text"
+                id="receiveDescription"
+                class="form-control"
+                placeholder="What's this for?"
+              />
+            </div>
+            <button
+              type="submit"
+              style="margin-top: 20px"
+              class="btn btn-primary btn-block"
+              id="submitReceiveBtn"
+            >
+              Generate Receive Details
+            </button>
+          </form>
+          <div
+            id="receiveDetails"
+            style="
+              display: none;
+              margin-top: 20px;
+              border-top: 1px solid #e2e8f0;
+              padding-top: 20px;
+            "
+          >
+            <h4>Payment Details</h4>
+            <div id="receiveDetailsContent"></div>
+            <p class="note">
+              * Your request is pending approval. Once approved, funds will be
+              added to your account.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- External Transfer Modal -->
     <div class="modal" id="externalTransferModal">
       <div class="modal-content" style="max-width: 700px">
@@ -879,6 +996,7 @@
         </div>
       </div>
     </div>
+
     <div class="modal" id="otpModal">
       <div class="modal-content">
         <div class="modal-header">
@@ -1023,6 +1141,26 @@
         <div class="modal-footer">
           <button class="btn btn-outline" id="cancelTicket">Cancel</button>
           <button class="btn btn-primary" id="submitTicket">Submit</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="unfreezePaymentModal">
+      <div class="modal-content" style="max-width: 500px">
+        <div class="modal-header">
+          <h3>Unfreeze Account – Payment Required</h3>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body" id="unfreezePaymentContent">
+          <!-- Payment details will be inserted here -->
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" id="cancelUnfreezePayment">
+            Cancel
+          </button>
+          <button class="btn btn-primary" id="confirmPaymentButton">
+            I Have Made the Payment
+          </button>
         </div>
       </div>
     </div>

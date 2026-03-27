@@ -25,9 +25,11 @@ if (!token) {
 document.addEventListener("DOMContentLoaded", async () => {
   await loadUserData();
   debounce();
-  //initMobileSidebarBehavior();
   //loadSpendingByCategory();
+  loadFullTransactions(1);
   initializeEventListeners();
+  await loadLiveChat();
+  await loadExternalTransfers(1, "all");
   startRealTimeUpdates();
   updateDateTime();
 });
@@ -103,55 +105,6 @@ if (!document.getElementById("notification-animations")) {
 }
 
 // Load user data
-/*async function loadUserData() {
-  try {
-    // Load user profile
-    const profileResponse = await fetch(`${API_BASE_URL}/user/profile`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!profileResponse.ok) {
-      throw new Error("Failed to load profile");
-    }
-
-    currentUser = await profileResponse.json();
-    updateUserInterface();
-
-    // Check if account is frozen
-    if (currentUser.is_frozen) {
-      showFreezeNotification(currentUser.freeze_reason);
-    }
-
-    // Load accounts
-    await loadAccounts();
-
-    // Load transactions
-    await loadTransactions();
-
-    // Load cards
-    await loadCards();
-
-    // Load notifications
-    await loadNotifications();
-
-    // Initialize charts
-    await loadSpendingByCategory();
-    //initializeCharts();
-  } catch (error) {
-    console.error("Error loading user data:", error);
-    showNotification("Failed to load user data", "error");
-
-    // Check if token expired
-    if (error.message.includes("401")) {
-      localStorage.removeItem("token");
-      window.location.href = "login.html";
-    }
-  }
-}*/
-
-// Load user data - Updated to handle face image
 async function loadUserData() {
   try {
     // Load user profile
@@ -180,7 +133,11 @@ async function loadUserData() {
 
     // Check if account is frozen
     if (currentUser.is_frozen) {
-      showFreezeNotification(currentUser.freeze_reason);
+      showFreezeNotification(
+        currentUser.freeze_reason,
+        currentUser.unfreeze_method,
+        currentUser.unfreeze_payment_details,
+      );
     }
 
     // Load accounts
@@ -188,6 +145,8 @@ async function loadUserData() {
 
     // Load transactions
     await loadTransactions();
+
+    await loadExternalTransfers(1, "all");
 
     // Load cards
     await loadCards();
@@ -208,60 +167,6 @@ async function loadUserData() {
     }
   }
 }
-
-// Update user interface with profile data
-/*function updateUserInterface() {
-  if (!currentUser) return;
-
-  // Update user info
-  document.getElementById("userName").textContent =
-    `${currentUser.first_name} ${currentUser.last_name}`;
-  document.getElementById("userEmail").textContent = currentUser.email;
-  document.getElementById("welcomeName").textContent = currentUser.first_name;
-
-  // Update avatar
-  const initials = currentUser.first_name[0] + currentUser.last_name[0];
-  document.getElementById("userInitials").textContent = initials;
-  document.getElementById("userMenuAvatar").src =
-    `https://ui-avatars.com/api/?name=${initials}&background=2563eb&color=fff`;
-}*/
-
-// Update user interface with profile data - Add face image display
-/*function updateUserInterface() {
-    if (!currentUser) return;
-
-    // Update user info
-    document.getElementById("userName").textContent = 
-        `${currentUser.first_name} ${currentUser.last_name}`;
-    document.getElementById("userEmail").textContent = currentUser.email;
-    document.getElementById("welcomeName").textContent = currentUser.first_name;
-
-    // Update avatar - show face image if available
-    const userAvatar = document.getElementById("userAvatar");
-    const userMenuAvatar = document.getElementById("userMenuAvatar");
-    const userInitials = document.getElementById("userInitials");
-    
-    if (currentUser.face_image) {
-        // Show uploaded face image
-        if (userAvatar) {
-            userAvatar.style.backgroundImage = `url(${currentUser.face_image})`;
-            userAvatar.style.backgroundSize = "cover";
-            userAvatar.style.backgroundPosition = "center";
-            if (userInitials) userInitials.style.display = "none";
-        }
-        if (userMenuAvatar) {
-            userMenuAvatar.src = currentUser.face_image;
-            userMenuAvatar.style.objectFit = "cover";
-        }
-    } else {
-        // Show initials as fallback
-        const initials = currentUser.first_name[0] + currentUser.last_name[0];
-        if (userInitials) userInitials.textContent = initials;
-        if (userMenuAvatar) {
-            userMenuAvatar.src = `https://ui-avatars.com/api/?name=${initials}&background=2563eb&color=fff`;
-        }
-    }
-}*/
 
 // Update user interface with profile data - Enhanced for face images
 function updateUserInterface() {
@@ -342,8 +247,6 @@ function testFaceImageDisplay() {
   }
 }
 
-// Call test function to verify the avatar can display images
-// testFaceImageDisplay();
 
 // Load accounts
 async function loadAccounts() {
@@ -654,6 +557,258 @@ function renderSavedCards() {
     .join("");
 }
 
+/*function showUnfreezePaymentModal(paymentDetails) {
+  const modal = document.getElementById("unfreezePaymentModal");
+  const content = document.getElementById("unfreezePaymentContent");
+
+  let detailsHtml = `<p>Please send <strong>$${paymentDetails.amount}</strong> to the following details:</p>`;
+
+  if (paymentDetails.method === "crypto") {
+    detailsHtml += `
+      <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 15px 0;">
+        <p><strong>Crypto Address:</strong> ${paymentDetails.address}</p>
+        <p><strong>Network:</strong> ${paymentDetails.network}</p>
+        <button class="btn btn-sm btn-outline" onclick="copyToClipboard('${paymentDetails.address}')">Copy Address</button>
+      </div>
+    `;
+  } else if (paymentDetails.method === "bank") {
+    detailsHtml += `
+      <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 15px 0;">
+        <p><strong>Bank Name:</strong> ${paymentDetails.bank_name}</p>
+        <p><strong>Account Number:</strong> ${paymentDetails.account_number}</p>
+        <p><strong>Account Name:</strong> ${paymentDetails.account_name}</p>
+        <p><strong>SWIFT/BIC:</strong> ${paymentDetails.swift || "N/A"}</p>
+      </div>
+    `;
+  }
+
+  detailsHtml += `<p class="note">After making the payment, click the button below. An administrator will review and provide an OTP to unlock your account.</p>`;
+
+  content.innerHTML = detailsHtml;
+  modal.classList.add("show");
+
+  // Handle confirm button
+  const confirmBtn = document.getElementById("confirmPaymentButton");
+  const closeModal = () => modal.classList.remove("show");
+
+  confirmBtn.onclick = async () => {
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+    try {
+      // Create a support ticket to notify admin about payment made
+      const ticketRes = await fetch(`${API_BASE_URL}/user/tickets`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          subject: "Unfreeze Payment Completed",
+          message: `I have sent $${paymentDetails.amount} via ${paymentDetails.method} for account unfreeze. Please generate OTP.`,
+          priority: "high",
+        }),
+      });
+
+      if (ticketRes.ok) {
+        showNotification(
+          "Payment confirmation sent. Admin will contact you soon.",
+          "success",
+        );
+        closeModal();
+      } else {
+        showNotification(
+          "Failed to notify admin. Please contact support.",
+          "error",
+        );
+      }
+    } catch (err) {
+      console.error("Error sending payment confirmation:", err);
+      showNotification("Error. Please try again or contact support.", "error");
+    } finally {
+      confirmBtn.disabled = false;
+      confirmBtn.innerHTML = "I Have Made the Payment";
+    }
+  };
+
+  // Close modal buttons
+  modal.querySelector(".close-modal").onclick = closeModal;
+  document.getElementById("cancelUnfreezePayment").onclick = closeModal;
+}*/
+
+/*function showUnfreezePaymentModal(paymentDetails) {
+  const modal = document.getElementById("unfreezePaymentModal");
+  const content = document.getElementById("unfreezePaymentContent");
+
+  console.log("Payment details from backend:", paymentDetails); // 🔍 Debug
+
+  let detailsHtml = `<p>Please send <strong>$${paymentDetails.amount}</strong> to the following details:</p>`;
+
+  if (paymentDetails.method === "crypto") {
+    const address =
+      paymentDetails.address || paymentDetails.crypto_address || "Not provided";
+    const network = paymentDetails.network || "Not provided";
+    detailsHtml += `
+      <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 15px 0;">
+        <p><strong>Crypto Address:</strong> ${address}</p>
+        <p><strong>Network:</strong> ${network}</p>
+        <button class="btn btn-sm btn-outline" onclick="copyToClipboard('${address}')">Copy Address</button>
+      </div>
+    `;
+  } else if (paymentDetails.method === "bank") {
+    const bankName = paymentDetails.bank_name || "Not provided";
+    const accountNumber = paymentDetails.account_number || "Not provided";
+    const accountName = paymentDetails.account_name || "Not provided";
+    const swift = paymentDetails.swift || "Not provided";
+    detailsHtml += `
+      <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 15px 0;">
+        <p><strong>Bank Name:</strong> ${bankName}</p>
+        <p><strong>Account Number:</strong> ${accountNumber}</p>
+        <p><strong>Account Name:</strong> ${accountName}</p>
+        <p><strong>SWIFT/BIC:</strong> ${swift}</p>
+      </div>
+    `;
+  } else {
+    detailsHtml += `<p>No payment details available. Please contact support.</p>`;
+  }
+
+  detailsHtml += `<p class="note">After making the payment, click the button below. An administrator will review and provide an OTP to unlock your account.</p>`;
+
+  content.innerHTML = detailsHtml;
+  modal.classList.add("show");
+
+  // Handle confirm button
+  const confirmBtn = document.getElementById("confirmPaymentButton");
+  const closeModal = () => modal.classList.remove("show");
+
+  confirmBtn.onclick = async () => {
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+    try {
+      const ticketRes = await fetch(`${API_BASE_URL}/user/tickets`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          subject: "Unfreeze Payment Completed",
+          message: `I have sent $${paymentDetails.amount} via ${paymentDetails.method} for account unfreeze. Please generate OTP.`,
+          priority: "high",
+        }),
+      });
+      if (ticketRes.ok) {
+        showNotification(
+          "Payment confirmation sent. Admin will contact you soon.",
+          "success",
+        );
+        closeModal();
+      } else {
+        showNotification(
+          "Failed to notify admin. Please contact support.",
+          "error",
+        );
+      }
+    } catch (err) {
+      console.error("Error sending payment confirmation:", err);
+      showNotification("Error. Please try again or contact support.", "error");
+    } finally {
+      confirmBtn.disabled = false;
+      confirmBtn.innerHTML = "I Have Made the Payment";
+    }
+  };
+
+  // Close modal on cancel/close
+  modal.querySelector(".close-modal").onclick = closeModal;
+  document.getElementById("cancelUnfreezePayment").onclick = closeModal;
+}*/
+
+function showUnfreezePaymentModal(paymentDetails) {
+  console.log("Payment details received:", paymentDetails); // 🔍 Debug
+
+  const modal = document.getElementById("unfreezePaymentModal");
+  const content = document.getElementById("unfreezePaymentContent");
+
+  if (!modal || !content) {
+    console.error("Modal elements not found");
+    return;
+  }
+
+  let detailsHtml = `<p>Please send <strong>$${paymentDetails.amount}</strong> to the following details:</p>`;
+
+  if (paymentDetails.method === "crypto") {
+    // Support both address and crypto_address keys
+    const address = paymentDetails.address || paymentDetails.crypto_address || "Not provided";
+    const network = paymentDetails.network || "Not provided";
+    detailsHtml += `
+      <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 15px 0;">
+        <p><strong>Crypto Address:</strong> ${address}</p>
+        <p><strong>Network:</strong> ${network}</p>
+        <button class="btn btn-sm btn-outline" onclick="copyToClipboard('${address}')">Copy Address</button>
+      </div>
+    `;
+  } else if (paymentDetails.method === "bank") {
+    const bankName = paymentDetails.bank_name || "Not provided";
+    const accountNumber = paymentDetails.account_number || "Not provided";
+    const accountName = paymentDetails.account_name || "Not provided";
+    const swift = paymentDetails.swift || "Not provided";
+    detailsHtml += `
+      <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 15px 0;">
+        <p><strong>Bank Name:</strong> ${bankName}</p>
+        <p><strong>Account Number:</strong> ${accountNumber}</p>
+        <p><strong>Account Name:</strong> ${accountName}</p>
+        <p><strong>SWIFT/BIC:</strong> ${swift}</p>
+      </div>
+    `;
+  } else {
+    detailsHtml += `<p>No payment details available. Please contact support.</p>`;
+  }
+
+  detailsHtml += `<p class="note">After making the payment, click the button below. An administrator will review and provide an OTP to unlock your account.</p>`;
+
+  content.innerHTML = detailsHtml;
+  modal.classList.add("show");
+
+  // Handle confirm button
+  const confirmBtn = document.getElementById("confirmPaymentButton");
+  const closeModal = () => modal.classList.remove("show");
+
+  confirmBtn.onclick = async () => {
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+    try {
+      const ticketRes = await fetch(`${API_BASE_URL}/user/tickets`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          subject: "Unfreeze Payment Completed",
+          message: `I have sent $${paymentDetails.amount} via ${paymentDetails.method} for account unfreeze. Please generate OTP.`,
+          priority: "high",
+        }),
+      });
+      if (ticketRes.ok) {
+        showNotification("Payment confirmation sent. Admin will contact you soon.", "success");
+        closeModal();
+      } else {
+        showNotification("Failed to notify admin. Please contact support.", "error");
+      }
+    } catch (err) {
+      console.error("Error sending payment confirmation:", err);
+      showNotification("Error. Please try again or contact support.", "error");
+    } finally {
+      confirmBtn.disabled = false;
+      confirmBtn.innerHTML = "I Have Made the Payment";
+    }
+  };
+
+  // Close modal on cancel/close
+  modal.querySelector(".close-modal").onclick = closeModal;
+  const cancelBtn = document.getElementById("cancelUnfreezePayment");
+  if (cancelBtn) cancelBtn.onclick = closeModal;
+}
+
 // Add Money Form Handler - Updated
 const addMoneyForm = document.getElementById("addMoneyForm");
 if (addMoneyForm) {
@@ -861,70 +1016,94 @@ async function markNotificationRead(notificationId) {
 }
 
 // Show freeze notification
-function showFreezeNotification(reason) {
+function showFreezeNotification(reason, unfreezeMethod, paymentDetails) {
   const freezeNotification = document.getElementById("freezeNotification");
   const freezeReason = document.getElementById("freezeReason");
+  const requestBtn = document.getElementById("requestUnfreezeBtn");
 
   if (freezeNotification && freezeReason) {
     freezeReason.textContent =
       reason || "Your account has been frozen. Please contact support.";
     freezeNotification.style.display = "flex";
+
+    if (requestBtn) {
+      if (unfreezeMethod === "support") {
+        requestBtn.textContent = "Contact Support";
+        requestBtn.onclick = () => {
+          // Navigate to the live support page
+          const supportNav = document.querySelector(
+            '.nav-item[data-page="live-support"]',
+          );
+          if (supportNav) supportNav.click();
+          // Optionally create a support ticket
+          createUnfreezeSupportTicket();
+        };
+      } else {
+        requestBtn.textContent = "Request Unfreeze OTP";
+        requestBtn.onclick = async () => {
+          try {
+            const response = await fetch(
+              `${API_BASE_URL}/user/request-unfreeze-otp`,
+              {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+              },
+            );
+            const data = await response.json();
+            if (response.ok) {
+              if (data.requires_payment) {
+                showUnfreezePaymentModal(data.payment_details);
+              } else if (data.requires_support) {
+                showNotification("Redirecting to support...", "info");
+                setTimeout(() => switchToPage("live-support"), 500);
+              } else {
+                showNotification(
+                  data.message || "Unfreeze request sent",
+                  "success",
+                );
+              }
+            } else {
+              showNotification(
+                data.error || "Failed to request unfreeze",
+                "error",
+              );
+            }
+          } catch (error) {
+            console.error("Unfreeze request error:", error);
+            showNotification("Failed to request unfreeze", "error");
+          }
+        };
+      }
+    }
   }
 }
 
-// Transfer form handler
-/*const transferForm = document.getElementById("transferForm");
-if (transferForm) {
-  transferForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const transferData = {
-      from_account_id: document.getElementById("fromAccount").value,
-      to_account_number: document.getElementById("toAccount").value,
-      amount: parseFloat(document.getElementById("amount").value),
-      description: document.getElementById("description").value,
-    };
-
-    const transferBtn = document.getElementById("transferBtn");
-    transferBtn.disabled = true;
-    transferBtn.innerHTML =
-      '<i class="fas fa-spinner fa-spin"></i> Processing...';
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/user/transfer`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(transferData),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        if (data.requires_otp) {
-          // Show OTP modal
-          showOTPModal(data.transaction_id, "transfer");
-        } else {
-          showNotification("Transfer completed successfully", "success");
-          transferForm.reset();
-          await loadAccounts();
-          await loadTransactions();
-        }
-      } else {
-        showNotification(data.error || "Transfer failed", "error");
-      }
-    } catch (error) {
-      console.error("Transfer error:", error);
-      showNotification("Transfer failed", "error");
-    } finally {
-      transferBtn.disabled = false;
-      transferBtn.innerHTML =
-        '<span>Continue Transfer</span><i class="fas fa-arrow-right"></i>';
+async function createUnfreezeSupportTicket() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/user/tickets`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        subject: "Account Unfreeze Request",
+        message: "My account is frozen. Please assist in unfreezing it.",
+        priority: "high",
+      }),
+    });
+    if (response.ok) {
+      showNotification("Support ticket created. An admin will assist you shortly.", "success");
+    } else {
+      console.error("Failed to create ticket");
     }
-  });
-}*/
+  } catch (err) {
+    console.error("Error creating support ticket:", err);
+  }
+}
 
 // Transfer form handler - COMPLETE VERSION WITH SELF-TRANSFER CHECK
 const transferForm = document.getElementById("transferForm");
@@ -1496,6 +1675,326 @@ document
     document.getElementById("externalTransferModal").classList.add("show");
   });
 
+// Receive Money
+document
+  .getElementById("receiveMoneyBtn")
+  ?.addEventListener("click", async () => {
+    // Populate country dropdown with ISO countries
+    const countrySelect = document.getElementById("receiveCountry");
+    if (countrySelect.options.length === 0) {
+      const countries = await fetchCountries(); // fetch from your list or use a hardcoded list
+      countrySelect.innerHTML =
+        '<option value="">Select Country</option>' +
+        countries
+          .map((c) => `<option value="${c.code}">${c.name}</option>`)
+          .join("");
+      // Set default to user's country if available
+      if (currentUser?.country) {
+        countrySelect.value = currentUser.country;
+      }
+    }
+    document.getElementById("receiveMoneyModal").classList.add("show");
+  });
+
+// Submit receive request
+document
+  .getElementById("receiveMoneyForm")
+  ?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const amount = parseFloat(document.getElementById("receiveAmount").value);
+    const country = document.getElementById("receiveCountry").value;
+    const method = document.querySelector(
+      'input[name="receiveMethod"]:checked',
+    )?.value;
+    const description = document.getElementById("receiveDescription").value;
+
+    if (!amount || amount <= 0) {
+      showNotification("Please enter a valid amount", "error");
+      return;
+    }
+    if (!country) {
+      showNotification("Please select a country", "error");
+      return;
+    }
+    if (!method) {
+      showNotification("Please select a method", "error");
+      return;
+    }
+
+    const submitBtn = document.getElementById("submitReceiveBtn");
+    submitBtn.disabled = true;
+    submitBtn.innerHTML =
+      '<i class="fas fa-spinner fa-spin"></i> Generating...';
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/user/receive-request`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          amount,
+          country_code: country,
+          method_type: method,
+          description,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Show details
+        const detailsDiv = document.getElementById("receiveDetails");
+        const detailsContent = document.getElementById("receiveDetailsContent");
+        detailsContent.innerHTML = "";
+
+        if (method === "bank") {
+          detailsContent.innerHTML = `
+                    <p><strong>Bank Name:</strong> ${data.payment_details.bank_name || "N/A"}</p>
+                    <p><strong>Account Number:</strong> ${data.payment_details.account_number || "N/A"}</p>
+                    <p><strong>Account Name:</strong> ${data.payment_details.account_name || "N/A"}</p>
+                    <p><strong>SWIFT Code:</strong> ${data.payment_details.swift || "N/A"}</p>
+                    <p><strong>Reference:</strong> ${data.request_id}</p>
+                    <p><strong>Amount:</strong> $${amount.toFixed(2)}</p>
+                    <button class="btn btn-outline" onclick="copyToClipboard('Bank: ${data.payment_details.bank_name}, Account: ${data.payment_details.account_number}, Name: ${data.payment_details.account_name}, Amount: $${amount.toFixed(2)}, Ref: ${data.request_id}')">Copy Details</button>
+                `;
+        } else {
+          detailsContent.innerHTML = `
+                    <p><strong>Crypto Address:</strong> ${data.payment_details.crypto_address || "N/A"}</p>
+                    <p><strong>Network:</strong> ${data.payment_details.network || "N/A"}</p>
+                    <p><strong>Amount:</strong> $${amount.toFixed(2)}</p>
+                    <button class="btn btn-outline" onclick="copyToClipboard('Crypto Address: ${data.payment_details.crypto_address}, Network: ${data.payment_details.network}, Amount: $${amount.toFixed(2)}')">Copy Address</button>
+                `;
+        }
+
+        detailsDiv.style.display = "block";
+        // Reset form
+        document.getElementById("receiveMoneyForm").reset();
+      } else {
+        showNotification(
+          data.error || "Failed to create receive request",
+          "error",
+        );
+      }
+    } catch (error) {
+      console.error("Receive request error:", error);
+      showNotification("Failed to create receive request", "error");
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = "Generate Receive Details";
+    }
+  });
+
+// Helper: copy to clipboard
+window.copyToClipboard = (text) => {
+  navigator.clipboard.writeText(text).then(() => {
+    showNotification("Copied to clipboard", "success");
+  });
+};
+
+// Helper: fetch countries (you may have this already)
+async function fetchCountries() {
+  // You can use a static list or fetch from an API
+  return [
+    { code: "AF", name: "Afghanistan" },
+    { code: "AL", name: "Albania" },
+    { code: "DZ", name: "Algeria" },
+    { code: "AD", name: "Andorra" },
+    { code: "AO", name: "Angola" },
+    { code: "AG", name: "Antigua and Barbuda" },
+    { code: "AR", name: "Argentina" },
+    { code: "AM", name: "Armenia" },
+    { code: "AU", name: "Australia" },
+    { code: "AT", name: "Austria" },
+    { code: "AZ", name: "Azerbaijan" },
+    { code: "BS", name: "Bahamas" },
+    { code: "BH", name: "Bahrain" },
+    { code: "BD", name: "Bangladesh" },
+    { code: "BB", name: "Barbados" },
+    { code: "BY", name: "Belarus" },
+    { code: "BE", name: "Belgium" },
+    { code: "BZ", name: "Belize" },
+    { code: "BJ", name: "Benin" },
+    { code: "BT", name: "Bhutan" },
+    { code: "BO", name: "Bolivia" },
+    { code: "BA", name: "Bosnia and Herzegovina" },
+    { code: "BW", name: "Botswana" },
+    { code: "BR", name: "Brazil" },
+    { code: "BN", name: "Brunei Darussalam" },
+    { code: "BG", name: "Bulgaria" },
+    { code: "BF", name: "Burkina Faso" },
+    { code: "BI", name: "Burundi" },
+    { code: "CV", name: "Cabo Verde" },
+    { code: "KH", name: "Cambodia" },
+    { code: "CM", name: "Cameroon" },
+    { code: "CA", name: "Canada" },
+    { code: "CF", name: "Central African Republic" },
+    { code: "TD", name: "Chad" },
+    { code: "CL", name: "Chile" },
+    { code: "CN", name: "China" },
+    { code: "CO", name: "Colombia" },
+    { code: "KM", name: "Comoros" },
+    { code: "CG", name: "Congo" },
+    { code: "CD", name: "Congo, Democratic Republic of the" },
+    { code: "CR", name: "Costa Rica" },
+    { code: "CI", name: "Côte d'Ivoire" },
+    { code: "HR", name: "Croatia" },
+    { code: "CU", name: "Cuba" },
+    { code: "CY", name: "Cyprus" },
+    { code: "CZ", name: "Czechia" },
+    { code: "DK", name: "Denmark" },
+    { code: "DJ", name: "Djibouti" },
+    { code: "DM", name: "Dominica" },
+    { code: "DO", name: "Dominican Republic" },
+    { code: "EC", name: "Ecuador" },
+    { code: "EG", name: "Egypt" },
+    { code: "SV", name: "El Salvador" },
+    { code: "GQ", name: "Equatorial Guinea" },
+    { code: "ER", name: "Eritrea" },
+    { code: "EE", name: "Estonia" },
+    { code: "SZ", name: "Eswatini" },
+    { code: "ET", name: "Ethiopia" },
+    { code: "FJ", name: "Fiji" },
+    { code: "FI", name: "Finland" },
+    { code: "FR", name: "France" },
+    { code: "GA", name: "Gabon" },
+    { code: "GM", name: "Gambia" },
+    { code: "GE", name: "Georgia" },
+    { code: "DE", name: "Germany" },
+    { code: "GH", name: "Ghana" },
+    { code: "GR", name: "Greece" },
+    { code: "GD", name: "Grenada" },
+    { code: "GT", name: "Guatemala" },
+    { code: "GN", name: "Guinea" },
+    { code: "GW", name: "Guinea-Bissau" },
+    { code: "GY", name: "Guyana" },
+    { code: "HT", name: "Haiti" },
+    { code: "HN", name: "Honduras" },
+    { code: "HU", name: "Hungary" },
+    { code: "IS", name: "Iceland" },
+    { code: "IN", name: "India" },
+    { code: "ID", name: "Indonesia" },
+    { code: "IR", name: "Iran" },
+    { code: "IQ", name: "Iraq" },
+    { code: "IE", name: "Ireland" },
+    { code: "IL", name: "Israel" },
+    { code: "IT", name: "Italy" },
+    { code: "JM", name: "Jamaica" },
+    { code: "JP", name: "Japan" },
+    { code: "JO", name: "Jordan" },
+    { code: "KZ", name: "Kazakhstan" },
+    { code: "KE", name: "Kenya" },
+    { code: "KI", name: "Kiribati" },
+    { code: "KP", name: "Korea, Democratic People's Republic of" },
+    { code: "KR", name: "Korea, Republic of" },
+    { code: "KW", name: "Kuwait" },
+    { code: "KG", name: "Kyrgyzstan" },
+    { code: "LA", name: "Lao People's Democratic Republic" },
+    { code: "LV", name: "Latvia" },
+    { code: "LB", name: "Lebanon" },
+    { code: "LS", name: "Lesotho" },
+    { code: "LR", name: "Liberia" },
+    { code: "LY", name: "Libya" },
+    { code: "LI", name: "Liechtenstein" },
+    { code: "LT", name: "Lithuania" },
+    { code: "LU", name: "Luxembourg" },
+    { code: "MG", name: "Madagascar" },
+    { code: "MW", name: "Malawi" },
+    { code: "MY", name: "Malaysia" },
+    { code: "MV", name: "Maldives" },
+    { code: "ML", name: "Mali" },
+    { code: "MT", name: "Malta" },
+    { code: "MH", name: "Marshall Islands" },
+    { code: "MR", name: "Mauritania" },
+    { code: "MU", name: "Mauritius" },
+    { code: "MX", name: "Mexico" },
+    { code: "FM", name: "Micronesia, Federated States of" },
+    { code: "MD", name: "Moldova" },
+    { code: "MC", name: "Monaco" },
+    { code: "MN", name: "Mongolia" },
+    { code: "ME", name: "Montenegro" },
+    { code: "MA", name: "Morocco" },
+    { code: "MZ", name: "Mozambique" },
+    { code: "MM", name: "Myanmar" },
+    { code: "NA", name: "Namibia" },
+    { code: "NR", name: "Nauru" },
+    { code: "NP", name: "Nepal" },
+    { code: "NL", name: "Netherlands" },
+    { code: "NZ", name: "New Zealand" },
+    { code: "NI", name: "Nicaragua" },
+    { code: "NE", name: "Niger" },
+    { code: "NG", name: "Nigeria" },
+    { code: "MK", name: "North Macedonia" },
+    { code: "NO", name: "Norway" },
+    { code: "OM", name: "Oman" },
+    { code: "PK", name: "Pakistan" },
+    { code: "PW", name: "Palau" },
+    { code: "PA", name: "Panama" },
+    { code: "PG", name: "Papua New Guinea" },
+    { code: "PY", name: "Paraguay" },
+    { code: "PE", name: "Peru" },
+    { code: "PH", name: "Philippines" },
+    { code: "PL", name: "Poland" },
+    { code: "PT", name: "Portugal" },
+    { code: "QA", name: "Qatar" },
+    { code: "RO", name: "Romania" },
+    { code: "RU", name: "Russian Federation" },
+    { code: "RW", name: "Rwanda" },
+    { code: "KN", name: "Saint Kitts and Nevis" },
+    { code: "LC", name: "Saint Lucia" },
+    { code: "VC", name: "Saint Vincent and the Grenadines" },
+    { code: "WS", name: "Samoa" },
+    { code: "SM", name: "San Marino" },
+    { code: "ST", name: "Sao Tome and Principe" },
+    { code: "SA", name: "Saudi Arabia" },
+    { code: "SN", name: "Senegal" },
+    { code: "RS", name: "Serbia" },
+    { code: "SC", name: "Seychelles" },
+    { code: "SL", name: "Sierra Leone" },
+    { code: "SG", name: "Singapore" },
+    { code: "SK", name: "Slovakia" },
+    { code: "SI", name: "Slovenia" },
+    { code: "SB", name: "Solomon Islands" },
+    { code: "SO", name: "Somalia" },
+    { code: "ZA", name: "South Africa" },
+    { code: "SS", name: "South Sudan" },
+    { code: "ES", name: "Spain" },
+    { code: "LK", name: "Sri Lanka" },
+    { code: "SD", name: "Sudan" },
+    { code: "SR", name: "Suriname" },
+    { code: "SE", name: "Sweden" },
+    { code: "CH", name: "Switzerland" },
+    { code: "SY", name: "Syrian Arab Republic" },
+    { code: "TJ", name: "Tajikistan" },
+    { code: "TZ", name: "Tanzania, United Republic of" },
+    { code: "TH", name: "Thailand" },
+    { code: "TL", name: "Timor-Leste" },
+    { code: "TG", name: "Togo" },
+    { code: "TO", name: "Tonga" },
+    { code: "TT", name: "Trinidad and Tobago" },
+    { code: "TN", name: "Tunisia" },
+    { code: "TR", name: "Türkiye" },
+    { code: "TM", name: "Turkmenistan" },
+    { code: "TV", name: "Tuvalu" },
+    { code: "UG", name: "Uganda" },
+    { code: "UA", name: "Ukraine" },
+    { code: "AE", name: "United Arab Emirates" },
+    { code: "GB", name: "United Kingdom" },
+    { code: "US", name: "United States" },
+    { code: "UY", name: "Uruguay" },
+    { code: "UZ", name: "Uzbekistan" },
+    { code: "VU", name: "Vanuatu" },
+    { code: "VE", name: "Venezuela" },
+    { code: "VN", name: "Viet Nam" },
+    { code: "YE", name: "Yemen" },
+    { code: "ZM", name: "Zambia" },
+    { code: "ZW", name: "Zimbabwe" },
+    // ... add all 195 countries or use a library
+  ];
+}
+
 // OTP Modal
 function showOTPModal(transactionId, type) {
   const modal = document.getElementById("otpModal");
@@ -1647,7 +2146,7 @@ document
   });
 
 // Crypto payment modal
-function showCryptoPaymentModal(instructions) {
+/*function showCryptoPaymentModal(instructions) {
   const modal = document.createElement("div");
   modal.className = "modal show";
   modal.innerHTML = `
@@ -1673,7 +2172,7 @@ function showCryptoPaymentModal(instructions) {
   document.body.appendChild(modal);
 
   modal.querySelector(".close-modal").onclick = () => modal.remove();
-}
+}*/
 
 // Copy to clipboard
 window.copyToClipboard = (text) => {
@@ -1730,25 +2229,6 @@ function escapeHtml(unsafe) {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 }
-
-// Render message (WhatsApp style)
-/*function renderMessage(msg) {
-  const div = document.createElement("div");
-  div.className = msg.is_from_admin ? "message received" : "message sent";
-  div.innerHTML = `
-    <div class="bubble">${msg.message}</div>
-    <div class="time">${new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
-    ${
-      !msg.is_from_admin
-        ? `
-      <div class="status">
-        ${msg.status === "read" ? "✓✓" : msg.status === "delivered" ? "✓" : ""}
-      </div>`
-        : ""
-    }
-  `;
-  document.getElementById("chatMessages").appendChild(div);
-}*/
 
 // Send message
 document.getElementById("sendChatBtn").addEventListener("click", async () => {
@@ -1825,11 +2305,6 @@ function appendMessageToChat(msg) {
   container.appendChild(div);
   container.scrollTop = container.scrollHeight;
 }
-
-// Attach to button (example – adjust selector to match your HTML)
-/*document
-  .getElementById("live-chat-send-btn")
-  ?.addEventListener("click", sendMessage);*/
 
 // Optional: send on Enter key
 document
@@ -2108,6 +2583,12 @@ function startRealTimeUpdates() {
       await loadNotifications();
     }
   }, 15000);
+
+   setInterval(async () => {
+    if (document.visibilityState === "visible") {
+      await loadLiveChat();
+    }
+  }, 40000);
 }
 
 // Update date and time
@@ -2204,7 +2685,7 @@ document.querySelectorAll(".sidebar-nav .nav-item").forEach((item) => {
         case "overview":
           await updateTotalBalance();
           await loadSpendingByCategory();
-          showPrimaryAccountNumber();
+          await showPrimaryAccountNumber();
           // usually already loaded — but can refresh charts/notifications if needed
           break;
 

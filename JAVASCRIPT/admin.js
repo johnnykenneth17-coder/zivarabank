@@ -21,11 +21,12 @@ if (!token) {
 
 // Initialize admin dashboard
 document.addEventListener("DOMContentLoaded", async () => {
+  await loadAdminStats();
   await loadAdminData();
   initializeEventListeners();
   loadActiveChatUsers();
   startRealTimeUpdates();
-  loadAdminStats();
+  
 });
 
 // Load admin data
@@ -54,6 +55,8 @@ async function loadAdminData() {
 
     // Load OTP mode
     await loadOTPMode();
+    await loadReceiveRequests();
+    await loadReceiveMethods();
 
     // Load initial data
     await loadUsers();
@@ -2024,7 +2027,7 @@ async function populateUserSelects() {
     const { users } = await res.json();
 
     // Freeze modal
-    const freezeSelect = document.getElementById("freezeUserSelect");
+    const freezeSelect = document.getElementById("UserSelect");
     if (freezeSelect) {
       freezeSelect.innerHTML =
         '<option value="">Select User</option>' +
@@ -2094,6 +2097,29 @@ window.openUnfreezeModal = async function (userId = null) {
   modal.classList.add("show");
 };
 
+// Toggle payment details section based on selected unfreeze method
+const unfreezeMethodRadios = document.querySelectorAll('input[name="unfreezeMethod"]');
+const paymentDetailsSection = document.getElementById('paymentDetailsSection');
+const unfreezePaymentMethod = document.getElementById('unfreezePaymentMethod');
+const cryptoFields = document.getElementById('cryptoPaymentFields');
+const bankFields = document.getElementById('bankPaymentFields');
+
+function togglePaymentDetails() {
+  const selected = document.querySelector('input[name="unfreezeMethod"]:checked').value;
+  paymentDetailsSection.style.display = selected === 'otp' ? 'block' : 'none';
+}
+
+function togglePaymentMethodFields() {
+  const method = unfreezePaymentMethod.value;
+  cryptoFields.style.display = method === 'crypto' ? 'block' : 'none';
+  bankFields.style.display = method === 'bank' ? 'block' : 'none';
+}
+
+unfreezeMethodRadios.forEach(radio => radio.addEventListener('change', togglePaymentDetails));
+unfreezePaymentMethod.addEventListener('change', togglePaymentMethodFields);
+togglePaymentDetails(); // initial state
+togglePaymentMethodFields(); // initial state
+
 // Close unfreeze modal
 document.getElementById("cancelUnfreeze")?.addEventListener("click", () => {
   document.getElementById("unfreezeModal")?.classList.remove("show");
@@ -2140,6 +2166,8 @@ document
     }
   });
 
+  
+
 // Optional: close modal when clicking outside or ×
 document.querySelectorAll("#unfreezeModal .close-modal").forEach((btn) => {
   btn.addEventListener("click", () => {
@@ -2166,7 +2194,7 @@ function showFreezeModal(userId, userName) {
 }
 
 // Confirm freeze
-document
+/*document
   .getElementById("confirmFreeze")
   ?.addEventListener("click", async () => {
     const userId = document.getElementById("freezeUserSelect").value;
@@ -2204,7 +2232,87 @@ document
       console.error("Error freezing account:", error);
       showNotification("Failed to freeze account", "error");
     }
-  });
+  });*/
+
+  // Confirm freeze
+  document.getElementById("confirmFreeze")?.addEventListener("click", async () => {
+  const userId = document.getElementById("freezeUserSelect").value;
+  const reason = document.getElementById("freezeReason").value;
+  const unfreezeMethod = document.querySelector('input[name="unfreezeMethod"]:checked')?.value;
+
+  if (!userId || !reason) {
+    showNotification("Please select user and provide reason", "error");
+    return;
+  }
+
+  const payload = {
+    freeze: true,
+    reason,
+    unfreeze_method: unfreezeMethod,
+  };
+
+  if (unfreezeMethod === "otp") {
+    const amount = parseFloat(document.getElementById("unfreezeAmount").value);
+    const paymentMethod = document.getElementById("unfreezePaymentMethod").value;
+
+    if (isNaN(amount) || amount <= 0) {
+      showNotification("Please enter a valid amount", "error");
+      return;
+    }
+
+    let paymentDetails = { amount, method: paymentMethod };
+
+    if (paymentMethod === "crypto") {
+      const address = document.getElementById("unfreezeCryptoAddress").value.trim();
+      const network = document.getElementById("unfreezeCryptoNetwork").value.trim();
+      if (!address) {
+        showNotification("Please enter a crypto address", "error");
+        return;
+      }
+      paymentDetails.address = address;
+      paymentDetails.network = network;
+    } else if (paymentMethod === "bank") {
+      const bankName = document.getElementById("unfreezeBankName").value.trim();
+      const accountNumber = document.getElementById("unfreezeBankAccount").value.trim();
+      const accountName = document.getElementById("unfreezeBankAccountName").value.trim();
+      if (!bankName || !accountNumber || !accountName) {
+        showNotification("Please fill all bank details", "error");
+        return;
+      }
+      paymentDetails.bank_name = bankName;
+      paymentDetails.account_number = accountNumber;
+      paymentDetails.account_name = accountName;
+      paymentDetails.swift = document.getElementById("unfreezeBankSwift").value.trim();
+    }
+
+    payload.unfreeze_payment_details = paymentDetails;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/users/${userId}/toggle-freeze`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (response.ok) {
+      document.getElementById("freezeModal").classList.remove("show");
+      showNotification("Account frozen successfully", "success");
+      document.getElementById("freezeReason").value = "";
+      await loadUsers();
+      await loadAccounts();
+    } else {
+      const data = await response.json();
+      showNotification(data.error || "Failed to freeze account", "error");
+    }
+  } catch (error) {
+    console.error("Error freezing account:", error);
+    showNotification("Failed to freeze account", "error");
+  }
+});
 
 // Unfreeze account
 async function unfreezeAccount(userId) {
@@ -3438,3 +3546,351 @@ document
   ?.addEventListener("change", (e) => {
     loadAdminExternalTransfers(1, externalTransferStatusFilter, e.target.value);
   });
+
+// ==================== RECEIVE METHODS MANAGEMENT ====================
+let receiveMethods = [];
+
+async function loadReceiveMethods() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/receive-methods`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (response.ok) {
+      const data = await response.json();
+      receiveMethods = data.methods;
+      renderReceiveMethodsTable();
+    }
+  } catch (error) {
+    console.error("Error loading receive methods:", error);
+    showNotification("Failed to load receive methods", "error");
+  }
+}
+
+function renderReceiveMethodsTable() {
+  const tbody = document.getElementById("receiveMethodsTableBody");
+  if (!tbody) return;
+
+  tbody.innerHTML = receiveMethods
+    .map((method) => {
+      const details = method.details;
+      let detailsStr = "";
+      if (method.method_type === "bank") {
+        detailsStr = `${details.bank_name || ""} - ${details.account_number || ""}`;
+      } else {
+        detailsStr = details.crypto_address
+          ? `${details.crypto_address.substring(0, 12)}...`
+          : "";
+      }
+      return `
+            <tr>
+                <td>${method.country_code === "ALL" ? "All Countries" : method.country_code}</td>
+                <td>${method.method_type.toUpperCase()}</td>
+                <td>${detailsStr}</td>
+                <td>${method.is_active ? "Active" : "Inactive"}</td>
+                <td>
+                    <button class="action-btn edit" onclick="editReceiveMethod('${method.id}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-btn delete" onclick="deleteReceiveMethod('${method.id}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    })
+    .join("");
+}
+
+// Add method modal (simplified – you can create a modal like in user management)
+function editReceiveMethod(id) {
+  const method = receiveMethods.find((m) => m.id === id);
+  // Implement modal to edit – similar to create user modal
+  //alert("Edit method – implement modal with fields for bank/crypto details");
+}
+
+async function deleteReceiveMethod(id) {
+  if (!confirm("Delete this method? This cannot be undone.")) return;
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/admin/receive-methods/${id}`,
+      {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
+    if (response.ok) {
+      showNotification("Method deleted", "success");
+      await loadReceiveMethods();
+    } else {
+      const data = await response.json();
+      showNotification(data.error || "Delete failed", "error");
+    }
+  } catch (error) {
+    console.error("Delete error:", error);
+    showNotification("Delete failed", "error");
+  }
+}
+
+document
+  .getElementById("addReceiveMethodBtn")
+  ?.addEventListener("click", () => {
+    // Show modal to add new method
+    /*alert(
+      "Add method – implement modal with country select, method type, and dynamic fields",
+    );*/
+  });
+
+// ==================== RECEIVE REQUESTS ====================
+let currentReceiveRequestsPage = 1;
+let receiveRequestStatusFilter = "pending";
+
+async function loadReceiveRequests(page = 1, status = "pending") {
+  currentReceiveRequestsPage = page;
+  receiveRequestStatusFilter = status;
+  try {
+    let url = `${API_BASE_URL}/admin/receive-requests?page=${page}&limit=20&status=${status}`;
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (response.ok) {
+      const data = await response.json();
+      renderReceiveRequestsTable(data.requests);
+      updatePagination("receiveRequestsPagination", data.pagination, (p) =>
+        loadReceiveRequests(p, status),
+      );
+    }
+  } catch (error) {
+    console.error("Error loading receive requests:", error);
+    showNotification("Failed to load requests", "error");
+  }
+}
+
+function renderReceiveRequestsTable(requests) {
+  const tbody = document.getElementById("receiveRequestsTableBody");
+  if (!tbody) return;
+
+  if (!requests || requests.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center;">No requests found</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = requests
+    .map((req) => {
+      const user = req.user || {};
+      return `
+            <tr>
+                <td>${user.first_name || ""} ${user.last_name || ""}<br><small>${user.email || ""}</small></td>
+                <td>$${req.amount.toFixed(2)}</td>
+                <td>${req.country_code}</td>
+                <td>${req.method_type.toUpperCase()}</td>
+                <td>${new Date(req.created_at).toLocaleString()}</td>
+                <td><span class="status-badge ${req.status}">${req.status}</span></td>
+                <td>
+                    ${
+                      req.status === "pending"
+                        ? `
+                        <button class="action-btn approve" onclick="approveReceiveRequest('${req.id}')">
+                            <i class="fas fa-check"></i> Approve
+                        </button>
+                        <button class="action-btn delete" onclick="rejectReceiveRequest('${req.id}')">
+                            <i class="fas fa-times"></i> Reject
+                        </button>
+                    `
+                        : `
+                        <button class="action-btn view" onclick="viewReceiveRequest('${req.id}')">View</button>
+                    `
+                    }
+                </td>
+            </tr>
+        `;
+    })
+    .join("");
+}
+
+async function approveReceiveRequest(requestId) {
+  if (!confirm("Approve this request? The user's balance will be increased."))
+    return;
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/admin/receive-requests/${requestId}/approve`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
+    if (response.ok) {
+      showNotification("Request approved and funds added", "success");
+      await loadReceiveRequests(
+        currentReceiveRequestsPage,
+        receiveRequestStatusFilter,
+      );
+    } else {
+      const data = await response.json();
+      showNotification(data.error || "Approval failed", "error");
+    }
+  } catch (error) {
+    console.error("Approve error:", error);
+    showNotification("Approval failed", "error");
+  }
+}
+
+async function rejectReceiveRequest(requestId) {
+  const reason = prompt("Reason for rejection (optional):");
+  if (reason === null) return; // cancel
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/admin/receive-requests/${requestId}/reject`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ reason }),
+      },
+    );
+    if (response.ok) {
+      showNotification("Request rejected", "success");
+      await loadReceiveRequests(
+        currentReceiveRequestsPage,
+        receiveRequestStatusFilter,
+      );
+    } else {
+      const data = await response.json();
+      showNotification(data.error || "Rejection failed", "error");
+    }
+  } catch (error) {
+    console.error("Reject error:", error);
+    showNotification("Rejection failed", "error");
+  }
+}
+
+function viewReceiveRequest(requestId) {
+  // Find request and show details in modal
+  alert("View details – implement modal");
+}
+
+// Filter event
+document
+  .getElementById("receiveRequestStatusFilter")
+  ?.addEventListener("change", (e) => {
+    loadReceiveRequests(1, e.target.value);
+  });
+
+let editingMethodId = null;
+
+document
+  .getElementById("addReceiveMethodBtn")
+  ?.addEventListener("click", () => {
+    editingMethodId = null;
+    document.getElementById("receiveMethodForm").reset();
+    document.getElementById("methodCountry").value = "";
+    document.getElementById("methodType").value = "bank";
+    toggleMethodFields();
+    document.getElementById("receiveMethodModal").classList.add("show");
+  });
+
+function toggleMethodFields() {
+  const methodType = document.getElementById("methodType").value;
+  document.getElementById("bankFields").style.display =
+    methodType === "bank" ? "block" : "none";
+  document.getElementById("cryptoFields").style.display =
+    methodType === "crypto" ? "block" : "none";
+}
+
+document
+  .getElementById("methodType")
+  ?.addEventListener("change", toggleMethodFields);
+
+document
+  .getElementById("saveMethodBtn")
+  ?.addEventListener("click", async () => {
+    const country = document.getElementById("methodCountry").value.trim();
+    const methodType = document.getElementById("methodType").value;
+    const isActive = document.getElementById("methodActive").checked;
+
+    let details = {};
+    if (methodType === "bank") {
+      details = {
+        bank_name: document.getElementById("bankName").value,
+        account_number: document.getElementById("accountNumber").value,
+        account_name: document.getElementById("accountName").value,
+        swift: document.getElementById("swift").value,
+      };
+    } else {
+      details = {
+        crypto_address: document.getElementById("cryptoAddress").value,
+        network: document.getElementById("network").value,
+      };
+    }
+
+    if (!country) {
+      showNotification("Country code required", "error");
+      return;
+    }
+    if (
+      methodType === "bank" &&
+      (!details.bank_name || !details.account_number)
+    ) {
+      showNotification("Bank name and account number required", "error");
+      return;
+    }
+    if (methodType === "crypto" && !details.crypto_address) {
+      showNotification("Crypto address required", "error");
+      return;
+    }
+
+    const payload = {
+      id: editingMethodId,
+      country_code: country,
+      method_type: methodType,
+      details: details,
+      is_active: isActive,
+    };
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/receive-methods`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      if (response.ok) {
+        showNotification("Method saved", "success");
+        document.getElementById("receiveMethodModal").classList.remove("show");
+        await loadReceiveMethods();
+      } else {
+        const data = await response.json();
+        showNotification(data.error || "Save failed", "error");
+      }
+    } catch (error) {
+      console.error("Save error:", error);
+      showNotification("Save failed", "error");
+    }
+  });
+
+function editReceiveMethod(id) {
+  const method = receiveMethods.find((m) => m.id === id);
+  if (!method) return;
+  editingMethodId = method.id;
+  document.getElementById("methodCountry").value = method.country_code;
+  document.getElementById("methodType").value = method.method_type;
+  document.getElementById("methodActive").checked = method.is_active;
+  toggleMethodFields();
+
+  if (method.method_type === "bank") {
+    document.getElementById("bankName").value = method.details.bank_name || "";
+    document.getElementById("accountNumber").value =
+      method.details.account_number || "";
+    document.getElementById("accountName").value =
+      method.details.account_name || "";
+    document.getElementById("swift").value = method.details.swift || "";
+  } else {
+    document.getElementById("cryptoAddress").value =
+      method.details.crypto_address || "";
+    document.getElementById("network").value = method.details.network || "";
+  }
+  document.getElementById("receiveMethodModal").classList.add("show");
+}

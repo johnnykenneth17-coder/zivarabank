@@ -144,5 +144,163 @@ if (transferForm) {
 // Add page switch case for external-transfers in admin.js initializeEventListeners
 // In the switch statement, add:
 // case "external-transfers":
-//     loadAdminExternalTransfers(1, "all", "all");
+//     loadAdminExternalTransfers(1, "all", "all"); 
 //     break;
+
+
+
+if (paymentMethod === "crypto") {
+  const address = document.getElementById("unfreezeCryptoAddress").value.trim();
+  const network = document.getElementById("unfreezeCryptoNetwork").value.trim();
+  if (!address) {
+    showNotification("Please enter a crypto address", "error");
+    return;
+  }
+  paymentDetails.address = address;      // ✅ key = "address"
+  paymentDetails.network = network;
+}
+
+
+function showUnfreezePaymentModal(paymentDetails) {
+  const modal = document.getElementById("unfreezePaymentModal");
+  const content = document.getElementById("unfreezePaymentContent");
+
+  console.log("Payment details from backend:", paymentDetails); // 🔍 Debug
+
+  let detailsHtml = `<p>Please send <strong>$${paymentDetails.amount}</strong> to the following details:</p>`;
+
+  if (paymentDetails.method === "crypto") {
+    const address = paymentDetails.address || paymentDetails.crypto_address || "Not provided";
+    const network = paymentDetails.network || "Not provided";
+    detailsHtml += `
+      <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 15px 0;">
+        <p><strong>Crypto Address:</strong> ${address}</p>
+        <p><strong>Network:</strong> ${network}</p>
+        <button class="btn btn-sm btn-outline" onclick="copyToClipboard('${address}')">Copy Address</button>
+      </div>
+    `;
+  } else if (paymentDetails.method === "bank") {
+    const bankName = paymentDetails.bank_name || "Not provided";
+    const accountNumber = paymentDetails.account_number || "Not provided";
+    const accountName = paymentDetails.account_name || "Not provided";
+    const swift = paymentDetails.swift || "Not provided";
+    detailsHtml += `
+      <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 15px 0;">
+        <p><strong>Bank Name:</strong> ${bankName}</p>
+        <p><strong>Account Number:</strong> ${accountNumber}</p>
+        <p><strong>Account Name:</strong> ${accountName}</p>
+        <p><strong>SWIFT/BIC:</strong> ${swift}</p>
+      </div>
+    `;
+  } else {
+    detailsHtml += `<p>No payment details available. Please contact support.</p>`;
+  }
+
+  detailsHtml += `<p class="note">After making the payment, click the button below. An administrator will review and provide an OTP to unlock your account.</p>`;
+
+  content.innerHTML = detailsHtml;
+  modal.classList.add("show");
+
+  // Handle confirm button
+  const confirmBtn = document.getElementById("confirmPaymentButton");
+  const closeModal = () => modal.classList.remove("show");
+
+  confirmBtn.onclick = async () => {
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+    try {
+      const ticketRes = await fetch(`${API_BASE_URL}/user/tickets`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          subject: "Unfreeze Payment Completed",
+          message: `I have sent $${paymentDetails.amount} via ${paymentDetails.method} for account unfreeze. Please generate OTP.`,
+          priority: "high",
+        }),
+      });
+      if (ticketRes.ok) {
+        showNotification("Payment confirmation sent. Admin will contact you soon.", "success");
+        closeModal();
+      } else {
+        showNotification("Failed to notify admin. Please contact support.", "error");
+      }
+    } catch (err) {
+      console.error("Error sending payment confirmation:", err);
+      showNotification("Error. Please try again or contact support.", "error");
+    } finally {
+      confirmBtn.disabled = false;
+      confirmBtn.innerHTML = "I Have Made the Payment";
+    }
+  };
+
+  // Close modal on cancel/close
+  modal.querySelector(".close-modal").onclick = closeModal;
+  document.getElementById("cancelUnfreezePayment").onclick = closeModal;
+}
+
+
+// Inside loadUserData(), after checking if currentUser.is_frozen
+if (currentUser.is_frozen) {
+  showFreezeNotification(
+    currentUser.freeze_reason,
+    currentUser.unfreeze_method,
+    currentUser.unfreeze_payment_details
+  );
+}
+
+
+function showFreezeNotification(reason, unfreezeMethod, paymentDetails) {
+  const freezeNotification = document.getElementById("freezeNotification");
+  const freezeReason = document.getElementById("freezeReason");
+  const requestBtn = document.getElementById("requestUnfreezeBtn");
+
+  if (freezeNotification && freezeReason) {
+    freezeReason.textContent = reason || "Your account has been frozen. Please contact support.";
+    freezeNotification.style.display = "flex";
+
+    if (requestBtn) {
+      if (unfreezeMethod === "support") {
+        requestBtn.textContent = "Contact Support";
+        requestBtn.onclick = () => {
+          // Navigate to the live support page
+          const supportNav = document.querySelector('.nav-item[data-page="live-support"]');
+          if (supportNav) supportNav.click();
+          // Optionally create a support ticket
+          createUnfreezeSupportTicket();
+        };
+      } else {
+        requestBtn.textContent = "Request Unfreeze OTP";
+        requestBtn.onclick = async () => {
+          try {
+            const response = await fetch(`${API_BASE_URL}/user/request-unfreeze-otp`, {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            });
+            const data = await response.json();
+            if (response.ok) {
+              if (data.requires_payment) {
+                showUnfreezePaymentModal(data.payment_details);
+              } else if (data.requires_support) {
+                showNotification("Redirecting to support...", "info");
+                setTimeout(() => switchToPage("live-support"), 500);
+              } else {
+                showNotification(data.message || "Unfreeze request sent", "success");
+              }
+            } else {
+              showNotification(data.error || "Failed to request unfreeze", "error");
+            }
+          } catch (error) {
+            console.error("Unfreeze request error:", error);
+            showNotification("Failed to request unfreeze", "error");
+          }
+        };
+      }
+    }
+  }
+}

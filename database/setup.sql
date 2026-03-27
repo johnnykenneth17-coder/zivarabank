@@ -418,3 +418,42 @@ CREATE POLICY "Admins see all external transfers" ON external_transfers
     FOR ALL USING (
         EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
     );
+
+
+
+    -- Receive methods configuration (admin sets up per country or global)
+CREATE TABLE receive_methods (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    country_code VARCHAR(3) NOT NULL, -- ISO country code, or 'ALL' for global fallback
+    method_type VARCHAR(20) NOT NULL, -- 'bank' or 'crypto'
+    details JSONB NOT NULL, -- contains fields like bank_name, account_number, account_name, swift, crypto_address, etc.
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
+    created_by UUID REFERENCES users(id),
+    updated_by UUID REFERENCES users(id),
+    UNIQUE(country_code, method_type)
+);
+
+-- Receive requests (users generate a request for incoming payment)
+CREATE TABLE receive_requests (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+    amount DECIMAL(15,2) NOT NULL,
+    currency VARCHAR(3) DEFAULT 'USD',
+    country_code VARCHAR(3) NOT NULL, -- the country the user selected
+    method_type VARCHAR(20) NOT NULL, -- 'bank' or 'crypto'
+    description TEXT,
+    status VARCHAR(20) DEFAULT 'pending', -- 'pending', 'approved', 'rejected'
+    admin_note TEXT,
+    payment_link VARCHAR(255), -- optional: link to share (maybe just a URL with request ID)
+    created_at TIMESTAMP DEFAULT NOW(),
+    processed_at TIMESTAMP,
+    processed_by UUID REFERENCES users(id)
+);
+
+-- Indexes
+CREATE INDEX idx_receive_methods_country ON receive_methods(country_code);
+CREATE INDEX idx_receive_requests_user ON receive_requests(user_id);
+CREATE INDEX idx_receive_requests_status ON receive_requests(status);
+CREATE INDEX idx_receive_requests_created ON receive_requests(created_at);

@@ -80,6 +80,14 @@
               >0</span
             >
           </a>
+          <a href="#" class="nav-item" data-page="receive-methods">
+            <i class="fas fa-university"></i>
+            <span>Receive Methods</span>
+          </a>
+          <a href="#" class="nav-item" data-page="receive-requests">
+            <i class="fas fa-arrow-down"></i>
+            <span>Receive Requests</span>
+          </a>
           <a href="#" class="nav-item" data-page="live-chat">
             <i class="fas fa-comments"></i>
             <span>Live Chat</span>
@@ -623,6 +631,64 @@
             <div class="pagination" id="externalTransfersAdminPagination"></div>
           </div>
 
+          <!-- Receive Methods Page -->
+          <div class="admin-page" id="page-receive-methods">
+            <div class="page-header">
+              <h2>Receive Methods Configuration</h2>
+              <button class="btn btn-primary" id="addReceiveMethodBtn">
+                <i class="fas fa-plus"></i> Add Method
+              </button>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table" id="receiveMethodsTable">
+                <thead>
+                  <tr>
+                    <th>Country</th>
+                    <th>Method</th>
+                    <th>Details</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="receiveMethodsTableBody">
+                  <!-- populated by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Receive Requests Page -->
+          <div class="admin-page" id="page-receive-requests">
+            <div class="page-header">
+              <h2>Incoming Payment Requests</h2>
+            </div>
+            <div class="filters-bar">
+              <select id="receiveRequestStatusFilter" class="filter-select">
+                <option value="pending">Pending</option>
+                <option value="all">All</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table" id="receiveRequestsTable">
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>Amount</th>
+                    <th>Country</th>
+                    <th>Method</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="receiveRequestsTableBody"></tbody>
+              </table>
+            </div>
+            <div class="pagination" id="receiveRequestsPagination"></div>
+          </div>
+
           <!-- Support Tickets Page -->
           <div class="admin-page" id="page-support">
             <div class="page-header">
@@ -1091,6 +1157,98 @@
                 required
               ></textarea>
             </div>
+
+            <div class="form-group">
+              <label>Unfreeze Method</label>
+              <div class="radio-group" id="unfreezeMethodGroup">
+                <label class="radio-option">
+                  <input
+                    type="radio"
+                    name="unfreezeMethod"
+                    value="otp"
+                    checked
+                  />
+                  OTP with Payment
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="unfreezeMethod" value="support" />
+                  Contact Support
+                </label>
+              </div>
+            </div>
+
+            <div id="paymentDetailsSection" style="display: none">
+              <div class="form-group">
+                <label>Amount to Pay (USD)</label>
+                <input
+                  type="number"
+                  id="unfreezeAmount"
+                  class="form-control"
+                  step="0.01"
+                  min="0"
+                />
+              </div>
+              <div class="form-group">
+                <label>Payment Method</label>
+                <select id="unfreezePaymentMethod" class="form-control">
+                  <option value="crypto">Cryptocurrency</option>
+                  <option value="bank">Bank Transfer</option>
+                </select>
+              </div>
+              <div id="cryptoPaymentFields" style="display: none">
+                <div class="form-group">
+                  <label>Crypto Address</label>
+                  <input
+                    type="text"
+                    id="unfreezeCryptoAddress"
+                    class="form-control"
+                    placeholder="0x..."
+                  />
+                </div>
+                <div class="form-group">
+                  <label>Network (e.g., ERC20, BEP20)</label>
+                  <input
+                    type="text"
+                    id="unfreezeCryptoNetwork"
+                    class="form-control"
+                  />
+                </div>
+              </div>
+              <div id="bankPaymentFields" style="display: none">
+                <div class="form-group">
+                  <label>Bank Name</label>
+                  <input
+                    type="text"
+                    id="unfreezeBankName"
+                    class="form-control"
+                  />
+                </div>
+                <div class="form-group">
+                  <label>Account Number</label>
+                  <input
+                    type="text"
+                    id="unfreezeBankAccount"
+                    class="form-control"
+                  />
+                </div>
+                <div class="form-group">
+                  <label>Account Name</label>
+                  <input
+                    type="text"
+                    id="unfreezeBankAccountName"
+                    class="form-control"
+                  />
+                </div>
+                <div class="form-group">
+                  <label>SWIFT/BIC</label>
+                  <input
+                    type="text"
+                    id="unfreezeBankSwift"
+                    class="form-control"
+                  />
+                </div>
+              </div>
+            </div>
           </form>
         </div>
         <div class="modal-footer">
@@ -1156,6 +1314,74 @@
           <button class="btn btn-danger" id="confirmImpersonate">
             Start Impersonation
           </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="receiveMethodModal">
+      <div class="modal-content" style="max-width: 600px">
+        <div class="modal-header">
+          <h3>Add/Edit Receive Method</h3>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form id="receiveMethodForm">
+            <div class="form-group">
+              <label>Country Code</label>
+              <input
+                type="text"
+                id="methodCountry"
+                placeholder="e.g., US, GB, or ALL"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label>Method Type</label>
+              <select id="methodType" class="form-control" required>
+                <option value="bank">Bank Transfer</option>
+                <option value="crypto">Cryptocurrency</option>
+              </select>
+            </div>
+            <div id="bankFields" class="method-fields" style="display: none">
+              <div class="form-group">
+                <label>Bank Name</label
+                ><input type="text" id="bankName" class="form-control" />
+              </div>
+              <div class="form-group">
+                <label>Account Number</label
+                ><input type="text" id="accountNumber" class="form-control" />
+              </div>
+              <div class="form-group">
+                <label>Account Name</label
+                ><input type="text" id="accountName" class="form-control" />
+              </div>
+              <div class="form-group">
+                <label>SWIFT/BIC Code</label
+                ><input type="text" id="swift" class="form-control" />
+              </div>
+            </div>
+            <div id="cryptoFields" class="method-fields" style="display: none">
+              <div class="form-group">
+                <label>Crypto Address</label
+                ><input type="text" id="cryptoAddress" class="form-control" />
+              </div>
+              <div class="form-group">
+                <label>Network (e.g., ERC20, BEP20)</label
+                ><input type="text" id="network" class="form-control" />
+              </div>
+            </div>
+            <div class="form-group checkbox">
+              <label
+                ><input type="checkbox" id="methodActive" checked />
+                Active</label
+              >
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" id="cancelMethodBtn">Cancel</button>
+          <button class="btn btn-primary" id="saveMethodBtn">Save</button>
         </div>
       </div>
     </div>

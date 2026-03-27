@@ -1,14 +1,80 @@
-<div class="form-group">
-    <label for="password">Password</label>
-    <div class="input-icon">
-        <i class="fas fa-lock"></i>
-        <input type="password" id="password" name="password" placeholder="Create a strong password" required>
-        <button type="button" class="toggle-password">
-            <i class="fas fa-eye"></i>
-        </button>
+<div class="modal" id="freezeModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Freeze User Account</h3>
+      <button class="close-modal">&times;</button>
     </div>
-    <div class="password-strength">
-        <div class="strength-bar"></div>
-        <span class="strength-text"></span>
+    <div class="modal-body">
+      <form id="freezeForm">
+        <div class="form-group">
+          <label>User</label>
+          <select id="freezeUserSelect" class="form-control" required>
+            <option value="">Select User</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Reason for Freezing</label>
+          <textarea id="freezeReason" class="form-control" rows="3" required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Unfreeze Method</label>
+          <div class="radio-group" id="unfreezeMethodGroup">
+            <label class="radio-option">
+              <input type="radio" name="unfreezeMethod" value="otp" checked> OTP with Payment
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="unfreezeMethod" value="support"> Contact Support
+            </label>
+          </div>
+        </div>
+
+        <div id="paymentDetailsSection" style="display: none;">
+          <div class="form-group">
+            <label>Amount to Pay (USD)</label>
+            <input type="number" id="unfreezeAmount" class="form-control" step="0.01" min="0">
+          </div>
+          <div class="form-group">
+            <label>Payment Method</label>
+            <select id="unfreezePaymentMethod" class="form-control">
+              <option value="crypto">Cryptocurrency</option>
+              <option value="bank">Bank Transfer</option>
+            </select>
+          </div>
+          <div id="cryptoPaymentFields" style="display: none;">
+            <div class="form-group">
+              <label>Crypto Address</label>
+              <input type="text" id="unfreezeCryptoAddress" class="form-control" placeholder="0x...">
+            </div>
+            <div class="form-group">
+              <label>Network (e.g., ERC20, BEP20)</label>
+              <input type="text" id="unfreezeCryptoNetwork" class="form-control">
+            </div>
+          </div>
+          <div id="bankPaymentFields" style="display: none;">
+            <div class="form-group">
+              <label>Bank Name</label>
+              <input type="text" id="unfreezeBankName" class="form-control">
+            </div>
+            <div class="form-group">
+              <label>Account Number</label>
+              <input type="text" id="unfreezeBankAccount" class="form-control">
+            </div>
+            <div class="form-group">
+              <label>Account Name</label>
+              <input type="text" id="unfreezeBankAccountName" class="form-control">
+            </div>
+            <div class="form-group">
+              <label>SWIFT/BIC</label>
+              <input type="text" id="unfreezeBankSwift" class="form-control">
+            </div>
+          </div>
+        </div>
+      </form>
     </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" id="cancelFreeze">Cancel</button>
+      <button class="btn btn-danger" id="confirmFreeze">Freeze Account</button>
+    </div>
+  </div>
 </div>
