@@ -2219,7 +2219,7 @@ document
 
       if (response.ok) {
         if (data.requires_payment) {
-          showCryptoPaymentModal(data.payment_details);
+           PaymentModal(data.payment_details);
         }
         showNotification(
           "Unfreeze request sent. Check chat for OTP.",
