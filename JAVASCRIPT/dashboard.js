@@ -2429,7 +2429,7 @@ function startRealTimeUpdates() {
     if (document.visibilityState === "visible") {
       await loadLiveChat();
     }
-  }, 40000);
+  }, 12000);
 }
 
 // Update date and time
