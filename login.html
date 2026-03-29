@@ -131,13 +131,13 @@
                 placeholder="123456"
               />
             </div>
-            <div class="form-options">
+            <div class="form-options" style="margin-top: 10px;">
               <button id="resendOtpBtn" class="btn btn-outline">
                 Resend Code
               </button>
               <span id="resendTimer" style="color: gray"></span>
             </div>
-            <button id="verifyOtpBtn" class="btn btn-primary btn-block">
+            <button id="verifyOtpBtn" class="btn btn-primary btn-block" style="margin-top: 15px;">
               Verify Code
             </button>
           </div>
@@ -154,7 +154,7 @@
                 placeholder="Enter new password"
               />
             </div>
-            <div class="form-group">
+            <div class="form-group" style="margin-top: 7px;">
               <label>Confirm New Password</label>
               <input
                 type="password"
@@ -163,7 +163,7 @@
                 placeholder="Confirm new password"
               />
             </div>
-            <button id="resetPasswordBtn" class="btn btn-primary btn-block">
+            <button id="resetPasswordBtn" class="btn btn-primary btn-block" style="margin-top: 15px;">
               Reset Password
             </button>
           </div>
@@ -178,7 +178,6 @@
     <script>
       // ==================== FORGOT PASSWORD FLOW ====================
 
-      // ==================== FORGOT PASSWORD FLOW ====================
       const forgotModal = document.getElementById("forgotPasswordModal");
       const forgotLink = document.querySelector(".forgot-link");
       const closeModalBtn = forgotModal?.querySelector(".close-modal");
@@ -413,7 +412,7 @@
         }
       });
 
-      
+
       // Helper: showNotification (if not already defined)
       function showNotification(message, type = "info") {
         // Reuse your existing notification system or implement a simple one

@@ -459,7 +459,10 @@ CREATE INDEX idx_receive_requests_status ON receive_requests(status);
 CREATE INDEX idx_receive_requests_created ON receive_requests(created_at);
 
 
-CREATE TABLE IF NOT EXISTS password_resets (
+-- Drop and recreate password_resets with correct structure
+DROP TABLE IF EXISTS password_resets CASCADE;
+
+CREATE TABLE password_resets (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     email TEXT NOT NULL,
     otp TEXT NOT NULL,
@@ -468,6 +471,7 @@ CREATE TABLE IF NOT EXISTS password_resets (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_password_resets_email ON password_resets(email);
+-- Create a unique index on email (required for upsert)
+CREATE UNIQUE INDEX idx_password_resets_email ON password_resets(email);
 CREATE INDEX idx_password_resets_otp ON password_resets(otp);
 
