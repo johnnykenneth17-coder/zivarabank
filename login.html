@@ -1,69 +1,439 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login - Paystora</title>
-    <link rel="stylesheet" href="./CSS/main.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body class="auth-page">
+    <link rel="stylesheet" href="./CSS/main.css" />
+    <link rel="stylesheet" href="./CSS/mobile.css" />
+    <link rel="stylesheet" href="./CSS/dashboard.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body class="auth-page">
     <div class="auth-container">
-        <div class="auth-card">
-            <div class="auth-header">  
-                <a href="index.html" class="auth-logo">
-                    <i class="fas fa-shield-alt"></i>
-                    <span>Paystora</span>
-                </a>
-                <h1>Welcome Back</h1>
-                <p>Enter your credentials to access your account</p>
-            </div>
-            <form id="loginForm" class="auth-form">
-                <div class="form-group">
-                    <label for="email">Email Address</label>
-                    <div class="input-icon">
-                        <!--<i class="fas fa-envelope"></i>-->
-                        <input type="email" id="email" name="email" placeholder="Enter your email" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <div class="input-icon">
-                        <!--<i class="fas fa-lock"></i>-->
-                        <input type="password" id="password" name="password" placeholder="Enter your password" required>
-                        <button type="button" class="toggle-password">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="form-options">
-                    <label class="checkbox">
-                        <input type="checkbox" name="remember">
-                        <span>Remember me</span>
-                    </label>
-                    <a href="#" class="forgot-link">Forgot Password?</a>
-                </div>
-                <button type="submit" class="btn btn-primary btn-block" id="loginBtn">
-                    <span>Sign In</span>
-                    <i class="fas fa-arrow-right"></i>
-                </button>
-            </form>
-            <div class="auth-footer">
-                <p>Don't have an account? <a href="register.html">Sign Up</a></p>
-            </div>
+      <div class="auth-card">
+        <div class="auth-header">
+          <a href="index.html" class="auth-logo">
+            <i class="fas fa-shield-alt"></i>
+            <span>Paystora</span>
+          </a>
+          <h1>Welcome Back</h1>
+          <p>Enter your credentials to access your account</p>
         </div>
-        <div class="auth-image">
-            <div class="auth-image-content">
-                <h2>Secure Banking</h2>
-                <p>Your money, protected with enterprise-grade security</p>
-                <div class="trust-badges">
-                    <span><i class="fas fa-shield-alt"></i> 256-bit Encryption</span>
-                    <span><i class="fas fa-lock"></i> 2FA Protection</span>
-                </div>
+        <form id="loginForm" class="auth-form">
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <div class="input-icon">
+              <!--<i class="fas fa-envelope"></i>-->
+              <input
+                type="email"
+                id="email"
+                name="email"
+                placeholder="Enter your email"
+                required
+              />
             </div>
+          </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <div class="input-icon">
+              <!--<i class="fas fa-lock"></i>-->
+              <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Enter your password"
+                required
+              />
+              <button type="button" class="toggle-password">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </div>
+          <div class="form-options">
+            <label class="checkbox">
+              <input type="checkbox" name="remember" />
+              <span>Remember me</span>
+            </label>
+            <a href="" class="forgot-link">Forgot Password?</a>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" id="loginBtn">
+            <span>Sign In</span>
+            <i class="fas fa-arrow-right"></i>
+          </button>
+        </form>
+        <div class="auth-footer">
+          <p>Don't have an account? <a href="register.html">Sign Up</a></p>
         </div>
+      </div>
+      <div class="auth-image">
+        <div class="auth-image-content">
+          <h2>Secure Banking</h2>
+          <p>Your money, protected with enterprise-grade security</p>
+          <div class="trust-badges">
+            <span><i class="fas fa-shield-alt"></i> 256-bit Encryption</span>
+            <span><i class="fas fa-lock"></i> 2FA Protection</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div id="forgotPasswordModal" class="modal" style="display: none">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Reset Password</h3>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <!-- Step 1: Email -->
+          <div id="forgotStep1">
+            <p>
+              Enter your email address and we'll send you a password reset code.
+            </p>
+            <div class="form-group" style="margin: 10px">
+              <label>Email Address</label>
+              <input
+                type="email"
+                id="resetEmail"
+                class="form-control"
+                placeholder="your@email.com"
+              />
+            </div>
+            <button
+              id="sendResetCodeBtn"
+              class="btn btn-primary btn-block"
+              style="margin-top: 15px"
+            >
+              Send Reset Code
+            </button>
+          </div>
+
+          <!-- Step 2: OTP Verification (initially hidden) -->
+          <div id="forgotStep2" style="display: none">
+            <p>
+              We've sent a 6-digit code to your email. Please enter it below.
+            </p>
+            <div class="form-group">
+              <label>Verification Code</label>
+              <input
+                type="text"
+                id="resetOtp"
+                class="form-control"
+                maxlength="6"
+                placeholder="123456"
+              />
+            </div>
+            <div class="form-options">
+              <button id="resendOtpBtn" class="btn btn-outline">
+                Resend Code
+              </button>
+              <span id="resendTimer" style="color: gray"></span>
+            </div>
+            <button id="verifyOtpBtn" class="btn btn-primary btn-block">
+              Verify Code
+            </button>
+          </div>
+
+          <!-- Step 3: New Password (initially hidden) -->
+          <div id="forgotStep3" style="display: none">
+            <p>Enter your new password.</p>
+            <div class="form-group">
+              <label>New Password</label>
+              <input
+                type="password"
+                id="newPassword"
+                class="form-control"
+                placeholder="Enter new password"
+              />
+            </div>
+            <div class="form-group">
+              <label>Confirm New Password</label>
+              <input
+                type="password"
+                id="confirmNewPassword"
+                class="form-control"
+                placeholder="Confirm new password"
+              />
+            </div>
+            <button id="resetPasswordBtn" class="btn btn-primary btn-block">
+              Reset Password
+            </button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" id="cancelForgotBtn">Cancel</button>
+        </div>
+      </div>
     </div>
     <script src="./JAVASCRIPT/main.js"></script>
-</body>
+
+    <script>
+      // ==================== FORGOT PASSWORD FLOW ====================
+
+      // ==================== FORGOT PASSWORD FLOW ====================
+      const forgotModal = document.getElementById("forgotPasswordModal");
+      const forgotLink = document.querySelector(".forgot-link");
+      const closeModalBtn = forgotModal?.querySelector(".close-modal");
+      const cancelBtn = document.getElementById("cancelForgotBtn");
+
+      const step1 = document.getElementById("forgotStep1");
+      const step2 = document.getElementById("forgotStep2");
+      const step3 = document.getElementById("forgotStep3");
+
+      const sendCodeBtn = document.getElementById("sendResetCodeBtn");
+      const verifyOtpBtn = document.getElementById("verifyOtpBtn");
+      const resetPasswordBtn = document.getElementById("resetPasswordBtn");
+      const resendOtpBtn = document.getElementById("resendOtpBtn");
+
+      const resetEmail = document.getElementById("resetEmail");
+      const resetOtp = document.getElementById("resetOtp");
+      const newPassword = document.getElementById("newPassword");
+      const confirmNewPassword = document.getElementById("confirmNewPassword");
+
+      let resendTimerInterval = null;
+
+      function resetModal() {
+        step1.style.display = "block";
+        step2.style.display = "none";
+        step3.style.display = "none";
+        resetEmail.value = "";
+        resetOtp.value = "";
+        newPassword.value = "";
+        confirmNewPassword.value = "";
+        if (resendTimerInterval) clearInterval(resendTimerInterval);
+        const timerSpan = document.getElementById("resendTimer");
+        if (timerSpan) timerSpan.textContent = "";
+      }
+
+      function closeForgotModal() {
+        if (forgotModal) forgotModal.style.display = "none";
+        resetModal();
+      }
+
+      if (forgotLink) {
+        forgotLink.addEventListener("click", (e) => {
+          e.preventDefault();
+          resetModal();
+          if (forgotModal) forgotModal.style.display = "flex";
+        });
+      }
+
+      if (closeModalBtn)
+        closeModalBtn.addEventListener("click", closeForgotModal);
+      if (cancelBtn) cancelBtn.addEventListener("click", closeForgotModal);
+      if (forgotModal) {
+        forgotModal.addEventListener("click", (e) => {
+          if (e.target === forgotModal) closeForgotModal();
+        });
+      }
+
+      // Step 1: Send OTP
+      sendCodeBtn?.addEventListener("click", async () => {
+        const email = resetEmail.value.trim();
+        if (!email) {
+          showNotification("Please enter your email", "error");
+          return;
+        }
+
+        sendCodeBtn.disabled = true;
+        sendCodeBtn.innerHTML =
+          '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+        try {
+          const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email }),
+          });
+          const data = await response.json();
+
+          if (response.ok) {
+            showNotification(
+              data.message || "Reset code sent to your email",
+              "success",
+            );
+            step1.style.display = "none";
+            step2.style.display = "block";
+            startResendTimer();
+          } else {
+            showNotification(data.error || "Failed to send code", "error");
+          }
+        } catch (err) {
+          console.error(err);
+          showNotification("Network error. Please try again.", "error");
+        } finally {
+          sendCodeBtn.disabled = false;
+          sendCodeBtn.innerHTML = "Send Reset Code";
+        }
+      });
+
+      // Resend OTP
+      resendOtpBtn?.addEventListener("click", async () => {
+        const email = resetEmail.value.trim();
+        if (!email) {
+          showNotification("Email is required", "error");
+          return;
+        }
+
+        resendOtpBtn.disabled = true;
+        try {
+          const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email }),
+          });
+          const data = await response.json();
+          if (response.ok) {
+            showNotification("A new code has been sent", "success");
+            resetOtp.value = "";
+            startResendTimer();
+          } else {
+            showNotification(data.error || "Failed to resend code", "error");
+          }
+        } catch (err) {
+          showNotification("Network error", "error");
+        } finally {
+          resendOtpBtn.disabled = false;
+        }
+      });
+
+      function startResendTimer() {
+        let seconds = 60;
+        const timerSpan = document.getElementById("resendTimer");
+        if (resendTimerInterval) clearInterval(resendTimerInterval);
+        resendTimerInterval = setInterval(() => {
+          if (seconds <= 0) {
+            clearInterval(resendTimerInterval);
+            timerSpan.textContent = "";
+            if (resendOtpBtn) resendOtpBtn.disabled = false;
+          } else {
+            timerSpan.textContent = `${seconds}s`;
+            seconds--;
+            if (resendOtpBtn) resendOtpBtn.disabled = true;
+          }
+        }, 1000);
+      }
+
+      // Step 2: Verify OTP
+      verifyOtpBtn?.addEventListener("click", async () => {
+        const email = resetEmail.value.trim();
+        const otp = resetOtp.value.trim();
+
+        if (!otp || otp.length !== 6) {
+          showNotification("Please enter the 6-digit code", "error");
+          return;
+        }
+
+        verifyOtpBtn.disabled = true;
+        verifyOtpBtn.innerHTML =
+          '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+
+        try {
+          const response = await fetch(
+            `${API_BASE_URL}/auth/verify-reset-otp`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email, otp }),
+            },
+          );
+          const data = await response.json();
+
+          if (response.ok && data.valid) {
+            step2.style.display = "none";
+            step3.style.display = "block";
+          } else {
+            showNotification(data.error || "Invalid or expired code", "error");
+          }
+        } catch (err) {
+          console.error(err);
+          showNotification("Verification failed", "error");
+        } finally {
+          verifyOtpBtn.disabled = false;
+          verifyOtpBtn.innerHTML = "Verify Code";
+        }
+      });
+
+      // Step 3: Reset Password
+      resetPasswordBtn?.addEventListener("click", async () => {
+        const email = resetEmail.value.trim();
+        const otp = resetOtp.value.trim();
+        const pwd = newPassword.value;
+        const confirmPwd = confirmNewPassword.value;
+
+        if (!pwd || pwd !== confirmPwd) {
+          showNotification("Passwords do not match", "error");
+          return;
+        }
+
+        // Optional password strength check (reuse your existing function)
+        if (typeof checkPasswordStrength === "function") {
+          const strength = checkPasswordStrength(pwd);
+          if (strength.score < 2) {
+            showNotification("Please use a stronger password", "error");
+            return;
+          }
+        }
+
+        resetPasswordBtn.disabled = true;
+        resetPasswordBtn.innerHTML =
+          '<i class="fas fa-spinner fa-spin"></i> Resetting...';
+
+        try {
+          const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, otp, new_password: pwd }),
+          });
+          const data = await response.json();
+
+          if (response.ok) {
+            showNotification(
+              "Password reset successful. You can now log in.",
+              "success",
+            );
+            closeForgotModal();
+          } else {
+            showNotification(data.error || "Failed to reset password", "error");
+          }
+        } catch (err) {
+          console.error(err);
+          showNotification("Reset failed", "error");
+        } finally {
+          resetPasswordBtn.disabled = false;
+          resetPasswordBtn.innerHTML = "Reset Password";
+        }
+      });
+
+      
+      // Helper: showNotification (if not already defined)
+      function showNotification(message, type = "info") {
+        // Reuse your existing notification system or implement a simple one
+        // Example:
+        const notification = document.createElement("div");
+        notification.className = `notification notification-${type}`;
+        notification.innerHTML = `<i class="fas fa-${type === "success" ? "check-circle" : type === "error" ? "exclamation-circle" : "info-circle"}"></i> ${message}`;
+        notification.style.cssText = `
+        position: fixed; top: 20px; right: 20px;
+        background: ${type === "success" ? "#10b981" : type === "error" ? "#ef4444" : "#3b82f6"};
+        color: white; padding: 12px 24px; border-radius: 8px;
+        z-index: 9999; display: flex; align-items: center; gap: 10px;
+        animation: slideIn 0.3s ease;
+    `;
+        document.body.appendChild(notification);
+        setTimeout(() => {
+          notification.style.animation = "slideOut 0.3s ease";
+          setTimeout(() => notification.remove(), 300);
+        }, 3000);
+      }
+    </script>
+  </body>
 </html>

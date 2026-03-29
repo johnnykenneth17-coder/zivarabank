@@ -280,7 +280,7 @@ function updateAccountsDisplay() {
                 <span>${account.account_type.charAt(0).toUpperCase() + account.account_type.slice(1)} Account</span>
                 <span>${account.account_number}</span>
             </div>
-            <div class="balance-amount">$${account.balance.toFixed(2)}</div>
+            <div class="balance-amount">$${account.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
             <div class="balance-change positive">
                 <i class="fas fa-arrow-up"></i>
                 <span>Available: $${account.available_balance.toFixed(2)}</span>
@@ -314,8 +314,9 @@ function updateAccountsDisplay() {
 // Update total balance
 function updateTotalBalance() {
   const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
-  document.getElementById("totalBalance").textContent =
-    `$${totalBalance.toFixed(2)}`;
+  document.getElementById("totalBalance").textContent = `$${totalBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  /*document.getElementById("totalBalance").textContent =
+    `$${totalBalance.toFixed(2)}`;*/
 }
 
 // Load transactions
