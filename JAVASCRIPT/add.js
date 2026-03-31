@@ -223,3 +223,20 @@ resetPasswordBtn.addEventListener('click', async () => {
         resetPasswordBtn.innerHTML = 'Reset Password';
     }
 });
+
+// Call when DOM is ready (inside your existing DOMContentLoaded)
+document.addEventListener('DOMContentLoaded', () => {
+  checkAndShowAppBanner();
+  setupAppBannerEvents();
+  // ... your existing initialization
+});
+
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  // Prevent Chrome 67 and earlier from automatically showing the prompt
+  e.preventDefault();
+  // Stash the event so it can be triggered later.
+  deferredPrompt = e;
+  // Optionally, you could show a custom button that triggers the install
+});

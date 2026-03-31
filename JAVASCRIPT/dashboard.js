@@ -26,6 +26,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadUserData();
   debounce();
   //loadSpendingByCategory();
+  checkAndShowAppBanner();
+  setupAppBannerEvents();
   loadFullTransactions(1);
   initializeEventListeners();
   await loadLiveChat();
@@ -59,7 +61,13 @@ function showNotification(message, type = "info") {
   const notification = document.createElement("div");
   notification.className = `notification notification-${type}`;
   notification.innerHTML = `
-        <i class="fas fa-${type === "success" ? "check-circle" : type === "error" ? "exclamation-circle" : "info-circle"}"></i>
+        <i class="fas fa-${
+          type === "success"
+            ? "check-circle"
+            : type === "error"
+            ? "exclamation-circle"
+            : "info-circle"
+        }"></i>
         <span>${message}</span>
     `;
 
@@ -67,7 +75,13 @@ function showNotification(message, type = "info") {
         position: fixed;
         top: 20px;
         right: 20px;
-        background: ${type === "success" ? "#10b981" : type === "error" ? "#ef4444" : "#3b82f6"};
+        background: ${
+          type === "success"
+            ? "#10b981"
+            : type === "error"
+            ? "#ef4444"
+            : "#3b82f6"
+        };
         color: white;
         padding: 12px 24px;
         border-radius: 8px;
@@ -180,8 +194,9 @@ function updateUserInterface() {
   console.log("Face image available:", currentUser.face_image ? "Yes" : "No");
 
   // Update user info text
-  document.getElementById("userName").textContent =
-    `${currentUser.first_name} ${currentUser.last_name}`;
+  document.getElementById(
+    "userName",
+  ).textContent = `${currentUser.first_name} ${currentUser.last_name}`;
   document.getElementById("userEmail").textContent = currentUser.email;
   document.getElementById("welcomeName").textContent = currentUser.first_name;
 
@@ -247,7 +262,6 @@ function testFaceImageDisplay() {
   }
 }
 
-
 // Load accounts
 async function loadAccounts() {
   try {
@@ -277,16 +291,24 @@ function updateAccountsDisplay() {
       (account) => `
         <div class="balance-card">
             <div class="balance-label">
-                <span>${account.account_type.charAt(0).toUpperCase() + account.account_type.slice(1)} Account</span>
+                <span>${
+                  account.account_type.charAt(0).toUpperCase() +
+                  account.account_type.slice(1)
+                } Account</span>
                 <span>${account.account_number}</span>
             </div>
-            <div class="balance-amount">$${account.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+            <div class="balance-amount">$${account.balance.toLocaleString(
+              undefined,
+              { minimumFractionDigits: 2 },
+            )}</div>
             <div class="balance-change positive">
                 <i class="fas fa-arrow-up"></i>
                 <span>Available: $${account.available_balance.toFixed(2)}</span>
             </div>
             <div class="progress-bar">
-                <div class="progress" style="width: ${(account.available_balance / account.balance) * 100}%"></div>
+                <div class="progress" style="width: ${
+                  (account.available_balance / account.balance) * 100
+                }%"></div>
             </div>
         </div>
     `,
@@ -303,7 +325,9 @@ function updateAccountsDisplay() {
             ${accounts
               .map(
                 (account) => `
-                <option value="${account.id}">${account.account_type} (${account.account_number}) - $${account.available_balance.toFixed(2)}</option>
+                <option value="${account.id}">${account.account_type} (${
+                  account.account_number
+                }) - $${account.available_balance.toFixed(2)}</option>
             `,
               )
               .join("")}
@@ -314,7 +338,12 @@ function updateAccountsDisplay() {
 // Update total balance
 function updateTotalBalance() {
   const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
-  document.getElementById("totalBalance").textContent = `$${totalBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  document.getElementById(
+    "totalBalance",
+  ).textContent = `$${totalBalance.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
   /*document.getElementById("totalBalance").textContent =
     `$${totalBalance.toFixed(2)}`;*/
 }
@@ -372,13 +401,25 @@ function updateTransactionsDisplay() {
       return `
             <div class="transaction-item">
                 <div class="transaction-icon">
-                    <i class="fas fa-${t.transaction_type === "transfer" ? "exchange-alt" : t.transaction_type === "bill_payment" ? "file-invoice" : "credit-card"}"></i>
+                    <i class="fas fa-${
+                      t.transaction_type === "transfer"
+                        ? "exchange-alt"
+                        : t.transaction_type === "bill_payment"
+                        ? "file-invoice"
+                        : "credit-card"
+                    }"></i>
                 </div>
                 <div class="transaction-details">
-                    <div class="transaction-name">${t.description || t.transaction_type}</div>
-                    <div class="transaction-date">${new Date(t.created_at).toLocaleDateString()}</div>
+                    <div class="transaction-name">${
+                      t.description || t.transaction_type
+                    }</div>
+                    <div class="transaction-date">${new Date(
+                      t.created_at,
+                    ).toLocaleDateString()}</div>
                 </div>
-                <div class="transaction-amount ${isCredit ? "positive" : "negative"}">
+                <div class="transaction-amount ${
+                  isCredit ? "positive" : "negative"
+                }">
                     ${isCredit ? "+" : "-"}$${t.amount.toFixed(2)}
                 </div>
             </div>
@@ -431,12 +472,22 @@ function renderFullTransactionsTable(transactions) {
 
       return `
             <tr>
-                <td>${new Date(t.created_at).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</td>
+                <td>${new Date(t.created_at).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                })}</td>
                 <td>${t.description || t.transaction_type || "—"}</td>
-                <td><span class="badge">${(t.transaction_type || "OTHER").toUpperCase()}</span></td>
-                <td class="${amountClass}">${sign}$${Math.abs(t.amount).toFixed(2)}</td>
+                <td><span class="badge">${(
+                  t.transaction_type || "OTHER"
+                ).toUpperCase()}</span></td>
+                <td class="${amountClass}">${sign}$${Math.abs(t.amount).toFixed(
+        2,
+      )}</td>
                 <td>${t.account_number || "—"}</td>
-                <td><span class="status-badge ${t.status || "completed"}">${(t.status || "completed").toUpperCase()}</span></td>
+                <td><span class="status-badge ${t.status || "completed"}">${(
+        t.status || "completed"
+      ).toUpperCase()}</span></td>
             </tr>
         `;
     })
@@ -457,7 +508,11 @@ function updatePagination(elementId, pagination, callback) {
   // Previous button
   html += `
         <button class="page-btn ${currentPage === 1 ? "disabled" : ""}" 
-                onclick="${currentPage > 1 ? `loadFullTransactions(${currentPage - 1})` : ""}">
+                onclick="${
+                  currentPage > 1
+                    ? `loadFullTransactions(${currentPage - 1})`
+                    : ""
+                }">
             ← Prev
         </button>
     `;
@@ -475,8 +530,14 @@ function updatePagination(elementId, pagination, callback) {
 
   // Next button
   html += `
-        <button class="page-btn ${currentPage === totalPages ? "disabled" : ""}" 
-                onclick="${currentPage < totalPages ? `loadFullTransactions(${currentPage + 1})` : ""}">
+        <button class="page-btn ${
+          currentPage === totalPages ? "disabled" : ""
+        }" 
+                onclick="${
+                  currentPage < totalPages
+                    ? `loadFullTransactions(${currentPage + 1})`
+                    : ""
+                }">
             Next →
         </button>
     `;
@@ -574,7 +635,8 @@ function showUnfreezePaymentModal(paymentDetails) {
 
   if (paymentDetails.method === "crypto") {
     // Support both address and crypto_address keys
-    const address = paymentDetails.address || paymentDetails.crypto_address || "Not provided";
+    const address =
+      paymentDetails.address || paymentDetails.crypto_address || "Not provided";
     const network = paymentDetails.network || "Not provided";
     detailsHtml += `
       <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 15px 0;">
@@ -626,10 +688,16 @@ function showUnfreezePaymentModal(paymentDetails) {
         }),
       });
       if (ticketRes.ok) {
-        showNotification("Payment confirmation sent. Admin will contact you soon.", "success");
+        showNotification(
+          "Payment confirmation sent. Admin will contact you soon.",
+          "success",
+        );
         closeModal();
       } else {
-        showNotification("Failed to notify admin. Please contact support.", "error");
+        showNotification(
+          "Failed to notify admin. Please contact support.",
+          "error",
+        );
       }
     } catch (err) {
       console.error("Error sending payment confirmation:", err);
@@ -716,19 +784,26 @@ function updateCardsDisplay() {
       (card) => `
         <div class="card-item">
             <div class="card-chip"></div>
-            <div class="card-number">•••• •••• •••• ${card.card_number.slice(-4)}</div>
+            <div class="card-number">•••• •••• •••• ${card.card_number.slice(
+              -4,
+            )}</div>
             <div class="card-details">
                 <div>${card.card_type.toUpperCase()}</div>
-                <div>${new Date(card.expiry_date).toLocaleDateString("en-US", { month: "2-digit", year: "2-digit" })}</div>
+                <div>${new Date(card.expiry_date).toLocaleDateString("en-US", {
+                  month: "2-digit",
+                  year: "2-digit",
+                })}</div>
             </div>
-            <span class="card-status ${card.card_status}">${card.card_status}</span>
+            <span class="card-status ${card.card_status}">${
+        card.card_status
+      }</span>
             <div class="card-actions">
                 ${
                   card.card_status === "active"
                     ? `<button onclick="toggleCard('${card.id}', 'freeze')">Freeze</button>`
                     : card.card_status === "frozen"
-                      ? `<button onclick="toggleCard('${card.id}', 'unfreeze')">Unfreeze</button>`
-                      : ""
+                    ? `<button onclick="toggleCard('${card.id}', 'unfreeze')">Unfreeze</button>`
+                    : ""
                 }
                 <button onclick="reportCard('${card.id}')">Report</button>
             </div>
@@ -826,7 +901,9 @@ function updateNotificationsDisplay() {
     .slice(0, 5)
     .map(
       (n) => `
-        <div class="notification-item ${!n.is_read ? "unread" : ""}" onclick="markNotificationRead('${n.id}')">
+        <div class="notification-item ${
+          !n.is_read ? "unread" : ""
+        }" onclick="markNotificationRead('${n.id}')">
             <div class="notification-title">${n.title}</div>
             <div class="notification-message">${n.message}</div>
             <div class="notification-time">${timeAgo(n.created_at)}</div>
@@ -933,7 +1010,10 @@ async function createUnfreezeSupportTicket() {
       }),
     });
     if (response.ok) {
-      showNotification("Support ticket created. An admin will assist you shortly.", "success");
+      showNotification(
+        "Support ticket created. An admin will assist you shortly.",
+        "success",
+      );
     } else {
       console.error("Failed to create ticket");
     }
@@ -1088,7 +1168,9 @@ if (toAccountInput && feedbackEl) {
 
     try {
       const res = await fetch(
-        `${API_BASE_URL}/accounts/recipient?account_number=${encodeURIComponent(accountNumber)}`,
+        `${API_BASE_URL}/accounts/recipient?account_number=${encodeURIComponent(
+          accountNumber,
+        )}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -1207,11 +1289,15 @@ function renderExternalTransfersTable(transfers) {
             <tr>
                 <td>${new Date(transfer.created_at).toLocaleDateString()}</td>
                 <td><strong>${transfer.bank_name}</strong></td>
-                <td>${transfer.recipient_name}<br><small>${transfer.recipient_account || transfer.recipient_email || ""}</small></td>
+                <td>${transfer.recipient_name}<br><small>${
+        transfer.recipient_account || transfer.recipient_email || ""
+      }</small></td>
                 <td class="amount">$${transfer.amount.toFixed(2)}</td>
                 <td><span class="external-transfer-status ${statusClass}">${statusText}</span></td>
                 <td>
-                    <button class="action-btn view" onclick="viewExternalTransferDetails('${transfer.id}')">
+                    <button class="action-btn view" onclick="viewExternalTransferDetails('${
+                      transfer.id
+                    }')">
                         <i class="fas fa-info-circle"></i>
                     </button>
                 </td>
@@ -1258,17 +1344,29 @@ function showExternalTransferInfoModal(transferId) {
                         <strong>Bank/Provider:</strong> ${transfer.bank_name}
                     </div>
                     <div style="margin-bottom: 15px;">
-                        <strong>Recipient:</strong> ${transfer.recipient_name}<br>
-                        <small>${transfer.recipient_account || transfer.recipient_email || "N/A"}</small>
+                        <strong>Recipient:</strong> ${
+                          transfer.recipient_name
+                        }<br>
+                        <small>${
+                          transfer.recipient_account ||
+                          transfer.recipient_email ||
+                          "N/A"
+                        }</small>
                     </div>
                     <div style="margin-bottom: 15px;">
-                        <strong>Amount:</strong> <span style="font-size: 20px; color: var(--primary-color);">$${transfer.amount.toFixed(2)}</span>
+                        <strong>Amount:</strong> <span style="font-size: 20px; color: var(--primary-color);">$${transfer.amount.toFixed(
+                          2,
+                        )}</span>
                     </div>
                     <div style="margin-bottom: 15px;">
-                        <strong>Status:</strong> <span class="external-transfer-status status-${transfer.status}">${transfer.status.toUpperCase()}</span>
+                        <strong>Status:</strong> <span class="external-transfer-status status-${
+                          transfer.status
+                        }">${transfer.status.toUpperCase()}</span>
                     </div>
                     <div style="margin-bottom: 15px;">
-                        <strong>Date:</strong> ${new Date(transfer.created_at).toLocaleString()}
+                        <strong>Date:</strong> ${new Date(
+                          transfer.created_at,
+                        ).toLocaleString()}
                     </div>
                     ${
                       transfer.admin_note
@@ -1288,13 +1386,13 @@ function showExternalTransferInfoModal(transferId) {
                         </div>
                     `
                         : transfer.status === "rejected"
-                          ? `
+                        ? `
                         <div class="warning-box" style="background: #fee2e2; padding: 12px; border-radius: 8px;">
                             <i class="fas fa-exclamation-circle"></i>
                             This transfer was rejected. Funds have been refunded to your account.
                         </div>
                     `
-                          : `
+                        : `
                         <div class="warning-box" style="background: #d1fae5; padding: 12px; border-radius: 8px;">
                             <i class="fas fa-check-circle"></i>
                             Transfer completed. Funds should arrive within 2-3 business days.
@@ -1339,11 +1437,15 @@ function renderProvidersGrid() {
   grid.innerHTML = externalProviders
     .map(
       (provider) => `
-        <div class="provider-card" data-provider='${JSON.stringify(provider)}' onclick="selectProvider(this, '${provider.id}')"> 
+        <div class="provider-card" data-provider='${JSON.stringify(
+          provider,
+        )}' onclick="selectProvider(this, '${provider.id}')"> 
            <div class="provider-logo">
             <img src="${provider.logo}" 
             alt="${provider.name}"
-            onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22 viewBox=%220 0 24 24%22 fill=%22%234f46e5%22%3E%3Ctext x=%2250%25%22 y=%2250%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-size=%2212%22 fill=%22white%22%3E${provider.name[0]}%3C/text%3E%3C/svg%3E'">
+            onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22 viewBox=%220 0 24 24%22 fill=%22%234f46e5%22%3E%3Ctext x=%2250%25%22 y=%2250%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-size=%2212%22 fill=%22white%22%3E${
+              provider.name[0]
+            }%3C/text%3E%3C/svg%3E'">
         </div>
             <div class="provider-name">${provider.name}</div>
         </div>
@@ -1383,7 +1485,9 @@ function showProviderDetailsForm(provider) {
     const fieldHtml = `
             <div class="form-group">
                 <label>${field.label} ${field.required ? "*" : ""}</label>
-                <input type="${field.type}" id="ext_${field.name}" class="form-control" ${field.required ? "required" : ""}>
+                <input type="${field.type}" id="ext_${
+      field.name
+    }" class="form-control" ${field.required ? "required" : ""}>
             </div>
         `;
     dynamicFields.insertAdjacentHTML("beforeend", fieldHtml);
@@ -1394,7 +1498,9 @@ function showProviderDetailsForm(provider) {
   accountSelect.innerHTML = '<option value="">Select account</option>';
   accounts.forEach((account) => {
     accountSelect.innerHTML += `
-            <option value="${account.id}">${account.account_type} (${account.account_number}) - $${account.available_balance.toFixed(2)}</option>
+            <option value="${account.id}">${account.account_type} (${
+      account.account_number
+    }) - $${account.available_balance.toFixed(2)}</option>
         `;
   });
 }
@@ -1589,20 +1695,42 @@ document
 
         if (method === "bank") {
           detailsContent.innerHTML = `
-                    <p><strong>Bank Name:</strong> ${data.payment_details.bank_name || "N/A"}</p>
-                    <p><strong>Account Number:</strong> ${data.payment_details.account_number || "N/A"}</p>
-                    <p><strong>Account Name:</strong> ${data.payment_details.account_name || "N/A"}</p>
-                    <p><strong>SWIFT Code:</strong> ${data.payment_details.swift || "N/A"}</p>
+                    <p><strong>Bank Name:</strong> ${
+                      data.payment_details.bank_name || "N/A"
+                    }</p>
+                    <p><strong>Account Number:</strong> ${
+                      data.payment_details.account_number || "N/A"
+                    }</p>
+                    <p><strong>Account Name:</strong> ${
+                      data.payment_details.account_name || "N/A"
+                    }</p>
+                    <p><strong>SWIFT Code:</strong> ${
+                      data.payment_details.swift || "N/A"
+                    }</p>
                     <p><strong>Reference:</strong> ${data.request_id}</p>
                     <p><strong>Amount:</strong> $${amount.toFixed(2)}</p>
-                    <button class="btn btn-outline" onclick="copyToClipboard('Bank: ${data.payment_details.bank_name}, Account: ${data.payment_details.account_number}, Name: ${data.payment_details.account_name}, Amount: $${amount.toFixed(2)}, Ref: ${data.request_id}')">Copy Details</button>
+                    <button class="btn btn-outline" onclick="copyToClipboard('Bank: ${
+                      data.payment_details.bank_name
+                    }, Account: ${data.payment_details.account_number}, Name: ${
+            data.payment_details.account_name
+          }, Amount: $${amount.toFixed(2)}, Ref: ${
+            data.request_id
+          }')">Copy Details</button>
                 `;
         } else {
           detailsContent.innerHTML = `
-                    <p><strong>Crypto Address:</strong> ${data.payment_details.crypto_address || "N/A"}</p>
-                    <p><strong>Network:</strong> ${data.payment_details.network || "N/A"}</p>
+                    <p><strong>Crypto Address:</strong> ${
+                      data.payment_details.crypto_address || "N/A"
+                    }</p>
+                    <p><strong>Network:</strong> ${
+                      data.payment_details.network || "N/A"
+                    }</p>
                     <p><strong>Amount:</strong> $${amount.toFixed(2)}</p>
-                    <button class="btn btn-outline" onclick="copyToClipboard('Crypto Address: ${data.payment_details.crypto_address}, Network: ${data.payment_details.network}, Amount: $${amount.toFixed(2)}')">Copy Address</button>
+                    <button class="btn btn-outline" onclick="copyToClipboard('Crypto Address: ${
+                      data.payment_details.crypto_address
+                    }, Network: ${
+            data.payment_details.network
+          }, Amount: $${amount.toFixed(2)}')">Copy Address</button>
                 `;
         }
 
@@ -1982,7 +2110,7 @@ document
     }
   });
 
-  // Crypto payment modal
+// Crypto payment modal
 function showCryptoPaymentModal(instructions) {
   console.log("showing crypto details");
 }
@@ -2048,9 +2176,14 @@ async function loadLiveChat() {
     container.innerHTML = messages
       .map(
         (msg) => `
-        <div class="message ${msg.is_from_admin ? "admin-message" : "user-message"}">
+        <div class="message ${
+          msg.is_from_admin ? "admin-message" : "user-message"
+        }">
           <div class="bubble">${msg.message}</div>
-          <div class="time">${new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
+          <div class="time">${new Date(msg.created_at).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}</div>
         </div>
       `,
       )
@@ -2139,10 +2272,15 @@ function appendMessageToChat(msg) {
   if (!container) return;
 
   const div = document.createElement("div");
-  div.className = `message ${msg.is_from_admin ? "admin-message" : "user-message"}`;
+  div.className = `message ${
+    msg.is_from_admin ? "admin-message" : "user-message"
+  }`;
   div.innerHTML = `
     <div class="bubble">${msg.message}</div>
-    <div class="time">${new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
+    <div class="time">${new Date(msg.created_at).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    })}</div>
   `;
   container.appendChild(div);
   container.scrollTop = container.scrollHeight;
@@ -2220,7 +2358,7 @@ document
 
       if (response.ok) {
         if (data.requires_payment) {
-           PaymentModal(data.payment_details);
+          PaymentModal(data.payment_details);
         }
         showNotification(
           "Unfreeze request sent. Check chat for OTP.",
@@ -2373,7 +2511,9 @@ async function loadSpendingByCategory() {
             callbacks: {
               label: (context) => {
                 const value = context.parsed;
-                return ` $${value.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+                return ` $${value.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                })}`;
               },
             },
           },
@@ -2426,7 +2566,7 @@ function startRealTimeUpdates() {
     }
   }, 15000);
 
-   setInterval(async () => {
+  setInterval(async () => {
     if (document.visibilityState === "visible") {
       await loadLiveChat();
     }
@@ -2592,6 +2732,80 @@ document.querySelectorAll(".sidebar-nav .nav-item").forEach((item) => {
     }
   });
 });
+
+// --- App Download Banner Logic ---
+let deferredPrompt;
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  // Prevent Chrome 67 and earlier from automatically showing the prompt
+  e.preventDefault();
+  // Stash the event so it can be triggered later.
+  deferredPrompt = e;
+});
+
+// Check if running inside Capacitor native app
+function isRunningInNativeApp() {
+  return (
+    typeof window.Capacitor !== "undefined" &&
+    window.Capacitor.isNativePlatform()
+  );
+}
+
+// Show banner if not in app and user hasn't dismissed it
+function checkAndShowAppBanner() {
+  if (isRunningInNativeApp()) {
+    return; // In native app – never show banner
+  }
+
+  const bannerDismissed = localStorage.getItem("appBannerDismissed");
+  if (bannerDismissed === "true") return;
+
+  const banner = document.getElementById("appDownloadBanner");
+  if (banner) banner.style.display = "block";
+}
+
+// Handle download button click
+function setupAppBannerEvents() {
+  const downloadBtn = document.getElementById("downloadAppBtn");
+  const dismissBtn = document.getElementById("dismissBannerBtn");
+
+  if (downloadBtn) {
+    downloadBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const userAgent = navigator.userAgent.toLowerCase();
+      // Replace with your actual Google Play Store link
+      if (/android/.test(userAgent)) {
+        window.location.href =
+          "https://play.google.com/store/apps/details?id=com.paystora.app"; // CHANGE THIS
+      } else if (/iphone|ipad|ipod/.test(userAgent)) {
+        window.location.href = "https://apps.apple.com/app/idYOUR_APP_ID"; // CHANGE THIS
+      } else {
+        // Fallback: PWA install
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          deferredPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === "accepted") {
+              console.log("User accepted the install prompt");
+            } else {
+              console.log("User dismissed the install prompt");
+            }
+            deferredPrompt = null;
+          });
+        } else {
+          alert("You can install this app as a PWA from your browser menu.");
+        }
+      }
+    });
+  }
+
+  if (dismissBtn) {
+    dismissBtn.addEventListener("click", () => {
+      const banner = document.getElementById("appDownloadBanner");
+      if (banner) banner.style.display = "none";
+      localStorage.setItem("appBannerDismissed", "true");
+    });
+  }
+}
 
 // Sidebar toggle
 const sidebar = document.getElementById("sidebar");

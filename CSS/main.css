@@ -982,3 +982,30 @@ body {
 .password-requirements li i.fa-times-circle {
     color: #ef4444;
 }
+
+.app-download-banner {
+  background: linear-gradient(135deg, #3b82f6, #1e40af);
+  color: white;
+  padding: 12px 20px;
+  text-align: center;
+  position: relative;
+  z-index: 1000;
+}
+.app-download-banner .download-btn {
+  background: white;
+  color: #1e40af;
+  padding: 6px 16px;
+  border-radius: 30px;
+  text-decoration: none;
+  margin-left: 12px;
+  font-weight: 500;
+}
+.app-download-banner .dismiss-btn {
+  background: none;
+  border: none;
+  color: white;
+  margin-left: 12px;
+  cursor: pointer;
+  font-size: 20px;
+  vertical-align: middle;
+}

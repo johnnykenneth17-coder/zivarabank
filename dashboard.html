@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="./CSS/admin.css" />
     <link rel="stylesheet" href="./CSS/main.css" />
     <link rel="stylesheet" href="./CSS/mobile.css" />
+    <link rel="manifest" href="/manifest.json" />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
@@ -69,7 +70,12 @@
             <i class="fas fa-credit-card"></i>
             <span>Cards</span>
           </a>
-          <a href="#" class="nav-item" data-page="bills" style="display: none !important">
+          <a
+            href="#"
+            class="nav-item"
+            data-page="bills"
+            style="display: none !important"
+          >
             <i class="fas fa-file-invoice"></i>
             <span>Bill Payments</span>
           </a>
@@ -77,12 +83,22 @@
             <i class="fas fa-users"></i>
             <span>Beneficiaries</span>
           </a>
-          <a href="#" class="nav-item" data-page="budgets" style="display: none !important">
+          <a
+            href="#"
+            class="nav-item"
+            data-page="budgets"
+            style="display: none !important"
+          >
             <i class="fas fa-chart-pie"></i>
             <span>Budgets</span>
           </a>
           <!-- ── Add this new item ─────────────────────────────────────── -->
-          <a href="#" class="nav-item" data-page="live-support" style="display: none !important">
+          <a
+            href="#"
+            class="nav-item"
+            data-page="live-support"
+            style="display: none !important"
+          >
             <i class="fas fa-headset"></i>
             <span>Live Support</span>
           </a>
@@ -102,6 +118,50 @@
           </a>
         </div>
       </aside>
+
+      <!-- App Download Banner -->
+      <div
+        id="appDownloadBanner"
+        style="
+          display: none;
+          background: linear-gradient(135deg, #3b82f6, #1e40af);
+          color: white;
+          padding: 12px 20px;
+          text-align: center;
+          position: relative;
+          z-index: 1000;
+        "
+      >
+        <span>📱 Get the best experience with our mobile app! </span>
+        <a
+          href="#"
+          id="downloadAppBtn"
+          style="
+            background: white;
+            color: #1e40af;
+            padding: 6px 16px;
+            border-radius: 30px;
+            text-decoration: none;
+            margin-left: 12px;
+            font-weight: 500;
+          "
+          >Download App</a
+        >
+        <button
+          id="dismissBannerBtn"
+          style="
+            background: none;
+            border: none;
+            color: white;
+            margin-left: 12px;
+            cursor: pointer;
+            font-size: 20px;
+            vertical-align: middle;
+          "
+        >
+          &times;
+        </button>
+      </div>
 
       <!-- Main Content -->
       <main class="main-content" id="mainContent">
@@ -397,15 +457,16 @@
             <div class="page-header">
               <h2>External Transfers</h2>
             </div>
-            <div class="page-head" style="display: flex!important;
-                  flex-wrap: wrap!important;
-                  align-items: center!important;
-                  justify-content: space-between !important;">
-              <button
-                class="btn btn-primary"
-                id="newExternalTransferBtn"
-                
-              >
+            <div
+              class="page-head"
+              style="
+                display: flex !important;
+                flex-wrap: wrap !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+              "
+            >
+              <button class="btn btn-primary" id="newExternalTransferBtn">
                 <i class="fas fa-plus"></i> New Transfer
               </button>
               <button
@@ -1008,7 +1069,7 @@
                 style="
                   background: #fef3c7;
                   padding: 12px;
-                  border-radius: 8px;         
+                  border-radius: 8px;
                   margin: 15px 0;
                 "
               >

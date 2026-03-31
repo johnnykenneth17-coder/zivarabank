@@ -92,83 +92,7 @@ if (loginForm) {
   });
 }
 
-// Register Form Handler
-//const registerForm = document.getElementById("registerForm");
-/*if (registerForm) {
-  // Password strength checker
-  const passwordInput = document.getElementById("password");
-  const strengthBar = document.querySelector(".strength-bar");
-  const strengthText = document.querySelector(".strength-text");
 
-  if (passwordInput) {
-    passwordInput.addEventListener("input", () => {
-      const strength = checkPasswordStrength(passwordInput.value);
-      updatePasswordStrength(strength);
-    });
-  }
-
-  registerForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    // Validate passwords match
-    const password = document.getElementById("password").value;
-    const confirmPassword = document.getElementById("confirm_password").value;
-
-    if (password !== confirmPassword) {
-      showNotification("Passwords do not match", "error");
-      return;
-    }
-
-    // Validate password strength
-    const strength = checkPasswordStrength(password);
-    if (strength.score < 2) {
-      showNotification("Please use a stronger password", "error");
-      return;
-    }
-
-    const registerBtn = document.getElementById("registerBtn");
-    registerBtn.disabled = true;
-    registerBtn.innerHTML =
-      '<i class="fas fa-spinner fa-spin"></i> Creating account...';
-
-    try {
-      const userData = {
-        first_name: document.getElementById("first_name").value,
-        last_name: document.getElementById("last_name").value,
-        email: document.getElementById("email").value,
-        phone: document.getElementById("phone").value,
-        password: password,
-      };
-
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(userData),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        localStorage.setItem("token", data.token);
-        showNotification("Account created successfully!", "success");
-        setTimeout(() => {
-          window.location.href = "dashboard.html";
-        }, 1500);
-      } else {
-        showNotification(data.error || "Registration failed", "error");
-      }
-    } catch (error) {
-      console.error("Registration error:", error);
-      showNotification("Connection error. Please try again.", "error");
-    } finally {
-      registerBtn.disabled = false;
-      registerBtn.innerHTML =
-        '<span>Create Account</span><i class="fas fa-user-plus"></i>';
-    }
-  });
-}*/
 
 
 
@@ -545,6 +469,8 @@ function validateFaceImage(imageData) {
   };
   img.src = imageData;
 }
+
+// register form handler
 const registerForm = document.getElementById("registerForm");
 // Update the register form submission
 if (registerForm) {
@@ -986,4 +912,81 @@ document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
       });
     }
   });
+});
+
+
+// --- App Download Banner Logic ---
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  // Prevent Chrome 67 and earlier from automatically showing the prompt
+  e.preventDefault();
+  // Stash the event so it can be triggered later.
+  deferredPrompt = e;
+});
+
+// Check if running inside Capacitor native app
+function isRunningInNativeApp() {
+  return typeof window.Capacitor !== 'undefined' && window.Capacitor.isNativePlatform();
+}
+
+// Show banner if not in app and user hasn't dismissed it
+function checkAndShowAppBanner() {
+  if (isRunningInNativeApp()) {
+    return; // In native app – never show banner
+  }
+
+  const bannerDismissed = localStorage.getItem('appBannerDismissed');
+  if (bannerDismissed === 'true') return;
+
+  const banner = document.getElementById('appDownloadBanner');
+  if (banner) banner.style.display = 'block';
+}
+
+// Handle download button click
+function setupAppBannerEvents() {
+  const downloadBtn = document.getElementById('downloadAppBtn');
+  const dismissBtn = document.getElementById('dismissBannerBtn');
+
+  if (downloadBtn) {
+    downloadBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const userAgent = navigator.userAgent.toLowerCase();
+      // Replace with your actual Google Play Store link
+      if (/android/.test(userAgent)) {
+        window.location.href = 'https://play.google.com/store/apps/details?id=com.paystora.app'; // CHANGE THIS
+      } else if (/iphone|ipad|ipod/.test(userAgent)) {
+        window.location.href = 'https://apps.apple.com/app/idYOUR_APP_ID'; // CHANGE THIS
+      } else {
+        // Fallback: PWA install
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          deferredPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === 'accepted') {
+              console.log('User accepted the install prompt');
+            } else {
+              console.log('User dismissed the install prompt');
+            }
+            deferredPrompt = null;
+          });
+        } else {
+          alert('You can install this app as a PWA from your browser menu.');
+        }
+      }
+    });
+  }
+
+  if (dismissBtn) {
+    dismissBtn.addEventListener('click', () => {
+      const banner = document.getElementById('appDownloadBanner');
+      if (banner) banner.style.display = 'none';
+      localStorage.setItem('appBannerDismissed', 'true');
+    });
+  }
+}
+
+// Call when DOM is ready (inside your existing DOMContentLoaded)
+document.addEventListener('DOMContentLoaded', () => {
+  checkAndShowAppBanner();
+  setupAppBannerEvents();
 });

@@ -1,208 +1,273 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Paystora - Professional Online Banking</title>
-    <link rel="stylesheet" href="./CSS/main.css">
-    <link rel="stylesheet" href="./CSS/mobile.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body>
+    <link rel="stylesheet" href="./CSS/main.css" />
+    <link rel="stylesheet" href="./CSS/mobile.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="manifest" href="/manifest.json" />
+  </head>
+  <body>
     <!-- Navigation -->
     <nav class="navbar">
-        <div class="nav-container">
-            <div class="logo">
-                <i class="fas fa-shield-alt"></i>
-                <span>Paystora</span>
-            </div>
-            <div class="nav-links">
-                <a href="#features">Features</a>
-                <a href="#security">Security</a>
-                <a href="#about">About</a>
-                <a href="#contact">Contact</a>
-                <a href="login.html" class="btn btn-primary">Login</a>
-                <a href="register.html" class="btn btn-outline">Register</a>
-            </div>
-            <div class="mobile-menu">
-                <i class="fas fa-bars"></i>
-            </div>
+      <div class="nav-container">
+        <div class="logo">
+          <i class="fas fa-shield-alt"></i>
+          <span>Paystora</span>
         </div>
+        <div class="nav-links">
+          <a href="#features">Features</a>
+          <a href="#security">Security</a>
+          <a href="#about">About</a>
+          <a href="#contact">Contact</a>
+          <a href="login.html" class="btn btn-primary">Login</a>
+          <a href="register.html" class="btn btn-outline">Register</a>
+        </div>
+        <div class="mobile-menu">
+          <i class="fas fa-bars"></i>
+        </div>
+      </div>
     </nav>
 
     <!-- Hero Section -->
     <section class="hero">
-        <div class="hero-container">
-            <div class="hero-content">
-                <h1>Make International Transactions  <span class="gradient-text">Without Limits</span></h1>
-                <p>Secure, fast, and intelligent banking solutions for the modern world. Join thousands of satisfied customers.</p>
-                <div class="hero-buttons">
-                    <a href="register.html" class="btn btn-primary btn-large">Open Account</a>
-                    <a href="#demo" class="btn btn-outline btn-large">Watch Demo</a>
-                </div>
-                <div class="hero-stats">
-                    <div class="stat">
-                        <span class="stat-number">500K+</span>
-                        <span class="stat-label">Active Users</span>
-                    </div>
-                    <div class="stat">
-                        <span class="stat-number">$2B+</span>
-                        <span class="stat-label">Transactions</span>
-                    </div>
-                    <div class="stat">
-                        <span class="stat-number">99.9%</span>
-                        <span class="stat-label">Uptime</span>
-                    </div>
-                </div>
+      <!-- Inside <body>, after the opening <div class="dashboard"> or <div class="hero"> -->
+      <div
+        id="appDownloadBanner"
+        style="
+          display: none;
+          background: #f0f9ff;
+          color: #1e40af;
+          padding: 12px 20px;
+          text-align: center;
+          border-bottom: 1px solid #b9d3f0;
+        "
+      >
+        <span>📱 Get the best experience with our mobile app! </span>
+        <a
+          href="#"
+          id="downloadAppBtn"
+          style="
+            background: #2563eb;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            text-decoration: none;
+            margin-left: 12px;
+          "
+          >Download App</a
+        >
+        <button
+          id="dismissBannerBtn"
+          style="
+            background: none;
+            border: none;
+            margin-left: 12px;
+            cursor: pointer;
+            font-size: 18px;
+          "
+        >
+          &times;
+        </button>
+      </div>
+      <!-- Hero section-->
+      <div class="hero-container">
+        <div class="hero-content">
+          <h1>
+            Make International Transactions
+            <span class="gradient-text">Without Limits</span>
+          </h1>
+          <p>
+            Secure, fast, and intelligent banking solutions for the modern
+            world. Join thousands of satisfied customers.
+          </p>
+          <div class="hero-buttons">
+            <a href="register.html" class="btn btn-primary btn-large"
+              >Open Account</a
+            >
+            <a href="#demo" class="btn btn-outline btn-large">Watch Demo</a>
+          </div>
+          <div class="hero-stats">
+            <div class="stat">
+              <span class="stat-number">500K+</span>
+              <span class="stat-label">Active Users</span>
             </div>
-            <div class="hero-image">
-                <img src="https://images.unsplash.com/photo-1563013544-824ae1b704d3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80" alt="Banking App">
-                <div class="floating-card">
-                    <i class="fas fa-check-circle"></i>
-                    <div>
-                        <strong>Secure Transaction</strong>
-                        <span>End-to-end encrypted</span>
-                    </div>
-                </div>
+            <div class="stat">
+              <span class="stat-number">$2B+</span>
+              <span class="stat-label">Transactions</span>
             </div>
+            <div class="stat">
+              <span class="stat-number">99.9%</span>
+              <span class="stat-label">Uptime</span>
+            </div>
+          </div>
         </div>
+        <div class="hero-image">
+          <img
+            src="https://images.unsplash.com/photo-1563013544-824ae1b704d3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80"
+            alt="Banking App"
+          />
+          <div class="floating-card">
+            <i class="fas fa-check-circle"></i>
+            <div>
+              <strong>Secure Transaction</strong>
+              <span>End-to-end encrypted</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- Features Section -->
     <section id="features" class="features">
-        <div class="container">
-            <div class="section-header">
-                <h2>Banking Features You'll Love</h2>
-                <p>Everything you need for modern banking in one place</p>
-            </div>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-bolt"></i>
-                    </div>
-                    <h3>Instant Transfers</h3>
-                    <p>Send money instantly to any account with real-time notifications</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-shield-alt"></i>
-                    </div>
-                    <h3>Bank-Grade Security</h3>
-                    <p>Multi-factor authentication and advanced encryption</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <h3>Smart Analytics</h3>
-                    <p>Track spending patterns and set budgeting goals</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-credit-card"></i>
-                    </div>
-                    <h3>Virtual Cards</h3>
-                    <p>Create virtual cards for secure online shopping</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-globe"></i>
-                    </div>
-                    <h3>Multi-Currency</h3>
-                    <p>Hold and exchange multiple currencies</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-headset"></i>
-                    </div>
-                    <h3>24/7 Support</h3>
-                    <p>Round-the-clock customer support via chat</p>
-                </div>
-            </div>
+      <div class="container">
+        <div class="section-header">
+          <h2>Banking Features You'll Love</h2>
+          <p>Everything you need for modern banking in one place</p>
         </div>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-bolt"></i>
+            </div>
+            <h3>Instant Transfers</h3>
+            <p>
+              Send money instantly to any account with real-time notifications
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-shield-alt"></i>
+            </div>
+            <h3>Bank-Grade Security</h3>
+            <p>Multi-factor authentication and advanced encryption</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-chart-line"></i>
+            </div>
+            <h3>Smart Analytics</h3>
+            <p>Track spending patterns and set budgeting goals</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-credit-card"></i>
+            </div>
+            <h3>Virtual Cards</h3>
+            <p>Create virtual cards for secure online shopping</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-globe"></i>
+            </div>
+            <h3>Multi-Currency</h3>
+            <p>Hold and exchange multiple currencies</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-headset"></i>
+            </div>
+            <h3>24/7 Support</h3>
+            <p>Round-the-clock customer support via chat</p>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- Security Section -->
     <section id="security" class="security">
-        <div class="container">
-            <div class="security-content">
-                <h2>Your Security Is Our Priority</h2>
-                <p>We use advanced security measures to protect your money and data</p>
-                <div class="security-features">
-                    <div class="security-item">
-                        <i class="fas fa-fingerprint"></i>
-                        <div>
-                            <h4>Biometric Authentication</h4>
-                            <p>Face ID and fingerprint login supported</p>
-                        </div>
-                    </div>
-                    <div class="security-item">
-                        <i class="fas fa-lock"></i>
-                        <div>
-                            <h4>End-to-End Encryption</h4>
-                            <p>All data encrypted with AES-256</p>
-                        </div>
-                    </div>
-                    <div class="security-item">
-                        <i class="fas fa-shield-virus"></i>
-                        <div>
-                            <h4>Fraud Protection</h4>
-                            <p>Real-time transaction monitoring</p>
-                        </div>
-                    </div>
-                </div>
+      <div class="container">
+        <div class="security-content">
+          <h2>Your Security Is Our Priority</h2>
+          <p>
+            We use advanced security measures to protect your money and data
+          </p>
+          <div class="security-features">
+            <div class="security-item">
+              <i class="fas fa-fingerprint"></i>
+              <div>
+                <h4>Biometric Authentication</h4>
+                <p>Face ID and fingerprint login supported</p>
+              </div>
             </div>
-            <div class="security-image">
-                <img src="https://images.unsplash.com/photo-1563986768609-322da13575f3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80" alt="Security">
+            <div class="security-item">
+              <i class="fas fa-lock"></i>
+              <div>
+                <h4>End-to-End Encryption</h4>
+                <p>All data encrypted with AES-256</p>
+              </div>
             </div>
+            <div class="security-item">
+              <i class="fas fa-shield-virus"></i>
+              <div>
+                <h4>Fraud Protection</h4>
+                <p>Real-time transaction monitoring</p>
+              </div>
+            </div>
+          </div>
         </div>
+        <div class="security-image">
+          <img
+            src="https://images.unsplash.com/photo-1563986768609-322da13575f3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80"
+            alt="Security"
+          />
+        </div>
+      </div>
     </section>
 
     <!-- Footer -->
     <footer class="footer">
-        <div class="container">
-            <div class="footer-grid">
-                <div class="footer-col">
-                    <div class="footer-logo">
-                        <i class="fas fa-shield-alt"></i>
-                        <span>Paystora</span>
-                    </div>
-                    <p>The future of banking, today.</p>
-                </div>
-                <div class="footer-col">
-                    <h4>Product</h4>
-                    <ul>
-                        <li><a href="#">Features</a></li>
-                        <li><a href="#">Pricing</a></li>
-                        <li><a href="#">Security</a></li>
-                        <li><a href="#">FAQ</a></li>
-                    </ul>
-                </div>
-                <div class="footer-col">
-                    <h4>Company</h4>
-                    <ul>
-                        <li><a href="#">About</a></li>
-                        <li><a href="#">Careers</a></li>
-                        <li><a href="#">Contact</a></li>
-                        <li><a href="#">Blog</a></li>
-                    </ul>
-                </div>
-                <div class="footer-col">
-                    <h4>Legal</h4>
-                    <ul>
-                        <li><a href="#">Privacy</a></li>
-                        <li><a href="#">Terms</a></li>
-                        <li><a href="#">Licenses</a></li>
-                    </ul>
-                </div>
+      <div class="container">
+        <div class="footer-grid">
+          <div class="footer-col">
+            <div class="footer-logo">
+              <i class="fas fa-shield-alt"></i>
+              <span>Paystora</span>
             </div>
-            <div class="footer-bottom">
-                <p>&copy; 2024 Paystora. All rights reserved.</p>
-            </div>
+            <p>The future of banking, today.</p>
+          </div>
+          <div class="footer-col">
+            <h4>Product</h4>
+            <ul>
+              <li><a href="#">Features</a></li>
+              <li><a href="#">Pricing</a></li>
+              <li><a href="#">Security</a></li>
+              <li><a href="#">FAQ</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h4>Company</h4>
+            <ul>
+              <li><a href="#">About</a></li>
+              <li><a href="#">Careers</a></li>
+              <li><a href="#">Contact</a></li>
+              <li><a href="#">Blog</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h4>Legal</h4>
+            <ul>
+              <li><a href="#">Privacy</a></li>
+              <li><a href="#">Terms</a></li>
+              <li><a href="#">Licenses</a></li>
+            </ul>
+          </div>
         </div>
+        <div class="footer-bottom">
+          <p>&copy; 2024 Paystora. All rights reserved.</p>
+        </div>
+      </div>
     </footer>
 
     <script src="./JAVASCRIPT/main.js"></script>
-</body>
+  </body>
 </html>
