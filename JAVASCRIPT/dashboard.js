@@ -15,7 +15,7 @@ let currentTransPage = 1;
 let currentTransFilters = { search: "", type: "", status: "" };
 let savedCards = [];
 
-// Check authentication
+// Check authentication  
 const token = localStorage.getItem("token");
 if (!token) {
   window.location.href = "login.html";
@@ -26,8 +26,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadUserData();
   debounce();
   //loadSpendingByCategory();
-  checkAndShowAppBanner();
-  setupAppBannerEvents();
+ // checkAndShowAppBanner();
+ //  setupAppBannerEvents();
   loadFullTransactions(1);
   initializeEventListeners();
   await loadLiveChat();
@@ -2734,7 +2734,7 @@ document.querySelectorAll(".sidebar-nav .nav-item").forEach((item) => {
 });
 
 // --- App Download Banner Logic ---
-let deferredPrompt;
+/*let deferredPrompt;
 
 window.addEventListener("beforeinstallprompt", (e) => {
   // Prevent Chrome 67 and earlier from automatically showing the prompt
@@ -2805,7 +2805,7 @@ function setupAppBannerEvents() {
       localStorage.setItem("appBannerDismissed", "true");
     });
   }
-}
+}*/
 
 // Sidebar toggle
 const sidebar = document.getElementById("sidebar");

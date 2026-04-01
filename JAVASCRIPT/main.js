@@ -916,7 +916,7 @@ document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
 
 
 // --- App Download Banner Logic ---
-let deferredPrompt;
+/*let deferredPrompt;
 
 window.addEventListener('beforeinstallprompt', (e) => {
   // Prevent Chrome 67 and earlier from automatically showing the prompt
@@ -989,4 +989,4 @@ function setupAppBannerEvents() {
 document.addEventListener('DOMContentLoaded', () => {
   checkAndShowAppBanner();
   setupAppBannerEvents();
-});
+});*/
