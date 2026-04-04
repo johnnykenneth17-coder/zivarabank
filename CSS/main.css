@@ -1108,7 +1108,7 @@ body {
   }
 }
 
-.modal {
+/*.modal {
     display: none;
     position: fixed;
     top: 0;
