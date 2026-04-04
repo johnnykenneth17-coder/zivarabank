@@ -959,7 +959,7 @@ document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
     }
 
     // Handle install click
-    async function installPwa() {
+    /*async function installPwa() {
         if (deferredPrompt) {
             // Chrome/Edge: show native install prompt
             deferredPrompt.prompt();
@@ -971,7 +971,26 @@ document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
             // Fallback: show instructions (iOS or unsupported)
             alert('To install this app on your device:\n\n- On Android/Chrome: Tap the menu (⋮) → "Install app"\n- On iPhone/Safari: Tap Share → "Add to Home Screen"');
         }
-    }
+    }*/
+
+        async function installPwa() {
+  if (!deferredPrompt) {
+    // Fallback: Show instructions if event not ready
+    alert('You can install this app manually from browser menu: "Add to Home Screen".');
+    return;
+  }
+  // Show the install prompt
+  deferredPrompt.prompt();
+  // Wait for user choice
+  const { outcome } = await deferredPrompt.userChoice;
+  console.log(`User ${outcome} the installation`);
+  // Clear deferredPrompt – can't be used again
+  deferredPrompt = null;
+  // Hide banner after install attempt (even if cancelled)
+  if (pwaBanner) pwaBanner.style.display = 'none';
+  // If user installed, we won't show again because isPWAInstalled() becomes true
+  // but we can keep localStorage untouched – next page load will detect standalone.
+}
 
     // Wait for DOM before attaching events
     document.addEventListener('DOMContentLoaded', () => {
