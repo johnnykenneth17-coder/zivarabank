@@ -916,7 +916,7 @@ document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
 
 
 // PWA Installation Logic
-/*let deferredPrompt = null;
+let deferredPrompt = null;
 
 /*window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
@@ -928,7 +928,7 @@ document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
 //document.addEventListener('DOMContentLoaded', () => {
 
 
-/*const pwaBanner = document.getElementById('pwaInstallBanner');
+const pwaBanner = document.getElementById('pwaInstallBanner');
 const installBtn = document.getElementById('pwaInstallBtn');
 const dismissBtn = document.getElementById('pwaDismissBtn');
 
@@ -941,9 +941,9 @@ function isPWAInstalled() {
 }
 
 // 2. Check if inside Capacitor native app (future proof)
-function isNativeApp() {
+/*function isNativeApp() {
   return typeof window.Capacitor !== 'undefined' && window.Capacitor.isNativePlatform();
-}
+}*/
 
 // 3. Show banner only if:
 //    - PWA not installed
@@ -952,7 +952,7 @@ function isNativeApp() {
 //    - User hasn't dismissed it permanently (localStorage)
 function shouldShowBanner() {
   if (isPWAInstalled()) return false;
-  if (isNativeApp()) return false;
+  //if (isNativeApp()) return false;
   if (!deferredPrompt) return false;
   const dismissed = localStorage.getItem('pwaBannerDismissed');
   if (dismissed === 'true') return false;
@@ -1021,7 +1021,7 @@ document.addEventListener('visibilitychange', () => {
 // 10. Initial check – in case beforeinstallprompt already fired before DOM ready
 if (deferredPrompt) {
   showPwaBanner();
-}.*/
+}.
 
 //});
 
