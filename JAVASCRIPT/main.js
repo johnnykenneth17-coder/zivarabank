@@ -918,14 +918,14 @@ document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
 // PWA Installation Logic
 let deferredPrompt = null;
 
-window.addEventListener('beforeinstallprompt', (e) => {
+/*window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
     // We'll show banner after DOM is ready
-});
+});*/
 
 // Then later, inside DOMContentLoaded:
-document.addEventListener('DOMContentLoaded', () => {
+//document.addEventListener('DOMContentLoaded', () => {
 
 
 const pwaBanner = document.getElementById('pwaInstallBanner');
@@ -995,12 +995,12 @@ async function installPwa() {
 }
 
 // 7. Listen for beforeinstallprompt event
-/*window.addEventListener('beforeinstallprompt', (e) => {
+window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
   // After event is captured, we can safely show the banner
   showPwaBanner();
-});*/
+});
 
 // 8. Attach button events
 if (installBtn) {
@@ -1023,7 +1023,7 @@ if (deferredPrompt) {
   showPwaBanner();
 }.
 
-});
+//});
 
 
 // --- App Download Banner Logic ---
