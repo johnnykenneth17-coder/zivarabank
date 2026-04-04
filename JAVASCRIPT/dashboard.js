@@ -2739,7 +2739,7 @@ document.querySelectorAll(".sidebar-nav .nav-item").forEach((item) => {
 
 
 // ========== PWA INSTALL BANNER (Improved) ==========
-(function() {
+/*(function() {
     let deferredPrompt = null;
     let bannerShown = false;
 
@@ -2816,7 +2816,7 @@ document.querySelectorAll(".sidebar-nav .nav-item").forEach((item) => {
             // Fallback: show instructions (iOS or unsupported)
             alert('To install this app on your device:\n\n- On Android/Chrome: Tap the menu (⋮) → "Install app"\n- On iPhone/Safari: Tap Share → "Add to Home Screen"');
         }
-    }*/
+    }
 
     // Wait for DOM before attaching events
     document.addEventListener('DOMContentLoaded', () => {
@@ -2858,12 +2858,12 @@ document.querySelectorAll(".sidebar-nav .nav-item").forEach((item) => {
             dismissPwaBanner(false);
         }
     });
-})();
+})();*/
 
 
 
 // ========== PWA INSTALL BANNER (iOS + Android friendly) ==========
-/*(function() {
+(function() {
     let deferredPrompt = null;
     let bannerShown = false;
 
@@ -2987,7 +2987,7 @@ document.querySelectorAll(".sidebar-nav .nav-item").forEach((item) => {
             dismissPwaBanner(false);
         }
     });
-})();*/
+})();
 
 // --- App Download Banner Logic ---
 /*let deferredPrompt;
