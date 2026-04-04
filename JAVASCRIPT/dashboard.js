@@ -2735,7 +2735,7 @@ document.querySelectorAll(".sidebar-nav .nav-item").forEach((item) => {
 
 
 // PWA Installation Logic
-let deferredPrompt = null;
+/*let deferredPrompt = null;
 
 /*window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
@@ -2747,7 +2747,7 @@ let deferredPrompt = null;
 //document.addEventListener('DOMContentLoaded', () => {
 
 
-const pwaBanner = document.getElementById('pwaInstallBanner');
+/*const pwaBanner = document.getElementById('pwaInstallBanner');
 const installBtn = document.getElementById('pwaInstallBtn');
 const dismissBtn = document.getElementById('pwaDismissBtn');
 
@@ -2840,7 +2840,7 @@ document.addEventListener('visibilitychange', () => {
 // 10. Initial check – in case beforeinstallprompt already fired before DOM ready
 if (deferredPrompt) {
   showPwaBanner();
-}.
+}.*/
 
 //});
 
