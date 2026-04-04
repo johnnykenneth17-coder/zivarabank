@@ -2735,10 +2735,13 @@ document.querySelectorAll(".sidebar-nav .nav-item").forEach((item) => {
 
 
 // PWA Installation Logic
-// ========== PWA INSTALL BANNER (Improved) ==========
+// ========== PWA INSTALL BANNER (iOS + Android friendly) ==========
 (function() {
     let deferredPrompt = null;
     let bannerShown = false;
+
+    // Detect iOS
+    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
     // Check if app is already installed (standalone mode)
     function isPWAInstalled() {
@@ -2746,7 +2749,7 @@ document.querySelectorAll(".sidebar-nav .nav-item").forEach((item) => {
                window.navigator.standalone === true;
     }
 
-    // Check if inside Capacitor native wrapper (future)
+    // Check if inside Capacitor native wrapper (future use)
     function isNativeApp() {
         return typeof window.Capacitor !== 'undefined' && window.Capacitor.isNativePlatform();
     }
@@ -2769,7 +2772,7 @@ document.querySelectorAll(".sidebar-nav .nav-item").forEach((item) => {
         }
     }
 
-    // Hide and optionally remember dismissal
+    // Hide banner and optionally remember dismissal
     function dismissPwaBanner(permanent = true) {
         const banner = document.getElementById('pwaInstallBanner');
         if (banner) banner.style.display = 'none';
@@ -2777,22 +2780,30 @@ document.querySelectorAll(".sidebar-nav .nav-item").forEach((item) => {
         bannerShown = false;
     }
 
-    // Handle install click
+    // Show iOS instructions modal
+    function showIosInstructions() {
+        const modal = document.getElementById('pwaInstructionsModal');
+        if (modal) {
+            modal.classList.add('show');
+        }
+    }
+
+    // Handle install button click
     async function installPwa() {
-        if (deferredPrompt) {
-            // Chrome/Edge: show native install prompt
+        if (!isIos && deferredPrompt) {
+            // Android/Chrome: native install prompt
             deferredPrompt.prompt();
             const { outcome } = await deferredPrompt.userChoice;
             console.log(`PWA install: ${outcome}`);
             deferredPrompt = null;
             dismissPwaBanner(true);
         } else {
-            // Fallback: show instructions (iOS or unsupported)
-            alert('To install this app on your device:\n\n- On Android/Chrome: Tap the menu (⋮) → "Install app"\n- On iPhone/Safari: Tap Share → "Add to Home Screen"');
+            // iOS or no beforeinstallprompt: show instructions
+            showIosInstructions();
         }
     }
 
-    // Wait for DOM before attaching events
+    // DOM ready: attach events and decide if banner should appear
     document.addEventListener('DOMContentLoaded', () => {
         const banner = document.getElementById('pwaInstallBanner');
         const installBtn = document.getElementById('pwaInstallBtn');
@@ -2801,24 +2812,41 @@ document.querySelectorAll(".sidebar-nav .nav-item").forEach((item) => {
         if (installBtn) installBtn.addEventListener('click', installPwa);
         if (dismissBtn) dismissBtn.addEventListener('click', () => dismissPwaBanner(true));
 
-        // If beforeinstallprompt already fired, show banner
+        // Close iOS instructions modal
+        const closeModalBtn = document.getElementById('closeInstructionsModal');
+        const gotItBtn = document.getElementById('gotItBtn');
+        const modal = document.getElementById('pwaInstructionsModal');
+        const closeModal = () => {
+            if (modal) modal.classList.remove('show');
+        };
+        if (closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
+        if (gotItBtn) gotItBtn.addEventListener('click', closeModal);
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeModal();
+            });
+        }
+
+        // If beforeinstallprompt already fired, show banner immediately
         if (deferredPrompt && shouldShowBanner()) {
             showPwaBanner();
-        } else {
-            // Even if no beforeinstallprompt, show banner after 2 seconds (for iOS/fallback)
+        } else if (!isIos && !deferredPrompt && shouldShowBanner()) {
+            // On Android/Chrome, wait 2 seconds, then show banner (if still not installed)
             setTimeout(() => {
-                if (shouldShowBanner() && !deferredPrompt) {
-                    showPwaBanner();
-                }
+                if (shouldShowBanner()) showPwaBanner();
+            }, 2000);
+        } else if (isIos && shouldShowBanner()) {
+            // On iOS, show banner after 2 seconds (no native prompt)
+            setTimeout(() => {
+                if (shouldShowBanner()) showPwaBanner();
             }, 2000);
         }
     });
 
-    // Listen for beforeinstallprompt event (Chrome/Edge)
+    // Listen for beforeinstallprompt (Android/Chrome only)
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
-        // Show banner immediately if DOM is ready, else wait for DOMContentLoaded
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => showPwaBanner());
         } else {

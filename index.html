@@ -49,6 +49,31 @@
     <button id="pwaDismissBtn" class="banner-close">&times;</button>
   </div>
 </div>
+
+<!-- iOS PWA Instructions Modal -->
+<div id="pwaInstructionsModal" class="modal" style="display: none;">
+  <div class="modal-content" style="max-width: 400px;">
+    <div class="modal-header">
+      <h3>Install Paystora on iOS</h3>
+      <button class="close-modal" id="closeInstructionsModal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p>Follow these steps to add Paystora to your home screen:</p>
+      <ol style="margin: 20px 0; padding-left: 20px;">
+        <li>Tap the <strong>Share</strong> button <i class="fas fa-share-alt"></i> (square with arrow).</li>
+        <li>Scroll down and tap <strong>Add to Home Screen</strong>.</li>
+        <li>Tap <strong>Add</strong> in the top‑right corner.</li>
+      </ol>
+      <div style="background: #f0f9ff; padding: 12px; border-radius: 12px; margin-top: 16px;">
+        <i class="fas fa-info-circle" style="color: #2563eb;"></i>
+        <span style="font-size: 13px;">You'll then see the Paystora icon on your home screen.</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" id="gotItBtn">Got it</button>
+    </div>
+  </div>
+</div>
       <!-- Inside <body>, after the opening <div class="dashboard"> or <div class="hero"> 
       <div
         id="appDownloadBanner"
