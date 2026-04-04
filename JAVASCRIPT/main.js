@@ -917,88 +917,115 @@ document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
 
 // PWA Installation Logic
 // ========== PWA INSTALL BANNER (iOS + Android friendly) ==========
+// ========== PWA INSTALL BANNER (Debug + iOS Modal) ==========
 (function() {
     let deferredPrompt = null;
     let bannerShown = false;
 
-    // Detect iOS
     const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    console.log('iOS detected:', isIos);
 
-    // Check if app is already installed (standalone mode)
     function isPWAInstalled() {
-        return window.matchMedia('(display-mode: standalone)').matches ||
-               window.navigator.standalone === true;
+        const installed = window.matchMedia('(display-mode: standalone)').matches ||
+                          window.navigator.standalone === true;
+        console.log('PWA installed?', installed);
+        return installed;
     }
 
-    // Check if inside Capacitor native wrapper (future use)
     function isNativeApp() {
-        return typeof window.Capacitor !== 'undefined' && window.Capacitor.isNativePlatform();
+        const native = typeof window.Capacitor !== 'undefined' && window.Capacitor.isNativePlatform();
+        console.log('Native app?', native);
+        return native;
     }
 
-    // Should we show the banner?
     function shouldShowBanner() {
         if (isPWAInstalled()) return false;
         if (isNativeApp()) return false;
-        if (localStorage.getItem('pwaBannerDismissed') === 'true') return false;
+        if (localStorage.getItem('pwaBannerDismissed') === 'true') {
+            console.log('Banner dismissed by user');
+            return false;
+        }
         return true;
     }
 
-    // Show the banner with animation
     function showPwaBanner() {
         const banner = document.getElementById('pwaInstallBanner');
-        if (!banner || bannerShown) return;
+        if (!banner) {
+            console.error('Banner element #pwaInstallBanner not found!');
+            return;
+        }
+        if (bannerShown) return;
         if (shouldShowBanner()) {
             banner.style.display = 'block';
             bannerShown = true;
+            console.log('Banner shown');
+        } else {
+            console.log('Banner not shown because conditions not met');
         }
     }
 
-    // Hide banner and optionally remember dismissal
     function dismissPwaBanner(permanent = true) {
         const banner = document.getElementById('pwaInstallBanner');
         if (banner) banner.style.display = 'none';
         if (permanent) localStorage.setItem('pwaBannerDismissed', 'true');
         bannerShown = false;
+        console.log('Banner dismissed, permanent:', permanent);
     }
 
-    // Show iOS instructions modal
     function showIosInstructions() {
         const modal = document.getElementById('pwaInstructionsModal');
-        if (modal) {
-            modal.classList.add('show');
+        if (!modal) {
+            console.error('Modal element #pwaInstructionsModal not found!');
+            alert('To install this app on iOS:\n\n1. Tap Share button\n2. Tap "Add to Home Screen"\n3. Tap Add');
+            return;
         }
+        modal.classList.add('show');
+        console.log('iOS instructions modal opened');
     }
 
-    // Handle install button click
     async function installPwa() {
+        console.log('Install button clicked. iOS?', isIos, 'deferredPrompt?', !!deferredPrompt);
         if (!isIos && deferredPrompt) {
-            // Android/Chrome: native install prompt
+            // Android/Chrome native prompt
             deferredPrompt.prompt();
             const { outcome } = await deferredPrompt.userChoice;
-            console.log(`PWA install: ${outcome}`);
+            console.log('PWA install outcome:', outcome);
             deferredPrompt = null;
             dismissPwaBanner(true);
         } else {
-            // iOS or no beforeinstallprompt: show instructions
+            // iOS or no beforeinstallprompt
             showIosInstructions();
         }
     }
 
-    // DOM ready: attach events and decide if banner should appear
+    // Wait for DOM to be ready before attaching events
     document.addEventListener('DOMContentLoaded', () => {
+        console.log('DOM ready – attaching PWA events');
         const banner = document.getElementById('pwaInstallBanner');
         const installBtn = document.getElementById('pwaInstallBtn');
         const dismissBtn = document.getElementById('pwaDismissBtn');
 
-        if (installBtn) installBtn.addEventListener('click', installPwa);
-        if (dismissBtn) dismissBtn.addEventListener('click', () => dismissPwaBanner(true));
+        if (installBtn) {
+            installBtn.addEventListener('click', installPwa);
+            console.log('Install button listener attached');
+        } else {
+            console.error('Install button #pwaInstallBtn not found!');
+        }
 
-        // Close iOS instructions modal
+        if (dismissBtn) {
+            dismissBtn.addEventListener('click', () => dismissPwaBanner(true));
+            console.log('Dismiss button listener attached');
+        } else {
+            console.error('Dismiss button #pwaDismissBtn not found!');
+        }
+
+        // Close modal events
+        const modal = document.getElementById('pwaInstructionsModal');
         const closeModalBtn = document.getElementById('closeInstructionsModal');
         const gotItBtn = document.getElementById('gotItBtn');
-        const modal = document.getElementById('pwaInstructionsModal');
         const closeModal = () => {
             if (modal) modal.classList.remove('show');
+            console.log('Modal closed');
         };
         if (closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
         if (gotItBtn) gotItBtn.addEventListener('click', closeModal);
@@ -1006,26 +1033,25 @@ document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) closeModal();
             });
+            console.log('Modal close handlers attached');
+        } else {
+            console.error('Modal #pwaInstructionsModal not found!');
         }
 
-        // If beforeinstallprompt already fired, show banner immediately
+        // Show banner if conditions met
         if (deferredPrompt && shouldShowBanner()) {
             showPwaBanner();
-        } else if (!isIos && !deferredPrompt && shouldShowBanner()) {
-            // On Android/Chrome, wait 2 seconds, then show banner (if still not installed)
-            setTimeout(() => {
-                if (shouldShowBanner()) showPwaBanner();
-            }, 2000);
-        } else if (isIos && shouldShowBanner()) {
-            // On iOS, show banner after 2 seconds (no native prompt)
+        } else if (shouldShowBanner()) {
+            // Wait 2 seconds then show banner (fallback for iOS or slow browsers)
             setTimeout(() => {
                 if (shouldShowBanner()) showPwaBanner();
             }, 2000);
         }
     });
 
-    // Listen for beforeinstallprompt (Android/Chrome only)
+    // Listen for beforeinstallprompt (Android/Chrome)
     window.addEventListener('beforeinstallprompt', (e) => {
+        console.log('beforeinstallprompt fired');
         e.preventDefault();
         deferredPrompt = e;
         if (document.readyState === 'loading') {
@@ -1035,10 +1061,11 @@ document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
         }
     });
 
-    // If user installs from browser menu, hide banner on next visibility change
+    // Hide banner if user installs from browser menu
     document.addEventListener('visibilitychange', () => {
         if (!document.hidden && isPWAInstalled()) {
             dismissPwaBanner(false);
+            console.log('Banner hidden because PWA now installed');
         }
     });
 })();
