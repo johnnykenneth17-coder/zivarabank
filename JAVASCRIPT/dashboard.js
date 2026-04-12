@@ -2552,6 +2552,12 @@ function renderFakeSpendingChart() {
 
 // Real-time updates
 function startRealTimeUpdates() {
+  // update account balance every 10 seconds 
+    setInterval(async () => {
+    if (document.visibilityState === "visible") {
+      await updateTotalBalance();
+    }
+  }, 12000);
   // Update transactions every 30 seconds
   setInterval(async () => {
     if (document.visibilityState === "visible") {

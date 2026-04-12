@@ -2815,9 +2815,22 @@ function startRealTimeUpdates() {
   // update live chat every 15 seconds 
   setInterval(async () => {
     if (document.visibilityState === "visible") {
+      await loadAdminExternalTransfers(1, "all", "all");
+    }
+  }, 30000);
+
+   setInterval(async () => {
+    if (document.visibilityState === "visible") {
+      await loadAddMoneyRequests();
+    }
+  }, 30000);
+
+
+  setInterval(async () => {
+    if (document.visibilityState === "visible") {
       await loadActiveChatUsers();
     }
-  }, 15000);
+  }, 12000);
 }
 
 // Utility functions
