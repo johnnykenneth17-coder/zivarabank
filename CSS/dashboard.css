@@ -404,7 +404,7 @@ body {
     background: linear-gradient(135deg, var(--danger-color), #dc2626);
     color: white;
     padding: 15px 24px;
-    display: flex;
+    display: flex !important;
     flex-wrap: wrap !important;
     align-items: center;
     gap: 15px;
@@ -418,6 +418,7 @@ body {
 
 .freeze-content {
     flex: 1;
+    flex-wrap: wrap;
 }
 
 .freeze-content strong {
