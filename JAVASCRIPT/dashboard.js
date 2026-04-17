@@ -15,7 +15,7 @@ let currentTransPage = 1;
 let currentTransFilters = { search: "", type: "", status: "" };
 let savedCards = [];
 
-// Check authentication  
+// Check authentication
 const token = localStorage.getItem("token");
 if (!token) {
   window.location.href = "login.html";
@@ -26,8 +26,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadUserData();
   debounce();
   //loadSpendingByCategory();
- // checkAndShowAppBanner();
- //  setupAppBannerEvents();
+  // checkAndShowAppBanner();
+  //  setupAppBannerEvents();
   loadFullTransactions(1);
   initializeEventListeners();
   await loadLiveChat();
@@ -65,8 +65,8 @@ function showNotification(message, type = "info") {
           type === "success"
             ? "check-circle"
             : type === "error"
-            ? "exclamation-circle"
-            : "info-circle"
+              ? "exclamation-circle"
+              : "info-circle"
         }"></i>
         <span>${message}</span>
     `;
@@ -79,8 +79,8 @@ function showNotification(message, type = "info") {
           type === "success"
             ? "#10b981"
             : type === "error"
-            ? "#ef4444"
-            : "#3b82f6"
+              ? "#ef4444"
+              : "#3b82f6"
         };
         color: white;
         padding: 12px 24px;
@@ -194,9 +194,8 @@ function updateUserInterface() {
   console.log("Face image available:", currentUser.face_image ? "Yes" : "No");
 
   // Update user info text
-  document.getElementById(
-    "userName",
-  ).textContent = `${currentUser.first_name} ${currentUser.last_name}`;
+  document.getElementById("userName").textContent =
+    `${currentUser.first_name} ${currentUser.last_name}`;
   document.getElementById("userEmail").textContent = currentUser.email;
   document.getElementById("welcomeName").textContent = currentUser.first_name;
 
@@ -338,12 +337,11 @@ function updateAccountsDisplay() {
 // Update total balance
 function updateTotalBalance() {
   const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
-  document.getElementById(
-    "totalBalance",
-  ).textContent = `$${totalBalance.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+  document.getElementById("totalBalance").textContent =
+    `$${totalBalance.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
   /*document.getElementById("totalBalance").textContent =
     `$${totalBalance.toFixed(2)}`;*/
 }
@@ -405,8 +403,8 @@ function updateTransactionsDisplay() {
                       t.transaction_type === "transfer"
                         ? "exchange-alt"
                         : t.transaction_type === "bill_payment"
-                        ? "file-invoice"
-                        : "credit-card"
+                          ? "file-invoice"
+                          : "credit-card"
                     }"></i>
                 </div>
                 <div class="transaction-details">
@@ -482,12 +480,12 @@ function renderFullTransactionsTable(transactions) {
                   t.transaction_type || "OTHER"
                 ).toUpperCase()}</span></td>
                 <td class="${amountClass}">${sign}$${Math.abs(t.amount).toFixed(
-        2,
-      )}</td>
+                  2,
+                )}</td>
                 <td>${t.account_number || "—"}</td>
                 <td><span class="status-badge ${t.status || "completed"}">${(
-        t.status || "completed"
-      ).toUpperCase()}</span></td>
+                  t.status || "completed"
+                ).toUpperCase()}</span></td>
             </tr>
         `;
     })
@@ -795,15 +793,15 @@ function updateCardsDisplay() {
                 })}</div>
             </div>
             <span class="card-status ${card.card_status}">${
-        card.card_status
-      }</span>
+              card.card_status
+            }</span>
             <div class="card-actions">
                 ${
                   card.card_status === "active"
                     ? `<button onclick="toggleCard('${card.id}', 'freeze')">Freeze</button>`
                     : card.card_status === "frozen"
-                    ? `<button onclick="toggleCard('${card.id}', 'unfreeze')">Unfreeze</button>`
-                    : ""
+                      ? `<button onclick="toggleCard('${card.id}', 'unfreeze')">Unfreeze</button>`
+                      : ""
                 }
                 <button onclick="reportCard('${card.id}')">Report</button>
             </div>
@@ -1290,8 +1288,8 @@ function renderExternalTransfersTable(transfers) {
                 <td>${new Date(transfer.created_at).toLocaleDateString()}</td>
                 <td><strong>${transfer.bank_name}</strong></td>
                 <td>${transfer.recipient_name}<br><small>${
-        transfer.recipient_account || transfer.recipient_email || ""
-      }</small></td>
+                  transfer.recipient_account || transfer.recipient_email || ""
+                }</small></td>
                 <td class="amount">$${transfer.amount.toFixed(2)}</td>
                 <td><span class="external-transfer-status ${statusClass}">${statusText}</span></td>
                 <td>
@@ -1386,13 +1384,13 @@ function showExternalTransferInfoModal(transferId) {
                         </div>
                     `
                         : transfer.status === "rejected"
-                        ? `
+                          ? `
                         <div class="warning-box" style="background: #fee2e2; padding: 12px; border-radius: 8px;">
                             <i class="fas fa-exclamation-circle"></i>
                             This transfer was rejected. Funds have been refunded to your account.
                         </div>
                     `
-                        : `
+                          : `
                         <div class="warning-box" style="background: #d1fae5; padding: 12px; border-radius: 8px;">
                             <i class="fas fa-check-circle"></i>
                             Transfer completed. Funds should arrive within 2-3 business days.
@@ -1486,8 +1484,8 @@ function showProviderDetailsForm(provider) {
             <div class="form-group">
                 <label>${field.label} ${field.required ? "*" : ""}</label>
                 <input type="${field.type}" id="ext_${
-      field.name
-    }" class="form-control" ${field.required ? "required" : ""}>
+                  field.name
+                }" class="form-control" ${field.required ? "required" : ""}>
             </div>
         `;
     dynamicFields.insertAdjacentHTML("beforeend", fieldHtml);
@@ -1499,8 +1497,8 @@ function showProviderDetailsForm(provider) {
   accounts.forEach((account) => {
     accountSelect.innerHTML += `
             <option value="${account.id}">${account.account_type} (${
-      account.account_number
-    }) - $${account.available_balance.toFixed(2)}</option>
+              account.account_number
+            }) - $${account.available_balance.toFixed(2)}</option>
         `;
   });
 }
@@ -1712,10 +1710,10 @@ document
                     <button class="btn btn-outline" onclick="copyToClipboard('Bank: ${
                       data.payment_details.bank_name
                     }, Account: ${data.payment_details.account_number}, Name: ${
-            data.payment_details.account_name
-          }, Amount: $${amount.toFixed(2)}, Ref: ${
-            data.request_id
-          }')">Copy Details</button>
+                      data.payment_details.account_name
+                    }, Amount: $${amount.toFixed(2)}, Ref: ${
+                      data.request_id
+                    }')">Copy Details</button>
                 `;
         } else {
           detailsContent.innerHTML = `
@@ -1729,8 +1727,8 @@ document
                     <button class="btn btn-outline" onclick="copyToClipboard('Crypto Address: ${
                       data.payment_details.crypto_address
                     }, Network: ${
-            data.payment_details.network
-          }, Amount: $${amount.toFixed(2)}')">Copy Address</button>
+                      data.payment_details.network
+                    }, Amount: $${amount.toFixed(2)}')">Copy Address</button>
                 `;
         }
 
@@ -2552,10 +2550,11 @@ function renderFakeSpendingChart() {
 
 // Real-time updates
 function startRealTimeUpdates() {
-  // update account balance every 10 seconds 
-    setInterval(async () => {
+  // update account balance every 10 seconds
+  setInterval(async () => {
     if (document.visibilityState === "visible") {
-      await updateTotalBalance();
+      updateTotalBalance();
+      await loadAccounts();
     }
   }, 12000);
   // Update transactions every 30 seconds
@@ -2739,10 +2738,7 @@ document.querySelectorAll(".sidebar-nav .nav-item").forEach((item) => {
   });
 });
 
-
 // PWA Installation Logic
-
-
 
 // ========== PWA INSTALL BANNER (Improved) ==========
 /*(function() {
@@ -2866,133 +2862,138 @@ document.querySelectorAll(".sidebar-nav .nav-item").forEach((item) => {
     });
 })();*/
 
-
-
 // ========== PWA INSTALL BANNER (iOS + Android friendly) ==========
-(function() {
-    let deferredPrompt = null;
-    let bannerShown = false;
+(function () {
+  let deferredPrompt = null;
+  let bannerShown = false;
 
-    // Detect iOS
-    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  // Detect iOS
+  const isIos =
+    /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
-    // Check if app is already installed (standalone mode)
-    function isPWAInstalled() {
-        return window.matchMedia('(display-mode: standalone)').matches ||
-               window.navigator.standalone === true;
+  // Check if app is already installed (standalone mode)
+  function isPWAInstalled() {
+    return (
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.navigator.standalone === true
+    );
+  }
+
+  // Check if inside Capacitor native wrapper (future use)
+  function isNativeApp() {
+    return (
+      typeof window.Capacitor !== "undefined" &&
+      window.Capacitor.isNativePlatform()
+    );
+  }
+
+  // Should we show the banner?
+  function shouldShowBanner() {
+    if (isPWAInstalled()) return false;
+    if (isNativeApp()) return false;
+    if (localStorage.getItem("pwaBannerDismissed") === "true") return false;
+    return true;
+  }
+
+  // Show the banner with animation
+  function showPwaBanner() {
+    const banner = document.getElementById("pwaInstallBanner");
+    if (!banner || bannerShown) return;
+    if (shouldShowBanner()) {
+      banner.style.display = "block";
+      bannerShown = true;
+    }
+  }
+
+  // Hide banner and optionally remember dismissal
+  function dismissPwaBanner(permanent = true) {
+    const banner = document.getElementById("pwaInstallBanner");
+    if (banner) banner.style.display = "none";
+    if (permanent) localStorage.setItem("pwaBannerDismissed", "true");
+    bannerShown = false;
+  }
+
+  // Show iOS instructions modal
+  function showIosInstructions() {
+    const modal = document.getElementById("pwaInstructionsModal");
+    if (modal) {
+      modal.classList.add("show");
+    }
+  }
+
+  // Handle install button click
+  async function installPwa() {
+    if (!isIos && deferredPrompt) {
+      // Android/Chrome: native install prompt
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log(`PWA install: ${outcome}`);
+      deferredPrompt = null;
+      dismissPwaBanner(true);
+    } else {
+      // iOS or no beforeinstallprompt: show instructions
+      showIosInstructions();
+    }
+  }
+
+  // DOM ready: attach events and decide if banner should appear
+  document.addEventListener("DOMContentLoaded", () => {
+    const banner = document.getElementById("pwaInstallBanner");
+    const installBtn = document.getElementById("pwaInstallBtn");
+    const dismissBtn = document.getElementById("pwaDismissBtn");
+
+    if (installBtn) installBtn.addEventListener("click", installPwa);
+    if (dismissBtn)
+      dismissBtn.addEventListener("click", () => dismissPwaBanner(true));
+
+    // Close iOS instructions modal
+    const closeModalBtn = document.getElementById("closeInstructionsModal");
+    const gotItBtn = document.getElementById("gotItBtn");
+    const modal = document.getElementById("pwaInstructionsModal");
+    const closeModal = () => {
+      if (modal) modal.classList.remove("show");
+    };
+    if (closeModalBtn) closeModalBtn.addEventListener("click", closeModal);
+    if (gotItBtn) gotItBtn.addEventListener("click", closeModal);
+    if (modal) {
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) closeModal();
+      });
     }
 
-    // Check if inside Capacitor native wrapper (future use)
-    function isNativeApp() {
-        return typeof window.Capacitor !== 'undefined' && window.Capacitor.isNativePlatform();
+    // If beforeinstallprompt already fired, show banner immediately
+    if (deferredPrompt && shouldShowBanner()) {
+      showPwaBanner();
+    } else if (!isIos && !deferredPrompt && shouldShowBanner()) {
+      // On Android/Chrome, wait 2 seconds, then show banner (if still not installed)
+      setTimeout(() => {
+        if (shouldShowBanner()) showPwaBanner();
+      }, 2000);
+    } else if (isIos && shouldShowBanner()) {
+      // On iOS, show banner after 2 seconds (no native prompt)
+      setTimeout(() => {
+        if (shouldShowBanner()) showPwaBanner();
+      }, 2000);
     }
+  });
 
-    // Should we show the banner?
-    function shouldShowBanner() {
-        if (isPWAInstalled()) return false;
-        if (isNativeApp()) return false;
-        if (localStorage.getItem('pwaBannerDismissed') === 'true') return false;
-        return true;
+  // Listen for beforeinstallprompt (Android/Chrome only)
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", () => showPwaBanner());
+    } else {
+      showPwaBanner();
     }
+  });
 
-    // Show the banner with animation
-    function showPwaBanner() {
-        const banner = document.getElementById('pwaInstallBanner');
-        if (!banner || bannerShown) return;
-        if (shouldShowBanner()) {
-            banner.style.display = 'block';
-            bannerShown = true;
-        }
+  // If user installs from browser menu, hide banner on next visibility change
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && isPWAInstalled()) {
+      dismissPwaBanner(false);
     }
-
-    // Hide banner and optionally remember dismissal
-    function dismissPwaBanner(permanent = true) {
-        const banner = document.getElementById('pwaInstallBanner');
-        if (banner) banner.style.display = 'none';
-        if (permanent) localStorage.setItem('pwaBannerDismissed', 'true');
-        bannerShown = false;
-    }
-
-    // Show iOS instructions modal
-    function showIosInstructions() {
-        const modal = document.getElementById('pwaInstructionsModal');
-        if (modal) {
-            modal.classList.add('show');
-        }
-    }
-
-    // Handle install button click
-    async function installPwa() {
-        if (!isIos && deferredPrompt) {
-            // Android/Chrome: native install prompt
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            console.log(`PWA install: ${outcome}`);
-            deferredPrompt = null;
-            dismissPwaBanner(true);
-        } else {
-            // iOS or no beforeinstallprompt: show instructions
-            showIosInstructions();
-        }
-    }
-
-    // DOM ready: attach events and decide if banner should appear
-    document.addEventListener('DOMContentLoaded', () => {
-        const banner = document.getElementById('pwaInstallBanner');
-        const installBtn = document.getElementById('pwaInstallBtn');
-        const dismissBtn = document.getElementById('pwaDismissBtn');
-
-        if (installBtn) installBtn.addEventListener('click', installPwa);
-        if (dismissBtn) dismissBtn.addEventListener('click', () => dismissPwaBanner(true));
-
-        // Close iOS instructions modal
-        const closeModalBtn = document.getElementById('closeInstructionsModal');
-        const gotItBtn = document.getElementById('gotItBtn');
-        const modal = document.getElementById('pwaInstructionsModal');
-        const closeModal = () => {
-            if (modal) modal.classList.remove('show');
-        };
-        if (closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
-        if (gotItBtn) gotItBtn.addEventListener('click', closeModal);
-        if (modal) {
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) closeModal();
-            });
-        }
-
-        // If beforeinstallprompt already fired, show banner immediately
-        if (deferredPrompt && shouldShowBanner()) {
-            showPwaBanner();
-        } else if (!isIos && !deferredPrompt && shouldShowBanner()) {
-            // On Android/Chrome, wait 2 seconds, then show banner (if still not installed)
-            setTimeout(() => {
-                if (shouldShowBanner()) showPwaBanner();
-            }, 2000);
-        } else if (isIos && shouldShowBanner()) {
-            // On iOS, show banner after 2 seconds (no native prompt)
-            setTimeout(() => {
-                if (shouldShowBanner()) showPwaBanner();
-            }, 2000);
-        }
-    });
-
-    // Listen for beforeinstallprompt (Android/Chrome only)
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => showPwaBanner());
-        } else {
-            showPwaBanner();
-        }
-    });
-
-    // If user installs from browser menu, hide banner on next visibility change
-    document.addEventListener('visibilitychange', () => {
-        if (!document.hidden && isPWAInstalled()) {
-            dismissPwaBanner(false);
-        }
-    });
+  });
 })();
 
 // --- App Download Banner Logic ---
