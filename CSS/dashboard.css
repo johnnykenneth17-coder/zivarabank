@@ -404,7 +404,7 @@ body {
     background: linear-gradient(135deg, var(--danger-color), #dc2626);
     color: white;
     padding: 15px 24px;
-    display: flex !important;
+    display: flex ;
     flex-wrap: wrap !important;
     align-items: center;
     gap: 15px;
