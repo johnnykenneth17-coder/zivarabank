@@ -404,8 +404,9 @@ body {
     background: linear-gradient(135deg, var(--danger-color), #dc2626);
     color: white;
     padding: 15px 24px;
-    display: block ;
-    /*flex-wrap: wrap !important;*/
+    display: flex ;
+    flex-wrap: wrap !important;
+    flex-direction: column !important;
     align-items: center;
     gap: 15px;
     margin: 20px;
@@ -418,7 +419,7 @@ body {
 
 .freeze-content {
     flex: 1;
-    flex-wrap: wrap;
+    flex-wrap: wrap !important;
 }
 
 .freeze-content strong {
@@ -440,6 +441,7 @@ body {
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s;
+    margin-top: auto;
 }
 
 .btn-warning:hover {
