@@ -408,7 +408,7 @@ body {
     flex-wrap: wrap !important;
     align-items: center;
     gap: 15px;
-    margin: 20px;
+    /*margin: 20px;*/
     border-radius: var(--border-radius);
 }
 
