@@ -169,7 +169,6 @@ async function withLoading(operation, options = {}) {
   }
 }
 
-
 // Wrap fetch requests with loading
 async function fetchWithLoading(url, options = {}, loadingOptions = {}) {
   return withLoading(async () => {
@@ -607,6 +606,7 @@ function showPrimaryAccountNumber() {
 }
 
 // Update transactions display for recent transactions (overview page)
+// Update transactions display for recent transactions (overview page) - OPTIMIZED FOR MOBILE
 function updateTransactionsDisplay() {
   const recentTransactions = document.getElementById("recentTransactions");
   if (!recentTransactions) return;
@@ -624,66 +624,66 @@ function updateTransactionsDisplay() {
       const isTransfer = t.transaction_type === "transfer";
       const transactionId = t.id || t.transaction_id;
 
-      // Determine icon and display text
+      // Determine icon and simplified display text
       let icon = "exchange-alt";
       let displayName = "";
-      let displayDetail = "";
+      let amountClass = isCredit ? "positive" : "negative";
+      let sign = isCredit ? "+" : "-";
 
       if (isTransfer) {
         if (isCredit) {
-          // Received money
+          // Received money - show "From: Name"
           const senderName = t.from_user?.first_name
-            ? `${t.from_user.first_name} ${t.from_user.last_name || ""}`.trim()
+            ? `${t.from_user.first_name} ${(t.from_user.last_name || "").charAt(0)}.`
             : "Transfer";
           icon = "arrow-down";
-          displayName = `Received from ${senderName}`;
-          displayDetail = t.from_account?.account_number || "";
+          displayName = `From ${senderName}`;
         } else {
-          // Sent money
+          // Sent money - show "To: Name"
           const receiverName = t.to_user?.first_name
-            ? `${t.to_user.first_name} ${t.to_user.last_name || ""}`.trim()
+            ? `${t.to_user.first_name} ${(t.to_user.last_name || "").charAt(0)}.`
             : "Transfer";
           icon = "arrow-up";
-          displayName = `Sent to ${receiverName}`;
-          displayDetail = t.to_account?.account_number || "";
+          displayName = `To ${receiverName}`;
         }
       } else if (t.transaction_type === "bill_payment") {
         icon = "file-invoice";
-        displayName = t.description || "Bill Payment";
-        displayDetail = "";
+        // Shorten bill description
+        let shortDesc = t.description || "Bill Payment";
+        if (shortDesc.length > 20)
+          shortDesc = shortDesc.substring(0, 18) + "...";
+        displayName = shortDesc;
       } else if (t.transaction_type === "savings") {
         icon = "piggy-bank";
-        displayName = "Savings Deposit";
-        displayDetail = t.description || "";
+        displayName = "Savings";
       } else if (t.transaction_type === "savings_withdrawal") {
         icon = "money-bill-wave";
-        displayName = "Savings Withdrawal";
-        displayDetail = t.description || "";
+        displayName = "Withdrawal";
       } else if (t.transaction_type === "deposit") {
         icon = "plus-circle";
         displayName = "Deposit";
-        displayDetail = t.description || "";
       } else {
         icon = "exchange-alt";
-        displayName = t.description || t.transaction_type || "Transaction";
-        displayDetail = "";
+        let shortDesc = t.description || t.transaction_type || "Transaction";
+        if (shortDesc.length > 20)
+          shortDesc = shortDesc.substring(0, 18) + "...";
+        displayName = shortDesc;
       }
 
       return `
-                <div class="transaction-item" data-transaction-id="${transactionId}" onclick="viewTransactionReceiptFromHistory('${transactionId}')" style="cursor: pointer;">
-                    <div class="transaction-icon">
-                        <i class="fas fa-${icon}"></i>
-                    </div>
-                    <div class="transaction-details">
-                        <div class="transaction-name">${escapeHtml(displayName)}</div>
-                        ${displayDetail ? `<div class="transaction-date" style="font-size: 10px; font-family: monospace;">${escapeHtml(displayDetail)}</div>` : ""}
-                        <div class="transaction-date">${new Date(t.created_at).toLocaleDateString()}</div>
-                    </div>
-                    <div class="transaction-amount ${isCredit ? "positive" : "negative"}">
-                        ${isCredit ? "+" : "-"}${formatMoney(Math.abs(t.amount))}
-                    </div>
-                </div>
-            `;
+        <div class="transaction-item" data-transaction-id="${transactionId}" onclick="viewTransactionReceiptFromHistory('${transactionId}')" style="cursor: pointer;">
+          <div class="transaction-icon">
+            <i class="fas fa-${icon}"></i>
+          </div>
+          <div class="transaction-details">
+            <div class="transaction-name">${escapeHtml(displayName)}</div>
+            <div class="transaction-date">${new Date(t.created_at).toLocaleDateString()}</div>
+          </div>
+          <div class="transaction-amount ${amountClass}">
+            ${sign}${formatMoney(Math.abs(t.amount))}
+          </div>
+        </div>
+      `;
     })
     .join("");
 }
@@ -7040,18 +7040,24 @@ function showChangePasswordModal() {
 // REPLACE the entire change password event listener with this
 document.addEventListener("DOMContentLoaded", () => {
   // Change Password Modal Handler - FIXED VERSION
-  const confirmChangePasswordBtn = document.getElementById("confirmChangePassword");
+  const confirmChangePasswordBtn = document.getElementById(
+    "confirmChangePassword",
+  );
   if (confirmChangePasswordBtn) {
     // Remove any existing listeners to prevent duplicates
     const newBtn = confirmChangePasswordBtn.cloneNode(true);
-    confirmChangePasswordBtn.parentNode.replaceChild(newBtn, confirmChangePasswordBtn);
-    
+    confirmChangePasswordBtn.parentNode.replaceChild(
+      newBtn,
+      confirmChangePasswordBtn,
+    );
+
     newBtn.addEventListener("click", async () => {
       console.log("Change password button clicked");
-      
+
       const currentPassword = document.getElementById("currentPassword")?.value;
       const newPassword = document.getElementById("newPassword")?.value;
-      const confirmNewPassword = document.getElementById("confirmNewPassword")?.value;
+      const confirmNewPassword =
+        document.getElementById("confirmNewPassword")?.value;
 
       // Validation
       if (!currentPassword || !newPassword || !confirmNewPassword) {
@@ -7072,10 +7078,10 @@ document.addEventListener("DOMContentLoaded", () => {
       // Get token
       const token = localStorage.getItem("token");
       console.log("Token exists:", !!token);
-      
+
       if (!token) {
         showNotification("Please login again", "error");
-        setTimeout(() => window.location.href = "login.html", 1500);
+        setTimeout(() => (window.location.href = "login.html"), 1500);
         return;
       }
 
@@ -7085,20 +7091,20 @@ document.addEventListener("DOMContentLoaded", () => {
       btn.disabled = true;
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
 
-      loadingManager.show("updating...")
+      loadingManager.show("updating...");
 
       try {
         console.log("Making API call to change password...");
-        
+
         const response = await fetch(`${API_BASE_URL}/user/change-password`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             current_password: currentPassword,
-            new_password: newPassword
+            new_password: newPassword,
           }),
         });
 
@@ -7117,8 +7123,12 @@ document.addEventListener("DOMContentLoaded", () => {
           const form = document.getElementById("changePasswordForm");
           if (form) form.reset();
           // Clear password strength display
-          const strengthBar = document.querySelector("#changePasswordModal .strength-bar");
-          const strengthText = document.querySelector("#changePasswordModal .strength-text");
+          const strengthBar = document.querySelector(
+            "#changePasswordModal .strength-bar",
+          );
+          const strengthText = document.querySelector(
+            "#changePasswordModal .strength-text",
+          );
           if (strengthBar) strengthBar.style.width = "0%";
           if (strengthText) strengthText.textContent = "";
         } else {
@@ -7128,11 +7138,14 @@ document.addEventListener("DOMContentLoaded", () => {
             // Token expired or invalid
             localStorage.removeItem("token");
             showNotification("Session expired. Please login again.", "error");
-            setTimeout(() => window.location.href = "login.html", 1500);
+            setTimeout(() => (window.location.href = "login.html"), 1500);
           } else {
             loadingManager.hide();
 
-            showNotification(data.error || "Failed to change password", "error");
+            showNotification(
+              data.error || "Failed to change password",
+              "error",
+            );
           }
         }
       } catch (error) {
@@ -7149,7 +7162,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
-
 
 // Password strength checker
 function checkPasswordStrength(password) {
@@ -7202,19 +7214,19 @@ async function ensureValidToken() {
     }, 1500);
     return false;
   }
-  
+
   // Optional: Verify token with backend
   try {
     const response = await fetch(`${API_BASE_URL}/user/profile`, {
       headers: {
-        "Authorization": `Bearer ${token}`
-      }
+        Authorization: `Bearer ${token}`,
+      },
     });
-    
+
     if (!response.ok) {
       localStorage.removeItem("token");
       showNotification("Session expired. Please login again.", "error");
-      setTimeout(() => window.location.href = "login.html", 1500);
+      setTimeout(() => (window.location.href = "login.html"), 1500);
       return false;
     }
     return true;

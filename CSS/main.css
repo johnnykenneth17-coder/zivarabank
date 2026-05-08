@@ -1132,4 +1132,245 @@ body {
 }
 .modal.show {
     display: flex;
+}*/
+
+/* ==================== INDEX PAGE SPECIFIC TOP BAR FIXES ==================== */
+
+body.index-page .top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  gap: 12px;
+  flex-wrap: nowrap;
+}
+
+body.index-page .top-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+body.index-page .top-bar-left .logo {
+  margin-left: 0 !important;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+body.index-page .top-bar-left .logo i {
+  font-size: 28px !important;
+}
+
+body.index-page .top-bar-left .logo span {
+  font-size: 22px !important;
+  font-weight: 700;
+}
+
+body.index-page .mobile-menu-btn {
+  display: flex !important;
+  background: none;
+  border: none;
+  font-size: 24px !important;
+  color: var(--gray-600);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  width: auto;
+  height: auto;
+}
+
+body.index-page .mobile-menu-btn i {
+  font-size: 24px;
+}
+
+body.index-page .top-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 1;
+}
+
+body.index-page .search-box {
+  display: none !important;
+}
+
+body.index-page .auth-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+body.index-page .auth-buttons .btn {
+  padding: 6px 12px !important;
+  font-size: 12px !important;
+  white-space: nowrap;
+  border-radius: 6px;
+}
+
+/* Tablet screens */
+@media (max-width: 768px) {
+  body.index-page .top-bar {
+    padding: 10px 16px;
+    gap: 10px;
+  }
+  
+  body.index-page .top-bar-left .logo i {
+    font-size: 35px !important;
+  }
+  
+  body.index-page .top-bar-left .logo span {
+    font-size: 27px !important;
+  }
+  
+  body.index-page .mobile-menu-btn {
+    font-size: 22px !important;
+  }
+  
+  body.index-page .mobile-menu-btn i {
+    font-size: 27px;
+  }
+  
+  body.index-page .auth-buttons .btn {
+    padding: 5px 17px !important;
+    font-size: 13px !important;
+  }
+}
+
+/* Mobile screens */
+@media (max-width: 550px) {
+  body.index-page .top-bar {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+  
+  body.index-page .top-bar-left {
+    gap: 8px;
+  }
+  
+  body.index-page .top-bar-left .logo i {
+    font-size: 30px !important;
+  }
+  
+  body.index-page .top-bar-left .logo span {
+    font-size: 24px !important;
+  }
+  
+  body.index-page .mobile-menu-btn {
+    font-size: 24px !important;
+    padding: 6px;
+  }
+  
+  body.index-page .mobile-menu-btn i {
+    font-size: 27px;
+  }
+  
+  body.index-page .auth-buttons {
+    gap: 6px;
+  }
+  
+  body.index-page .auth-buttons .btn {
+    padding: 4px 20px !important;
+    font-size: 15px !important;
+  }
+}
+
+/* Small mobile screens */
+@media (max-width: 450px) {
+  body.index-page .top-bar {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+  
+  body.index-page .top-bar-left .logo i {
+    font-size: 27px !important;
+  }
+  
+  body.index-page .top-bar-left .logo span {
+    font-size: 21px !important;
+  }
+  
+  body.index-page .mobile-menu-btn {
+    font-size: 25px !important;
+    padding: 4px;
+  }
+  
+  body.index-page .mobile-menu-btn i {
+    font-size: 25px;
+  }
+  
+  body.index-page .auth-buttons .btn {
+    padding: 4px 18px !important;
+    font-size: 12px !important;
+  }
+}
+
+/* Extra small screens (280px) */
+@media (max-width: 380px) {
+  body.index-page .top-bar {
+    padding: 6px 8px;
+    gap: 5px;
+  }
+  
+  body.index-page .top-bar-left .logo i {
+    font-size: 24px !important;
+  }
+  
+  body.index-page .top-bar-left .logo span {
+    font-size: 18px !important;
+
+  }
+  
+  body.index-page .mobile-menu-btn {
+    font-size: 20px !important;
+    padding: 3px;
+  }
+  
+  body.index-page .mobile-menu-btn i {
+    font-size: 25px;
+  }
+  
+  body.index-page .auth-buttons {
+    gap: 4px;
+  }
+  
+  body.index-page .auth-buttons .btn {
+    padding: 3px 14px !important;
+    font-size: 12px !important;
+  }
+}
+/* Extra small screens (280px) */
+@media (max-width: 350px) {
+  body.index-page .top-bar {
+    padding: 6px 8px;
+    gap: 5px;
+  }
+  
+  body.index-page .top-bar-left .logo i {
+    font-size: 20px !important;
+  }
+  
+  body.index-page .top-bar-left .logo span {
+    font-size: 16px !important;
+
+  }
+  
+  body.index-page .mobile-menu-btn {
+    font-size: 18px !important;
+    padding: 3px;
+  }
+  
+  body.index-page .mobile-menu-btn i {
+    font-size: 18px;
+  }
+  
+  body.index-page .auth-buttons {
+    gap: 4px;
+  }
+  
+  body.index-page .auth-buttons .btn {
+    padding: 3px 12px !important;
+    font-size: 10px !important;
+  }
 }

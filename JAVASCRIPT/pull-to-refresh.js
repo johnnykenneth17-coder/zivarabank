@@ -1,12 +1,12 @@
-// pull-to-refresh.js - Professional Pull to Refresh for PWA (COMPLETE FIXED)
+// pull-to-refresh.js - Professional Pull to Refresh for PWA (COMPLETELY FIXED)
 
 class PullToRefresh {
   constructor(options = {}) {
     this.options = {
-      threshold: 80, // pixels to trigger refresh
-      maxPull: 150, // maximum pull distance
-      refreshTimeout: 10000, // max wait time for refresh
-      onRefresh: null, // callback function
+      threshold: 80,
+      maxPull: 150,
+      refreshTimeout: 10000,
+      onRefresh: null,
       enabled: true,
       ...options,
     };
@@ -24,8 +24,16 @@ class PullToRefresh {
     this.startScrollTop = 0;
     this.touchElement = null;
     this.toastTimeout = null;
+    this.isAtTopStart = false;
 
-    // Wait for DOM to be ready
+    // Bind methods to ensure correct 'this' context
+    this.handleTouchStart = this.handleTouchStart.bind(this);
+    this.handleTouchMove = this.handleTouchMove.bind(this);
+    this.handleTouchEnd = this.handleTouchEnd.bind(this);
+    this.handleMouseDown = this.handleMouseDown.bind(this);
+    this.handleMouseMove = this.handleMouseMove.bind(this);
+    this.handleMouseUp = this.handleMouseUp.bind(this);
+
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", () => this.init());
     } else {
@@ -35,12 +43,11 @@ class PullToRefresh {
 
   init() {
     this.createElements();
-    this.attachEvents();
+    this._attachEvents();
     this.detectScrollableElement();
   }
 
   createElements() {
-    // Create pull-to-refresh indicator with professional design
     this.refreshElement = document.createElement("div");
     this.refreshElement.className = "pull-to-refresh";
     this.refreshElement.innerHTML = `
@@ -56,7 +63,6 @@ class PullToRefresh {
     `;
     document.body.appendChild(this.refreshElement);
 
-    // Create loading overlay
     this.loadingOverlay = document.createElement("div");
     this.loadingOverlay.className = "refresh-loading-overlay";
     this.loadingOverlay.innerHTML = `
@@ -71,7 +77,6 @@ class PullToRefresh {
     `;
     document.body.appendChild(this.loadingOverlay);
 
-    // Create toast notification
     this.toast = document.createElement("div");
     this.toast.className = "refresh-toast";
     this.toast.innerHTML = `
@@ -84,118 +89,145 @@ class PullToRefresh {
   }
 
   detectScrollableElement() {
-    // Find the main scrollable container
+    // Find the ACTUAL scrollable content container
+    const activePage = document.querySelector(".page.active");
+
+    if (activePage) {
+      // Check if the active page itself is scrollable
+      if (activePage.scrollHeight > activePage.clientHeight + 10) {
+        this.scrollableElement = activePage;
+        return;
+      }
+
+      // Look for common scrollable containers within the active page
+      const scrollableSelectors = [
+        ".content-pages",
+        ".admin-pages",
+        ".transactions-list",
+        ".savings-list",
+        ".accounts-grid",
+        ".recent-transactions",
+        ".main-content",
+        ".dashboard .main-content",
+        ".admin-main",
+        ".page.active .transactions-list",
+        ".page.active .savings-list",
+        ".page.active .accounts-grid",
+      ];
+
+      for (const selector of scrollableSelectors) {
+        const element = document.querySelector(selector);
+        if (element && element.scrollHeight > element.clientHeight + 10) {
+          this.scrollableElement = element;
+          return;
+        }
+      }
+
+      // Fallback: find any scrollable div within active page
+      const allDivs = activePage.querySelectorAll("div");
+      for (const div of allDivs) {
+        if (div.scrollHeight > div.clientHeight + 20) {
+          this.scrollableElement = div;
+          return;
+        }
+      }
+    }
+
+    // If no scrollable content found, use the main content wrapper
     this.scrollableElement =
-      document.querySelector(".content-pages") ||
-      document.querySelector(".admin-pages") ||
-      document.querySelector(".main-content") ||
-      document.querySelector(".dashboard .main-content") ||
-      document.querySelector(".admin-main") ||
-      document.querySelector(".page.active") ||
-      window;
-  }
-
-  attachEvents() {
-    // Determine the element to attach touch events to
-    let touchElement = null;
-
-    if (this.scrollableElement && this.scrollableElement !== window) {
-      touchElement = this.scrollableElement;
-    } else {
-      touchElement = document.body || document.documentElement;
-    }
-
-    this.touchElement = touchElement;
-
-    // Touch events for mobile
-    if (touchElement) {
-      touchElement.addEventListener(
-        "touchstart",
-        this.handleTouchStart.bind(this),
-        { passive: false },
-      );
-      touchElement.addEventListener(
-        "touchmove",
-        this.handleTouchMove.bind(this),
-        { passive: false },
-      );
-      touchElement.addEventListener("touchend", this.handleTouchEnd.bind(this));
-    }
-
-    // Mouse events for desktop development
-    document.addEventListener("mousedown", this.handleMouseDown.bind(this));
-    document.addEventListener("mousemove", this.handleMouseMove.bind(this));
-    document.addEventListener("mouseup", this.handleMouseUp.bind(this));
-
-    // Also listen on window for scroll events
-    window.addEventListener("scroll", this.handleWindowScroll.bind(this));
-  }
-
-  handleWindowScroll() {
-    // Reset pull if user scrolls normally
-    if (!this.isDragging && this.pullDistance > 0) {
-      this.resetPullUI();
-      this.pullDistance = 0;
-    }
+      document.querySelector(".main-content") || document.documentElement;
   }
 
   isAtTop() {
     if (!this.scrollableElement) return true;
 
-    if (this.scrollableElement === window) {
-      return (window.scrollY || document.documentElement.scrollTop) <= 5;
+    let scrollTop = 0;
+
+    if (this.scrollableElement === document.documentElement) {
+      scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    } else {
+      scrollTop = this.scrollableElement.scrollTop;
     }
 
-    if (
-      this.scrollableElement &&
-      typeof this.scrollableElement.scrollTop !== "undefined"
-    ) {
-      return this.scrollableElement.scrollTop <= 5;
-    }
+    // Allow a small tolerance (5px) for natural scroll bounce
+    return scrollTop <= 5;
+  }
 
-    return true;
+  _attachEvents() {
+    let touchElement = this.scrollableElement || document.body;
+    this.touchElement = touchElement;
+
+    touchElement.addEventListener("touchstart", this.handleTouchStart, {
+      passive: false,
+    });
+    touchElement.addEventListener("touchmove", this.handleTouchMove, {
+      passive: false,
+    });
+    touchElement.addEventListener("touchend", this.handleTouchEnd);
+
+    document.addEventListener("mousedown", this.handleMouseDown);
+    document.addEventListener("mousemove", this.handleMouseMove);
+    document.addEventListener("mouseup", this.handleMouseUp);
   }
 
   handleTouchStart(e) {
     if (!this.options.enabled || this.isRefreshing) return;
 
-    // Get current scroll position
-    if (this.scrollableElement === window) {
+    // Store current scroll position
+    if (this.scrollableElement === document.documentElement) {
       this.startScrollTop =
-        window.scrollY || document.documentElement.scrollTop;
+        window.pageYOffset || document.documentElement.scrollTop;
     } else {
-      this.startScrollTop = this.scrollableElement?.scrollTop || 0;
+      this.startScrollTop = this.scrollableElement
+        ? this.scrollableElement.scrollTop
+        : 0;
     }
 
-    // Only allow pull-to-refresh if at the very top
-    if (!this.isAtTop()) return;
+    // Check if we're at the top of scrollable content
+    this.isAtTopStart = this.isAtTop();
+
+    // ONLY allow pull-to-refresh if scrollable content is at its top
+    if (!this.isAtTopStart || this.startScrollTop > 5) {
+      this.isDragging = false;
+      return;
+    }
 
     this.startY = e.touches[0].clientY;
     this.isDragging = true;
     this.pullDistance = 0;
-    this.hasStartedRefreshing = false;
   }
 
   handleTouchMove(e) {
     if (!this.isDragging || !this.options.enabled || this.isRefreshing) return;
 
-    // Check if we're still at top during drag
-    if (!this.isAtTop()) {
-      // User scrolled down, cancel the pull
-      this.resetPullUI();
+    // Get current scroll position
+    let currentScrollTop = 0;
+    if (this.scrollableElement === document.documentElement) {
+      currentScrollTop =
+        window.pageYOffset || document.documentElement.scrollTop;
+    } else {
+      currentScrollTop = this.scrollableElement
+        ? this.scrollableElement.scrollTop
+        : 0;
+    }
+
+    // If user has scrolled down even a little, cancel pull-to-refresh
+    if (currentScrollTop > 5) {
+      this._resetPullUI();
       this.isDragging = false;
+      this.pullDistance = 0;
       return;
     }
 
     this.currentY = e.touches[0].clientY;
     let deltaY = this.currentY - this.startY;
 
-    // Only positive delta (pulling down) and at top
-    if (deltaY > 0 && this.isAtTop()) {
-      // Prevent default to stop page scroll while pulling
+    // Only allow pull-down when at top and starting to pull down
+    if (deltaY > 0 && this.isAtTopStart && currentScrollTop <= 5) {
+      // Prevent default scrolling while pulling
       e.preventDefault();
 
-      // Calculate pull distance with resistance (increasing resistance as you pull more)
+      // Calculate pull distance with resistance (increases as you pull more)
       let resistance = 1;
       if (deltaY > 40) {
         resistance = Math.max(0.2, 1 - (deltaY - 40) / 200);
@@ -203,82 +235,116 @@ class PullToRefresh {
       this.pullDistance = Math.min(deltaY * resistance, this.options.maxPull);
 
       // Update UI based on pull distance
-      this.updatePullUI(this.pullDistance);
+      this._updatePullUI(this.pullDistance);
     }
   }
 
   handleTouchEnd() {
-    if (!this.isDragging) return;
+    if (!this.isDragging) {
+      this.isDragging = false;
+      this.pullDistance = 0;
+      return;
+    }
 
     this.isDragging = false;
 
-    if (this.pullDistance >= this.options.threshold && !this.isRefreshing) {
+    if (
+      this.pullDistance >= this.options.threshold &&
+      !this.isRefreshing &&
+      this.isAtTopStart
+    ) {
       this.triggerRefresh();
     } else {
-      this.resetPullUI();
+      this._resetPullUI();
     }
 
     this.pullDistance = 0;
+    this.isAtTopStart = false;
   }
 
   handleMouseDown(e) {
     if (!this.options.enabled || this.isRefreshing) return;
 
-    if (this.scrollableElement === window) {
+    if (this.scrollableElement === document.documentElement) {
       this.startScrollTop =
-        window.scrollY || document.documentElement.scrollTop;
+        window.pageYOffset || document.documentElement.scrollTop;
     } else {
-      this.startScrollTop = this.scrollableElement?.scrollTop || 0;
+      this.startScrollTop = this.scrollableElement
+        ? this.scrollableElement.scrollTop
+        : 0;
     }
 
-    if (!this.isAtTop()) return;
+    this.isAtTopStart = this.isAtTop();
+
+    if (!this.isAtTopStart || this.startScrollTop > 5) {
+      this.isDragging = false;
+      return;
+    }
 
     this.startY = e.clientY;
     this.isDragging = true;
     this.pullDistance = 0;
-    this.hasStartedRefreshing = false;
   }
 
   handleMouseMove(e) {
     if (!this.isDragging || !this.options.enabled || this.isRefreshing) return;
 
-    if (!this.isAtTop()) {
-      this.resetPullUI();
+    let currentScrollTop = 0;
+    if (this.scrollableElement === document.documentElement) {
+      currentScrollTop =
+        window.pageYOffset || document.documentElement.scrollTop;
+    } else {
+      currentScrollTop = this.scrollableElement
+        ? this.scrollableElement.scrollTop
+        : 0;
+    }
+
+    if (currentScrollTop > 5) {
+      this._resetPullUI();
       this.isDragging = false;
+      this.pullDistance = 0;
       return;
     }
 
     let deltaY = e.clientY - this.startY;
 
-    if (deltaY > 0 && this.isAtTop()) {
+    if (deltaY > 0 && this.isAtTopStart && currentScrollTop <= 5) {
       let resistance = 1;
       if (deltaY > 40) {
         resistance = Math.max(0.2, 1 - (deltaY - 40) / 200);
       }
       this.pullDistance = Math.min(deltaY * resistance, this.options.maxPull);
-      this.updatePullUI(this.pullDistance);
+      this._updatePullUI(this.pullDistance);
     }
   }
 
   handleMouseUp() {
-    if (!this.isDragging) return;
+    if (!this.isDragging) {
+      this.isDragging = false;
+      this.pullDistance = 0;
+      return;
+    }
 
     this.isDragging = false;
 
-    if (this.pullDistance >= this.options.threshold && !this.isRefreshing) {
+    if (
+      this.pullDistance >= this.options.threshold &&
+      !this.isRefreshing &&
+      this.isAtTopStart
+    ) {
       this.triggerRefresh();
     } else {
-      this.resetPullUI();
+      this._resetPullUI();
     }
 
     this.pullDistance = 0;
+    this.isAtTopStart = false;
   }
 
-  updatePullUI(pullDistance) {
+  _updatePullUI(pullDistance) {
     if (!this.refreshElement) return;
 
     const percentage = Math.min(pullDistance / this.options.threshold, 1);
-    // Calculate position - start hidden above screen
     const translateY = -60 + pullDistance;
 
     this.refreshElement.style.transform = `translateY(${translateY}px)`;
@@ -313,7 +379,7 @@ class PullToRefresh {
     }
   }
 
-  resetPullUI() {
+  _resetPullUI() {
     if (!this.refreshElement) return;
 
     this.refreshElement.style.transform = "";
@@ -341,7 +407,6 @@ class PullToRefresh {
 
     this.isRefreshing = true;
 
-    // Show refreshing state - move element into visible area
     if (this.refreshElement) {
       this.refreshElement.style.transform = "translateY(0)";
       const arrow = this.refreshElement.querySelector(".refresh-arrow");
@@ -360,19 +425,15 @@ class PullToRefresh {
       }
     }
 
-    // Show loading overlay
     if (this.loadingOverlay) {
       this.loadingOverlay.classList.add("show");
     }
 
-    // Store timeout reference
     let timeoutId = null;
     let isCompleted = false;
 
-    // Create a promise that resolves when refresh completes or times out
     const refreshPromise = (async () => {
       try {
-        // Call the refresh callback
         if (
           this.options.onRefresh &&
           typeof this.options.onRefresh === "function"
@@ -388,7 +449,6 @@ class PullToRefresh {
       }
     })();
 
-    // Set timeout - but don't auto-hide, just handle the timeout case
     const timeoutPromise = new Promise((resolve) => {
       timeoutId = setTimeout(() => {
         if (!isCompleted) {
@@ -397,52 +457,42 @@ class PullToRefresh {
       }, this.options.refreshTimeout);
     });
 
-    // Race between refresh completion and timeout
     const result = await Promise.race([refreshPromise, timeoutPromise]);
 
-    // Clear timeout
     if (timeoutId) clearTimeout(timeoutId);
 
     if (result.success !== undefined) {
-      // Refresh completed or timed out
       if (result.success) {
-        this.hideRefreshUI(true);
-        this.showToast("Updated successfully", "success");
+        this._hideRefreshUI(true);
+        this._showToast("Updated successfully", "success");
       } else {
         if (result.error && result.error.message === "timeout") {
-          // Timeout occurred but refresh might still be ongoing
-          // Don't hide yet, wait for actual completion
           console.log("Refresh taking longer than expected, waiting...");
-
-          // Wait for the actual refresh to complete
           const finalResult = await refreshPromise;
           if (finalResult.success) {
-            this.hideRefreshUI(true);
-            this.showToast("Updated successfully", "success");
+            this._hideRefreshUI(true);
+            this._showToast("Updated successfully", "success");
           } else {
-            this.hideRefreshUI(false);
-            this.showToast("Refresh failed. Try again.", "error");
+            this._hideRefreshUI(false);
+            this._showToast("Refresh failed. Try again.", "error");
           }
         } else {
-          this.hideRefreshUI(false);
-          this.showToast("Refresh failed. Try again.", "error");
+          this._hideRefreshUI(false);
+          this._showToast("Refresh failed. Try again.", "error");
         }
       }
     }
   }
 
-  hideRefreshUI(success) {
+  _hideRefreshUI(success) {
     this.isRefreshing = false;
     this.hasStartedRefreshing = false;
 
-    // Hide loading overlay
     if (this.loadingOverlay) {
       this.loadingOverlay.classList.remove("show");
     }
 
-    // Reset the refresh element
     if (this.refreshElement) {
-      // Remove the spinning animation
       const spinnerCircle = this.refreshElement.querySelector(
         ".refresh-spinner-circle",
       );
@@ -455,24 +505,21 @@ class PullToRefresh {
         arrow.style.display = "";
       }
 
-      // Reset to original state
       setTimeout(() => {
         if (this.refreshElement) {
-          this.resetPullUI();
+          this._resetPullUI();
         }
       }, 100);
     }
   }
 
-  showToast(message, type = "success") {
+  _showToast(message, type = "success") {
     if (!this.toast) return;
 
-    // Clear any existing timeout
     if (this.toastTimeout) {
       clearTimeout(this.toastTimeout);
     }
 
-    // Update toast icon based on type
     const iconSvg = this.toast.querySelector(".refresh-toast-icon");
     if (iconSvg) {
       if (type === "success") {
@@ -491,11 +538,9 @@ class PullToRefresh {
     this.toast.className = `refresh-toast ${type}`;
     this.toast.classList.add("show");
 
-    // Set timeout to hide after 2 seconds
     this.toastTimeout = setTimeout(() => {
       if (this.toast) {
         this.toast.classList.remove("show");
-        // Reset icon back to success style after error
         if (iconSvg && type === "error") {
           iconSvg.innerHTML = '<path d="M20 6L9 17l-5-5"/>';
           iconSvg.style.stroke = "#10b981";
@@ -511,7 +556,7 @@ class PullToRefresh {
 
   disable() {
     this.options.enabled = false;
-    this.resetPullUI();
+    this._resetPullUI();
   }
 
   async manualRefresh() {
@@ -522,7 +567,6 @@ class PullToRefresh {
   destroy() {
     this.disable();
 
-    // Remove event listeners
     if (this.touchElement) {
       this.touchElement.removeEventListener(
         "touchstart",
@@ -535,9 +579,7 @@ class PullToRefresh {
     document.removeEventListener("mousedown", this.handleMouseDown);
     document.removeEventListener("mousemove", this.handleMouseMove);
     document.removeEventListener("mouseup", this.handleMouseUp);
-    window.removeEventListener("scroll", this.handleWindowScroll);
 
-    // Remove elements from DOM
     if (this.refreshElement && this.refreshElement.remove) {
       this.refreshElement.remove();
     }
@@ -556,10 +598,8 @@ class PullToRefresh {
   }
 }
 
-// Export for use in other files
 if (typeof module !== "undefined" && module.exports) {
   module.exports = PullToRefresh;
 }
 
-// Make available globally
 window.PullToRefresh = PullToRefresh;
