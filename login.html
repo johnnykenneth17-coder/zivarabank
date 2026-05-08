@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login - Paystora</title>
+    <title>Login - FEECENT</title>
     <link rel="stylesheet" href="./CSS/main.css" />
     <link rel="stylesheet" href="./CSS/mobile.css" />
     <link rel="stylesheet" href="./CSS/dashboard.css" />
@@ -20,10 +20,15 @@
     <div class="auth-container">
       <div class="auth-card">
         <div class="auth-header">
-          <a href="index.html" class="auth-logo">
-            <i class="fas fa-shield-alt"></i>
-            <span>Paystora</span>
-          </a>
+          <div class="page-header">
+            <a href="index.html" class="auth-logo">
+              <i class="fas fa-shield-alt"></i>
+              <span>FEECENT</span>
+            </a>
+            <div style="margin-top: -30px !important">
+              <button class="btn btn-outline" id="locateBack">← Back</button>
+            </div>
+          </div>
           <h1>Welcome Back</h1>
           <p>Enter your credentials to access your account</p>
         </div>
@@ -131,13 +136,17 @@
                 placeholder="123456"
               />
             </div>
-            <div class="form-options" style="margin-top: 10px;">
+            <div class="form-options" style="margin-top: 10px">
               <button id="resendOtpBtn" class="btn btn-outline">
                 Resend Code
               </button>
               <span id="resendTimer" style="color: gray"></span>
             </div>
-            <button id="verifyOtpBtn" class="btn btn-primary btn-block" style="margin-top: 15px;">
+            <button
+              id="verifyOtpBtn"
+              class="btn btn-primary btn-block"
+              style="margin-top: 15px"
+            >
               Verify Code
             </button>
           </div>
@@ -154,7 +163,7 @@
                 placeholder="Enter new password"
               />
             </div>
-            <div class="form-group" style="margin-top: 7px;">
+            <div class="form-group" style="margin-top: 7px">
               <label>Confirm New Password</label>
               <input
                 type="password"
@@ -163,7 +172,11 @@
                 placeholder="Confirm new password"
               />
             </div>
-            <button id="resetPasswordBtn" class="btn btn-primary btn-block" style="margin-top: 15px;">
+            <button
+              id="resetPasswordBtn"
+              class="btn btn-primary btn-block"
+              style="margin-top: 15px"
+            >
               Reset Password
             </button>
           </div>
@@ -412,7 +425,6 @@
         }
       });
 
-
       // Helper: showNotification (if not already defined)
       function showNotification(message, type = "info") {
         // Reuse your existing notification system or implement a simple one
@@ -433,6 +445,10 @@
           setTimeout(() => notification.remove(), 300);
         }, 3000);
       }
+
+      document.getElementById("locateBack")?.addEventListener("click", () => {
+        window.location.href = "index.html";
+      });
     </script>
   </body>
 </html>

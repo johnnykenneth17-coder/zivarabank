@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Bank Ledger - FEECENT Admin</title>
+    <link rel="stylesheet" href="./CSS/admin.css">
+    <link rel="stylesheet" href="./CSS/dashboard.css">
+    <link rel="stylesheet" href="./CSS/main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Ledger specific styles */
+        .ledger-container {
+            padding: 20px;
+        }
+        
+        .ledger-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .ledger-tab {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            color: #64748b;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        
+        .ledger-tab:hover {
+            background: #f1f5f9;
+            color: #2563eb;
+        }
+        
+        .ledger-tab.active {
+            background: #2563eb;
+            color: white;
+        }
+        
+        .ledger-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .ledger-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .summary-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+        }
+        
+        .summary-card.green {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        
+        .summary-card.blue {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        }
+        
+        .summary-card.orange {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .summary-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        
+        .summary-value {
+            font-size: 28px;
+            font-weight: 700;
+        }
+        
+        .ledger-table {
+            width: 100%;
+            overflow-x: auto;
+        }
+        
+        .ledger-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .ledger-table th,
+        .ledger-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .ledger-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .ledger-table tr:hover {
+            background: #f8fafc;
+        }
+        
+        .debit {
+            color: #ef4444;
+            font-weight: 600;
+        }
+        
+        .credit {
+            color: #10b981;
+            font-weight: 600;
+        }
+        
+        .balance-positive {
+            color: #10b981;
+        }
+        
+        .balance-negative {
+            color: #ef4444;
+        }
+        
+        .reconciled {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+        
+        .unreconciled {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+        
+        .ledger-filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .ledger-filters input,
+        .ledger-filters select {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 768px) {
+            .ledger-summary {
+                grid-template-columns: 1fr;
+            }
+            
+            .ledger-table {
+                font-size: 12px;
+            }
+            
+            .ledger-table th,
+            .ledger-table td {
+                padding: 8px;
+            }
+        }
+        
+        .trial-balance-table .debit-col {
+            text-align: right;
+        }
+        
+        .trial-balance-table .credit-col {
+            text-align: right;
+        }
+        
+        .total-row {
+            font-weight: 700;
+            background: #f1f5f9;
+            border-top: 2px solid #e2e8f0;
+        }
+        
+        .balanced {
+            color: #10b981;
+        }
+        
+        .unbalanced {
+            color: #ef4444;
+        }
+
+/* ==================== COMPLETE ADMIN LAYOUT FIX FOR ALL SCREENS ==================== */
+
+/* Reset and base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    position: relative;
+}
+
+.admin-dashboard {
+    display: flex;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    position: relative;
+    min-height: 100vh;
+}
+
+/* Sidebar - Fixed position */
+.admin-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 280px;
+    background: linear-gradient(180deg, var(--admin-dark) 0%, #0f172a 100%);
+    color: white;
+    z-index: 1000;
+    transition: transform 0.3s ease, width 0.3s ease;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.admin-sidebar.collapsed {
+    width: 80px;
+}
+
+/* Main content - adjusts based on sidebar */
+.admin-main {
+    flex: 1;
+    min-height: 100vh;
+    width: calc(100% - 280px);
+    margin-left: 280px;
+    transition: margin-left 0.3s ease, width 0.3s ease;
+    overflow-x: auto;
+    overflow-y: visible;
+    position: relative;
+}
+
+.admin-sidebar.collapsed ~ .admin-main,
+.admin-sidebar.collapsed + .admin-main {
+    margin-left: 80px;
+    width: calc(100% - 80px);
+}
+
+/* Top bar fixes */
+.admin-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: white;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    height: 70px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-shrink: 0;
+}
+
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-shrink: 0;
+}
+
+/* Search box */
+.admin-search {
+    position: relative;
+}
+
+.admin-search input {
+    width: 250px;
+    padding: 8px 12px 8px 36px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+}
+
+/* Pages container */
+.admin-pages {
+    padding: 20px;
+    width: 100%;
+    overflow-x: visible;
+}
+
+.admin-page {
+    width: 100%;
+    overflow-x: visible;
+}
+
+/* Stats grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    width: 100%;
+}
+
+/* Tables - make them scrollable within container */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.data-table {
+    width: 100%;
+    min-width: 800px;
+    border-collapse: collapse;
+}
+
+/* ==================== RESPONSIVE BREAKPOINTS ==================== */
+
+/* Large Desktop (1400px and above) */
+@media (min-width: 1400px) {
+    .admin-main {
+        width: calc(100% - 280px);
+        margin-left: 280px;
+    }
+    
+    .admin-pages {
+        padding: 24px 32px;
+        max-width: calc(100% - 0px);
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Desktop (1024px to 1399px) */
+@media (min-width: 1024px) and (max-width: 1399px) {
+    .admin-main {
+        width: calc(100% - 280px);
+        margin-left: 280px;
+    }
+    
+    .admin-pages {
+        padding: 20px 24px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Tablet (768px to 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .admin-sidebar {
+        transform: translateX(-100%);
+        width: 280px;
+    }
+    
+    .admin-sidebar.show {
+        transform: translateX(0);
+    }
+    
+    .admin-main {
+        width: 100%;
+        margin-left: 0;
+    }
+    
+    .admin-sidebar.collapsed ~ .admin-main,
+    .admin-sidebar.collapsed + .admin-main {
+        margin-left: 0;
+        width: 100%;
+    }
+    
+    .mobile-menu-btn {
+        display: block;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .admin-search input {
+        width: 180px;
+    }
+}
+
+/* Mobile (below 768px) */
+@media (max-width: 767px) {
+    .admin-sidebar {
+        transform: translateX(-100%);
+        width: 260px;
+    }
+    
+    .admin-sidebar.show {
+        transform: translateX(0);
+    }
+    
+    .admin-main {
+        width: 100%;
+        margin-left: 0;
+    }
+    
+    .mobile-menu-btn {
+        display: block;
+    }
+    
+    .admin-topbar {
+        padding: 12px 16px;
+        height: auto;
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .topbar-left {
+        justify-content: space-between;
+    }
+    
+    .topbar-right {
+        justify-content: space-between;
+    }
+    
+    .admin-search {
+        flex: 1;
+    }
+    
+    .admin-search input {
+        width: 100%;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .admin-pages {
+        padding: 12px;
+    }
+    
+    .filters-bar {
+        flex-direction: column;
+    }
+    
+    .filter-select,
+    .filter-input {
+        width: 100%;
+    }
+}
+
+/* Fix for mobile menu button visibility */
+.mobile-menu-btn {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: var(--admin-dark);
+}
+
+/* Ensure all content respects container width */
+.admin-page,
+.ledger-container,
+.settings-grid,
+.tickets-container,
+.charts-row {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: visible;
+}
+
+/* Fix for any absolute positioned elements */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.show {
+    display: flex;
+}
+
+.modal-content {
+    max-width: 90%;
+    width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+/* Force no horizontal scroll on body */
+body {
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
+}
+
+/* Fix for sidebar toggle button */
+.sidebar-toggle {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+    </style>
+</head>
+<body>
+    <div class="admin-dashboard">
+        <!-- Include the same sidebar as admin.html -->
+        <aside class="admin-sidebar" id="adminSidebar">
+            <!-- Same sidebar content from admin.html -->
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>FEECENT Admin</span>
+                </div>
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+            </div>
+            <div class="admin-info">
+                <div class="admin-avatar">
+                    <span id="adminInitials">AD</span>
+                </div>
+                <div class="admin-details">
+                    <h4 id="adminName">Admin User</h4>
+                    <p>Administrator</p>
+                </div>
+            </div>
+            <nav class="admin-nav">
+                <a href="admin.html" class="nav-item" data-page="dashboard">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="admin.html" class="nav-item" data-page="users">
+                    <i class="fas fa-users"></i>
+                    <span>User Management</span>
+                </a>
+                <a href="admin-ledger.html" class="nav-item active">
+                    <i class="fas fa-book"></i>
+                    <span>Bank Ledger</span>
+                </a>
+                <a href="admin.html" class="nav-item" data-page="transactions">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Transactions</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="#" id="adminLogout" class="nav-item">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <!--<main class="admin-main">-->
+        <main class="admin-main" >    
+            <header class="admin-topbar">
+                <div class="topbar-left">
+                    <button class="mobile-menu-btn" id="mobileMenuBtn">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1>Bank Ledger</h1>
+                </div>
+                <div class="topbar-right">
+                    <div class="admin-profile">
+                        <span id="adminEmail">admin@bank.com</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+            </header>
+
+            <div class="ledger-container">
+                <!-- Ledger Tabs -->
+                <div class="ledger-tabs">
+                    <button class="ledger-tab active" data-tab="general">General Ledger</button>
+                    <button class="ledger-tab" data-tab="single">Single Ledger</button>
+                    <button class="ledger-tab" data-tab="trial">Trial Balance</button>
+                    <button class="ledger-tab" data-tab="balancesheet">Balance Sheet</button>
+                    <button class="ledger-tab" data-tab="pl">Profit & Loss</button>
+                    <button class="ledger-tab" data-tab="daily">Daily Journal</button>
+                    <button class="ledger-tab" data-tab="accounts">Chart of Accounts</button>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="ledger-summary" id="ledgerSummary">
+                    <!-- Populated by JS -->
+                </div>
+
+                <!-- General Ledger Tab -->
+                <div id="generalLedgerTab" class="ledger-tab-content active">
+                    <div class="ledger-card">
+                        <h3>General Ledger</h3>
+                        <div class="ledger-filters">
+                            <input type="date" id="glStartDate" placeholder="Start Date">
+                            <input type="date" id="glEndDate" placeholder="End Date">
+                            <select id="glAccountFilter">
+                                <option value="">All Accounts</option>
+                            </select>
+                            <button class="btn btn-primary" id="refreshGlBtn">Refresh</button>
+                            <button class="btn btn-outline" id="exportGlBtn">Export CSV</button>
+                        </div>
+                        <div class="ledger-table">
+                            <table id="generalLedgerTable">
+                                <thead>
+                                    <tr>
+                                        <th>Entry ID</th>
+                                        <th>Date</th>
+                                        <th>Account Code</th>
+                                        <th>Account Name</th>
+                                        <th>User</th>
+                                        <th>Description</th>
+                                        <th>Reference</th>
+                                        <th class="debit">Debit ($)</th>
+                                        <th class="credit">Credit ($)</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="generalLedgerBody">
+                                    <tr><td colspan="11">Loading...</td><ee
+                                </tbody>
+                                <tfoot id="generalLedgerFooter">
+                                    <!-- Totals will be here -->
+                                </tfoot>
+                            </table>
+                        </div>
+                        <div class="pagination" id="glPagination"></div>
+                    </div>
+                </div>
+
+                <!-- Single Ledger Tab -->
+                <div id="singleLedgerTab" class="ledger-tab-content" style="display: none;">
+                    <div class="ledger-card">
+                        <h3>Single Ledger (User Account History)</h3>
+                        <div class="ledger-filters">
+                            <select id="slUserFilter">
+                                <option value="">Select User</option>
+                            </select>
+                            <select id="slAccountFilter">
+                                <option value="">Select Account</option>
+                            </select>
+                            <input type="date" id="slStartDate">
+                            <input type="date" id="slEndDate">
+                            <button class="btn btn-primary" id="refreshSlBtn">Refresh</button>
+                        </div>
+                        <div class="ledger-table">
+                            <table id="singleLedgerTable">
+                                <thead>
+                                    <tr>
+                                        <th>Ledger ID</th>
+                                        <th>Date</th>
+                                        <th>Account</th>
+                                        <th>Transaction Type</th>
+                                        <th>Description</th>
+                                        <th>Amount ($)</th>
+                                        <th>Direction</th>
+                                        <th>Balance Before</th>
+                                        <th>Balance After</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="singleLedgerBody">
+                                    <tr><td colspan="9">Loading...</td><ee
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="pagination" id="slPagination"></div>
+                    </div>
+                </div>
+
+                <!-- Trial Balance Tab -->
+                <div id="trialBalanceTab" class="ledger-tab-content" style="display: none;">
+                    <div class="ledger-card">
+                        <h3>Trial Balance</h3>
+                        <div class="ledger-filters">
+                            <input type="date" id="tbAsOfDate">
+                            <button class="btn btn-primary" id="refreshTbBtn">Generate</button>
+                        </div>
+                        <div class="ledger-table trial-balance-table">
+                            <table id="trialBalanceTable">
+                                <thead>
+                                    <tr>
+                                        <th>Account Code</th>
+                                        <th>Account Name</th>
+                                        <th>Account Type</th>
+                                        <th class="debit">Debit ($)</th>
+                                        <th class="credit">Credit ($)</th>
+                                        <th>Normal Balance</th>
+                                        <th>Balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="trialBalanceBody">
+                                    <tr><td colspan="7">Loading...</td><ee
+                                </tbody>
+                                <tfoot id="trialBalanceFooter"></tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Balance Sheet Tab -->
+                <div id="balanceSheetTab" class="ledger-tab-content" style="display: none;">
+                    <div class="ledger-card">
+                        <h3>Balance Sheet</h3>
+                        <div class="ledger-filters">
+                            <input type="date" id="bsAsOfDate">
+                            <button class="btn btn-primary" id="refreshBsBtn">Generate</button>
+                        </div>
+                        <div id="balanceSheetContent">
+                            <!-- Balance sheet will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profit & Loss Tab -->
+                <div id="plTab" class="ledger-tab-content" style="display: none;">
+                    <div class="ledger-card">
+                        <h3>Profit & Loss Statement</h3>
+                        <div class="ledger-filters">
+                            <input type="date" id="plStartDate">
+                            <input type="date" id="plEndDate">
+                            <button class="btn btn-primary" id="refreshPlBtn">Generate</button>
+                        </div>
+                        <div id="plContent">
+                            <!-- P&L will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Daily Journal Tab -->
+                <div id="dailyJournalTab" class="ledger-tab-content" style="display: none;">
+                    <div class="ledger-card">
+                        <h3>Daily Journal</h3>
+                        <div class="ledger-filters">
+                            <input type="date" id="djDate">
+                            <button class="btn btn-primary" id="refreshDjBtn">View</button>
+                        </div>
+                        <div id="dailyJournalContent">
+                            <!-- Daily journal will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart of Accounts Tab -->
+                <div id="accountsTab" class="ledger-tab-content" style="display: none;">
+                    <div class="ledger-card">
+                        <h3>Chart of Accounts</h3>
+                        <button class="btn btn-primary" id="addAccountBtn" style="margin-bottom: 15px;">
+                            <i class="fas fa-plus"></i> Add Account
+                        </button>
+                        <div class="ledger-table">
+                            <table id="chartOfAccountsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Account Code</th>
+                                        <th>Account Name</th>
+                                        <th>Account Type</th>
+                                        <th>Normal Balance</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="chartOfAccountsBody">
+                                    <tr><td colspan="6">Loading...</td><ee
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Account Modal -->
+    <div class="modal" id="addAccountModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>Add Chart of Account</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="addAccountForm">
+                    <div class="form-group">
+                        <label>Account Code</label>
+                        <input type="text" id="accountCode" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Account Name</label>
+                        <input type="text" id="accountName" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Account Type</label>
+                        <select id="accountType" class="form-control" required>
+                            <option value="Asset">Asset</option>
+                            <option value="Liability">Liability</option>
+                            <option value="Equity">Equity</option>
+                            <option value="Revenue">Revenue</option>
+                            <option value="Expense">Expense</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Normal Balance</label>
+                        <select id="normalBalance" class="form-control" required>
+                            <option value="Debit">Debit</option>
+                            <option value="Credit">Credit</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="accountDescription" class="form-control" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('addAccountModal')">Cancel</button>
+                <button class="btn btn-primary" id="saveAccountBtn">Save Account</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="./JAVASCRIPT/admin-ledger.js"></script>
+</body>
+</html>

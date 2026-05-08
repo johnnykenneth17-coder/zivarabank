@@ -1,6 +1,6 @@
 {
-  "name": "Paystora",
-  "short_name": "Paystora",
+  "name": "feecent",
+  "short_name": "feecent",
   "description": "Secure online banking",
   "start_url": "/",
   "display": "standalone",

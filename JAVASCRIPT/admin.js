@@ -3,6 +3,188 @@
 // API Base URL
 const API_BASE_URL = "https://bank-backend-blush.vercel.app/api";
 
+// ==================== PROFESSIONAL LOADING MANAGER ====================
+class LoadingManager {
+  constructor() {
+    this.overlay = document.getElementById("globalLoadingOverlay");
+    this.lockScreen = document.getElementById("lockScreenOverlay");
+    this.messageElement = document.getElementById("loadingMessage");
+    this.activeRequests = 0;
+    this.timeoutId = null;
+    this.isHiding = false;
+  }
+
+  show(
+    message = "Please wait while we complete your request",
+    type = "default",
+  ) {
+    this.activeRequests++;
+    this.isHiding = false;
+
+    if (this.overlay) {
+      this.overlay.classList.remove("success", "error");
+      if (type === "success") this.overlay.classList.add("success");
+      if (type === "error") this.overlay.classList.add("error");
+
+      if (this.messageElement) {
+        this.messageElement.textContent = message;
+      }
+
+      this.overlay.style.display = "flex";
+    }
+
+    if (this.lockScreen) {
+      this.lockScreen.style.display = "block";
+    }
+
+    if (this.timeoutId) {
+      clearTimeout(this.timeoutId);
+      this.timeoutId = null;
+    }
+
+    this.timeoutId = setTimeout(() => {
+      if (this.activeRequests > 0 && !this.isHiding) {
+        console.warn("Loading auto-closed due to timeout");
+        this.forceHide();
+      }
+    }, 60000);
+  }
+
+  forceHide() {
+    this.activeRequests = 0;
+    this.isHiding = true;
+
+    if (this.overlay) {
+      this.overlay.style.display = "none";
+      this.overlay.classList.remove("success", "error");
+    }
+
+    if (this.lockScreen) {
+      this.lockScreen.style.display = "none";
+    }
+
+    if (this.timeoutId) {
+      clearTimeout(this.timeoutId);
+      this.timeoutId = null;
+    }
+
+    setTimeout(() => {
+      this.isHiding = false;
+    }, 100);
+  }
+
+  showSuccess(message = "Completed successfully!") {
+    if (this.overlay) {
+      this.overlay.classList.remove("error");
+      this.overlay.classList.add("success");
+      if (this.messageElement) {
+        this.messageElement.textContent = message;
+      }
+    }
+  }
+
+  showError(message = "Something went wrong") {
+    if (this.overlay) {
+      this.overlay.classList.remove("success");
+      this.overlay.classList.add("error");
+      if (this.messageElement) {
+        this.messageElement.textContent = message;
+      }
+    }
+  }
+
+  hide() {
+    if (this.isHiding) return;
+
+    this.activeRequests = Math.max(0, this.activeRequests - 1);
+
+    if (this.activeRequests === 0) {
+      this.isHiding = true;
+
+      if (this.overlay) {
+        this.overlay.style.display = "none";
+        setTimeout(() => {
+          if (this.overlay) {
+            this.overlay.classList.remove("success", "error");
+          }
+        }, 100);
+      }
+
+      if (this.lockScreen) {
+        this.lockScreen.style.display = "none";
+      }
+
+      if (this.timeoutId) {
+        clearTimeout(this.timeoutId);
+        this.timeoutId = null;
+      }
+
+      setTimeout(() => {
+        this.isHiding = false;
+      }, 100);
+    }
+  }
+
+  reset() {
+    this.activeRequests = 0;
+    this.hide();
+  }
+
+  isActive() {
+    return this.activeRequests > 0;
+  }
+}
+
+// Create global instance
+const loadingManager = new LoadingManager();
+
+// Wrapper function for async operations with automatic loading
+async function withLoading(operation, options = {}) {
+  const {
+    loadingMessage = "Processing your request...",
+    successMessage = null,
+    errorMessage = "Operation failed",
+    showSuccessOnComplete = false,
+    successDelay = 800,
+    errorDelay = 1200,
+  } = options;
+
+  // Show loading
+  loadingManager.show(loadingMessage);
+
+  try {
+    const result = await operation();
+
+    if (showSuccessOnComplete && successMessage) {
+      loadingManager.showSuccess(successMessage, successDelay);
+    } else {
+      loadingManager.hide();
+    }
+
+    return result;
+  } catch (error) {
+    console.error("Operation failed:", error);
+    loadingManager.showError(errorMessage || error.message, errorDelay);
+    throw error;
+  }
+}
+
+// Wrap fetch requests with loading
+async function fetchWithLoading(url, options = {}, loadingOptions = {}) {
+  return withLoading(async () => {
+    const response = await fetch(url, options);
+    if (!response.ok) {
+      const error = await response
+        .json()
+        .catch(() => ({ error: `HTTP ${response.status}` }));
+      throw new Error(
+        error.error || `Request failed with status ${response.status}`,
+      );
+    }
+    return response.json();
+  }, loadingOptions);
+}
+
 //const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // State management
@@ -24,9 +206,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadAdminStats();
   await loadAdminData();
   initializeEventListeners();
+  initHarvestManagement();
   loadActiveChatUsers();
   startRealTimeUpdates();
-  
 });
 
 // Load admin data
@@ -59,7 +241,7 @@ async function loadAdminData() {
     await loadReceiveMethods();
 
     // Load initial data
-    await loadUsers();
+    await loadUsers(1);
     await loadTransactions();
     await loadTickets();
   } catch (error) {
@@ -108,6 +290,66 @@ function initializeEventListeners() {
       if (targetPage) {
         targetPage.classList.add("active");
       }
+
+      // Logs filter listeners
+      document.getElementById("logSearch")?.addEventListener(
+        "input",
+        debounce((e) => {
+          loadAdminLogs(
+            1,
+            e.target.value,
+            logsActionFilter,
+            logsStartDate,
+            logsEndDate,
+          );
+        }, 500),
+      );
+
+      document
+        .getElementById("logActionFilter")
+        ?.addEventListener("change", (e) => {
+          loadAdminLogs(
+            1,
+            logsSearchTerm,
+            e.target.value,
+            logsStartDate,
+            logsEndDate,
+          );
+        });
+
+      document
+        .getElementById("logDateFrom")
+        ?.addEventListener("change", (e) => {
+          logsStartDate = e.target.value;
+          loadAdminLogs(
+            1,
+            logsSearchTerm,
+            logsActionFilter,
+            logsStartDate,
+            logsEndDate,
+          );
+        });
+
+      document.getElementById("logDateTo")?.addEventListener("change", (e) => {
+        logsEndDate = e.target.value;
+        loadAdminLogs(
+          1,
+          logsSearchTerm,
+          logsActionFilter,
+          logsStartDate,
+          logsEndDate,
+        );
+      });
+
+      document
+        .getElementById("refreshLogsBtn")
+        ?.addEventListener("click", () => {
+          loadAdminLogs(1, "", "", "", "");
+          document.getElementById("logSearch").value = "";
+          document.getElementById("logDateFrom").value = "";
+          document.getElementById("logDateTo").value = "";
+          document.getElementById("logActionFilter").value = "";
+        });
 
       // FIXED modal close handler - only hide, never destroy
       document
@@ -171,6 +413,10 @@ function initializeEventListeners() {
             await loadTickets(); // assuming you have this
             break;
 
+          case "harvest-plans":
+            await loadHarvestPlans();
+            break;
+
           case "settings":
             await loadSettings(); // if exists
             break;
@@ -198,10 +444,6 @@ function deleteUser(userId) {
 }
 
 // ============================================================================
-// Call initialization after DOM is ready (already in your DOMContentLoaded)
-// Just make sure this line exists:
-// initializeEventListeners();
-// ============================================================================
 
 // If you want safer table button handling (recommended) - add this too:
 document.addEventListener("DOMContentLoaded", () => {
@@ -222,8 +464,13 @@ document.addEventListener("DOMContentLoaded", () => {
 document
   .getElementById("freezeAccountBtn")
   ?.addEventListener("click", async () => {
+    //loadingManager.show("Opening Freeze modal");
     await populateUserSelects(); // ← important
     document.getElementById("freezeModal").classList.add("show");
+    /*const freeze = document.getElementById("freezeModal");
+    if (freeze.classList.add("show")){
+      loadingManager.hide()
+    }*/
   });
 
 // Unfreeze Account Button (if you have separate button)
@@ -313,121 +560,288 @@ document
     }
   });
 
-// Load users
-async function loadUsers(page = 1, search = "", status = "") {
-  try {
-    let url = `${API_BASE_URL}/admin/users?page=${page}`;
-    if (search) url += `&search=${encodeURIComponent(search)}`;
-    if (status) url += `&status=${status}`;
-
-    const response = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      users = data.users;
-      updateUsersTable(data);
-      populateAllUserSelects(users);
-    }
-  } catch (error) {
-    console.error("Error loading users:", error);
-  }
+// Currency formatting for NGN
+function formatMoneyNGN(amount) {
+  if (amount === undefined || amount === null) return "₦0.00";
+  return new Intl.NumberFormat("en-NG", {
+    style: "currency",
+    currency: "NGN",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
 }
 
-// Inside loadUsers(), after fetching users
-function populateAllUserSelects(users) {
-  const selects = [
-    document.getElementById("userSelect"), // top of users page
-    document.getElementById("freezeUserSelect"),
-    document.getElementById("balanceUserSelect"),
-    document.getElementById("accountUserSelect"), // if exists
-    document.getElementById("otpUserSelect"), // ← OTP tab select
-    // add any others — check your HTML!
-  ].filter(Boolean); // remove null/undefined
-
-  console.log(`Populating ${selects.length} user selects`);
-
-  const placeholder = '<option value="">Select User</option>';
-
-  selects.forEach((select) => {
-    let options = placeholder;
-
-    users.forEach((user) => {
-      const name =
-        `${user.first_name || ""} ${user.last_name || ""}`.trim() || "Unnamed";
-      const label = `${name} (${user.email || "no email"})`;
-      options += `<option value="${user.id}">${label}</option>`;
-    });
-
-    select.innerHTML = options;
-
-    // Optional: reset to placeholder
-    select.value = "";
+// Simple NGN formatter without symbol (for table cells)
+function formatAmountNGN(amount) {
+  if (amount === undefined || amount === null) return "0.00";
+  return amount.toLocaleString("en-NG", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   });
 }
 
-// Update users table
-function updateUsersTable(data) {
+// Escape HTML to prevent XSS attacks
+function escapeHtml(str) {
+  if (!str) return "";
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// Load users
+// ==================== OPTIMIZED ADMIN USERS TABLE WITH BACKWARD COMPATIBILITY ====================
+
+// Global variables for pagination and filtering
+let currentUsersPage = 1;
+let usersSearchTerm = "";
+let usersStatusFilter = "";
+let isLoadingUsers = false;
+let totalUsersPages = 1;
+
+// REPLACE your existing loadUsers function with this one
+async function loadUsers(page = 1, search = "", status = "") {
+  // PREVENT DUPLICATE REQUESTS
+  if (isLoadingUsers) return;
+
+  // BACKWARD COMPATIBILITY: Update global variables if parameters are passed
+  // This ensures old code that calls loadUsers(1, "john", "active") still works
+  if (search !== undefined && search !== "") {
+    usersSearchTerm = search;
+  }
+  if (status !== undefined && status !== "") {
+    usersStatusFilter = status;
+  }
+
+  // Update current page
+  currentUsersPage = page;
+
+  isLoadingUsers = true;
+
+  // Show loading indicator
+  const tbody = document.getElementById("usersTableBody");
+  if (tbody) {
+    tbody.innerHTML =
+      '<tr><td colspan="7" style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading users...</td></tr>';
+  }
+
+  try {
+    // Build URL with all filters
+    let url = `${API_BASE_URL}/admin/users?page=${currentUsersPage}&limit=25`;
+    if (usersSearchTerm)
+      url += `&search=${encodeURIComponent(usersSearchTerm)}`;
+    if (usersStatusFilter) url += `&status=${usersStatusFilter}`;
+
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to load users: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // Store total pages for pagination
+    totalUsersPages = data.pagination?.pages || 1;
+
+    // Update the table with optimized rendering
+    updateOptimizedUsersTable(data.users || []);
+
+    // Update pagination controls
+    updateOptimizedUsersPagination(data.pagination);
+
+    // Update user selects for dropdowns (beneficiaries, etc.)
+    populateUserSelectsOptimized(data.users || []);
+  } catch (error) {
+    console.error("Error loading users:", error);
+    const tbody = document.getElementById("usersTableBody");
+    if (tbody) {
+      tbody.innerHTML =
+        '<tr><td colspan="7" style="text-align: center; color: #ef4444;">Failed to load users. Please try again.</td></tr>';
+    }
+    showNotification("Failed to load users", "error");
+  } finally {
+    isLoadingUsers = false;
+  }
+}
+
+// REPLACE your existing updateUsersTable function with this
+function updateOptimizedUsersTable(users) {
   const tbody = document.getElementById("usersTableBody");
   if (!tbody) return;
 
-  tbody.innerHTML = data.users
-    .map(
-      (user) => `
-        <tr>
-            <td>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <div class="admin-avatar" style="width: 35px; height: 35px; background: #2563eb;">
-                        ${user.first_name[0]}${user.last_name[0]}
-                    </div>
-                    <div>
-                        <strong>${user.first_name} ${user.last_name}</strong>
-                    </div>
-                </div>
-            </td>
-            <td>${user.email}</td>
-            <td>
-                <span class="status-badge ${user.is_frozen ? "frozen" : user.is_active ? "active" : "inactive"}">
-                    ${user.is_frozen ? "Frozen" : user.is_active ? "Active" : "Inactive"}
-                </span>
-            </td>
-            <td>
-                <span class="status-badge ${user.kyc_status}">
-                    ${user.kyc_status.toUpperCase()}
-                </span>
-            </td>
-            <td>$${user.accounts?.reduce((sum, acc) => sum + acc.balance, 0).toFixed(2) || "0.00"}</td>
-            <td>${new Date(user.created_at).toLocaleDateString()}</td>
-            <td>
-                <button class="action-btn view" onclick="viewUser('${user.id}')">
-                    <i class="fas fa-eye"></i>
-                </button>
-                <button class="action-btn edit" onclick="editUser('${user.id}')">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button class="action-btn freeze" onclick="showFreezeModal('${user.id}', '${user.first_name} ${user.last_name}')">
-                    <i class="fas fa-ban"></i>
-                </button>
-                <button class="action-btn delete" onclick="impersonateUser('${user.id}', '${user.first_name} ${user.last_name}')">
-                    <i class="fas fa-mask"></i>
-                </button>
-            </td>
-        </tr>
-    `,
-    )
+  if (!users || users.length === 0) {
+    tbody.innerHTML =
+      '<tr><td colspan="7" style="text-align: center; padding: 40px;">No users found</td></tr>';
+    return;
+  }
+
+  // Use DocumentFragment for better performance
+  const fragment = document.createDocumentFragment();
+
+  users.forEach((user) => {
+    const row = document.createElement("tr");
+
+    // Calculate total balance from accounts if not already provided
+    const totalBalance =
+      user.total_balance ||
+      user.accounts?.reduce((sum, acc) => sum + (acc.balance || 0), 0) ||
+      0;
+
+    // Get status classes
+    let statusClass = "active";
+    let statusText = "Active";
+    if (user.is_frozen) {
+      statusClass = "frozen";
+      statusText = "Frozen";
+    } else if (!user.is_active) {
+      statusClass = "inactive";
+      statusText = "Inactive";
+    }
+
+    row.innerHTML = `
+      <td>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="admin-avatar" style="width: 35px; height: 35px; background: #2563eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">
+            ${user.first_name?.[0] || ""}${user.last_name?.[0] || ""}
+          </div>
+          <div>
+            <strong>${escapeHtml(user.first_name || "")} ${escapeHtml(user.last_name || "")}</strong>
+          </div>
+        </div>
+      </td>
+      <td>${escapeHtml(user.email || "")}</td>
+      <td>
+        <span class="status-badge ${statusClass}">
+          ${statusText}
+        </span>
+      </td>
+      <td>
+        <span class="status-badge ${user.kyc_status || "pending"}">
+          ${(user.kyc_status || "pending").toUpperCase()}
+        </span>
+      </td>
+      <td>${formatMoneyNGN(totalBalance)}</td>
+      <td>${new Date(user.created_at).toLocaleDateString()}</td>
+      <td>
+        <button class="action-btn view" onclick="viewUser('${user.id}')" title="View Details">
+          <i class="fas fa-eye"></i>
+        </button>
+        <button class="action-btn edit" onclick="editUser('${user.id}')" title="Edit User">
+          <i class="fas fa-edit"></i>
+        </button>
+        <button class="action-btn freeze" onclick="showFreezeModal('${user.id}', '${escapeHtml(user.first_name || "")} ${escapeHtml(user.last_name || "")}')" title="${user.is_frozen ? "Unfreeze" : "Freeze"} Account">
+          <i class="fas ${user.is_frozen ? "fa-check" : "fa-ban"}"></i>
+        </button>
+        <button class="action-btn delete" onclick="impersonateUser('${user.id}', '${escapeHtml(user.first_name || "")} ${escapeHtml(user.last_name || "")}')" title="Impersonate">
+          <i class="fas fa-mask"></i>
+        </button>
+      </td>
+    `;
+    fragment.appendChild(row);
+  });
+
+  // Clear and append all rows at once (minimal reflows)
+  tbody.innerHTML = "";
+  tbody.appendChild(fragment);
+}
+
+// New pagination function (replaces the old one for users only)
+function updateOptimizedUsersPagination(pagination) {
+  const container = document.getElementById("usersPagination");
+  if (!container) return;
+
+  if (!pagination || pagination.pages <= 1) {
+    container.innerHTML = "";
+    return;
+  }
+
+  let html = `
+    <button class="page-btn" ${pagination.page === 1 ? "disabled" : ""} 
+            onclick="loadUsersPage(${pagination.page - 1})">
+      ← Prev
+    </button>
+  `;
+
+  // Show limited page numbers (max 5 for cleaner UI)
+  const startPage = Math.max(1, pagination.page - 2);
+  const endPage = Math.min(pagination.pages, pagination.page + 2);
+
+  for (let i = startPage; i <= endPage; i++) {
+    html += `<button class="page-btn ${i === pagination.page ? "active" : ""}" 
+                   onclick="loadUsersPage(${i})">${i}</button>`;
+  }
+
+  html += `
+    <button class="page-btn" ${pagination.page === pagination.pages ? "disabled" : ""} 
+            onclick="loadUsersPage(${pagination.page + 1})">
+      Next →
+    </button>
+  `;
+
+  container.innerHTML = html;
+}
+
+// New helper function for page navigation (keeps existing filters)
+function loadUsersPage(page) {
+  // Preserve current search and status filters
+  loadUsers(page, usersSearchTerm, usersStatusFilter);
+}
+
+// Optimized populate user selects (replaces populateAllUserSelects)
+function populateUserSelectsOptimized(users) {
+  // Get all select elements that need user lists
+  const selects = [
+    document.getElementById("userSelect"),
+    document.getElementById("freezeUserSelect"),
+    document.getElementById("balanceUserSelect"),
+    document.getElementById("accountUserSelect"),
+    document.getElementById("otpUserSelect"),
+    document.getElementById("unfreezeUserSelect"),
+  ].filter(Boolean);
+
+  if (selects.length === 0) return;
+
+  const placeholder = '<option value="">Select User</option>';
+  const optionsHtml = users
+    .map((user) => {
+      const name =
+        `${user.first_name || ""} ${user.last_name || ""}`.trim() || "Unnamed";
+      const label = `${name} (${user.email || "no email"})`;
+      return `<option value="${user.id}">${escapeHtml(label)}</option>`;
+    })
     .join("");
 
-  // Update pagination
-  updatePagination("usersPagination", data.pagination, (page) =>
-    loadUsers(page),
-  );
+  selects.forEach((select) => {
+    // Store current value if any
+    const currentValue = select.value;
+    select.innerHTML = placeholder + optionsHtml;
+    // Restore value if it still exists
+    if (currentValue && users.some((u) => u.id === currentValue)) {
+      select.value = currentValue;
+    }
+  });
+}
+
+// Debounced search handler - call this from your event listener
+const debouncedUserSearch = debounce(function (searchTerm) {
+  usersSearchTerm = searchTerm;
+  loadUsers(1, usersSearchTerm, usersStatusFilter);
+}, 500);
+
+// Status filter handler
+function onUserStatusChange(status) {
+  usersStatusFilter = status;
+  loadUsers(1, usersSearchTerm, usersStatusFilter);
 }
 
 // View user details function
 async function viewUser(userId) {
+  loadingManager.show("Loading users...");
+
   try {
     const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
       headers: {
@@ -436,12 +850,17 @@ async function viewUser(userId) {
     });
 
     if (!response.ok) {
+      loadingManager.hide();
+
       throw new Error("Failed to load user details");
     }
 
     const user = await response.json();
+    loadingManager.hide();
+
     showUserDetailsModal(user);
   } catch (error) {
+    loadingManager.hide();
     console.error("Error loading user details:", error);
     showNotification("Failed to load user details", "error");
   }
@@ -505,6 +924,18 @@ function showUserDetailsModal(user) {
                         <div class="detail-item">
                             <div class="detail-label">Date of Birth</div>
                             <div class="detail-value">${user.date_of_birth ? new Date(user.date_of_birth).toLocaleDateString() : "N/A"}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Age</div>
+                            <div class="detail-value">${user.age || "N/A"}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">ID Type</div>
+                            <div class="detail-value">${user.identification_type ? user.identification_type.toUpperCase() : "N/A"}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">ID Number</div>
+                            <div class="detail-value">${user.identification_number || "N/A"}</div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Address</div>
@@ -589,7 +1020,7 @@ function showUserDetailsModal(user) {
                 
                 <!-- Accounts Tab -->
                 <div id="userAccountsTab" class="user-detail-tab" style="display: none;">
-                    <h4 style="margin-bottom: 15px;">Total Balance: <strong>$${totalBalance.toFixed(2)}</strong></h4>
+                    <h4 style="margin-bottom: 15px;">Total Balance: <strong>${formatMoneyNGN(totalBalance)}</strong></h4>
                     <div style="display: grid; gap: 15px;">
                         ${
                           user.accounts
@@ -597,37 +1028,37 @@ function showUserDetailsModal(user) {
                               (account) => `
                             <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px;">
                                 <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                                    <strong>${account.account_type.charAt(0).toUpperCase() + account.account_type.slice(1)} Account</strong>
-                                    <span>${account.account_number}</span>
+                                    <strong>${(account.account_type || "checking").charAt(0).toUpperCase() + (account.account_type || "checking").slice(1)} Account</strong>
+                                    <span>${account.account_number || ""}</span>
                                 </div>
                                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
                                     <div>
                                         <div class="detail-label">Balance</div>
-                                        <div class="detail-value">$${account.balance.toFixed(2)}</div>
+                                        <div class="detail-value">${formatMoneyNGN(account.balance || 0)}</div>
                                     </div>
                                     <div>
                                         <div class="detail-label">Available</div>
-                                        <div class="detail-value">$${account.available_balance.toFixed(2)}</div>
+                                        <div class="detail-value">${formatMoneyNGN(account.available_balance || 0)}</div>
                                     </div>
                                     <div>
                                         <div class="detail-label">Currency</div>
-                                        <div class="detail-value">${account.currency}</div>
+                                        <div class="detail-value">${account.currency || "NGN"}</div>
                                     </div>
                                     <div>
                                         <div class="detail-label">Status</div>
                                         <div class="detail-value">
-                                            <span class="status-badge ${account.status}">
-                                                ${account.status.toUpperCase()}
+                                            <span class="status-badge ${account.status || "active"}">
+                                                ${(account.status || "active").toUpperCase()}
                                             </span>
                                         </div>
                                     </div>
                                     <div>
                                         <div class="detail-label">Daily Limit</div>
-                                        <div class="detail-value">$${account.daily_limit?.toFixed(2) || "N/A"}</div>
+                                        <div class="detail-value">${formatMoneyNGN(account.daily_limit || 0)}</div>
                                     </div>
                                     <div>
                                         <div class="detail-label">Monthly Limit</div>
-                                        <div class="detail-value">$${account.monthly_limit?.toFixed(2) || "N/A"}</div>
+                                        <div class="detail-value">${formatMoneyNGN(account.monthly_limit || 0)}</div>
                                     </div>
                                 </div>
                                 <div style="margin-top: 10px; display: flex; gap: 10px;">
@@ -655,21 +1086,21 @@ function showUserDetailsModal(user) {
                               (card) => `
                             <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px;">
                                 <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                                    <strong>${card.card_type.charAt(0).toUpperCase() + card.card_type.slice(1)} Card</strong>
-                                    <span class="status-badge ${card.card_status}">${card.card_status}</span>
+                                    <strong>${(card.card_type || "debit").charAt(0).toUpperCase() + (card.card_type || "debit").slice(1)} Card</strong>
+                                    <span class="status-badge ${card.card_status || "inactive"}">${card.card_status || "inactive"}</span>
                                 </div>
                                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
                                     <div>
                                         <div class="detail-label">Card Number</div>
-                                        <div class="detail-value">•••• •••• •••• ${card.card_number.slice(-4)}</div>
+                                        <div class="detail-value">•••• •••• •••• ${(card.card_number || "").slice(-4)}</div>
                                     </div>
                                     <div>
                                         <div class="detail-label">Expiry</div>
-                                        <div class="detail-value">${new Date(card.expiry_date).toLocaleDateString("en-US", { month: "2-digit", year: "2-digit" })}</div>
+                                        <div class="detail-value">${card.expiry_date ? new Date(card.expiry_date).toLocaleDateString("en-US", { month: "2-digit", year: "2-digit" }) : "N/A"}</div>
                                     </div>
                                     <div>
                                         <div class="detail-label">Spending Limit</div>
-                                        <div class="detail-value">$${card.spending_limit?.toFixed(2) || "N/A"}</div>
+                                        <div class="detail-value">${formatMoneyNGN(card.spending_limit || 0)}</div>
                                     </div>
                                 </div>
                                 <div style="margin-top: 10px; display: flex; gap: 10px;">
@@ -712,13 +1143,13 @@ function showUserDetailsModal(user) {
                                       (t) => `
                                     <tr>
                                         <td>${new Date(t.created_at).toLocaleDateString()}</td>
-                                        <td>${t.transaction_type.replace("_", " ").toUpperCase()}</td>
+                                        <td>${(t.transaction_type || "").replace("_", " ").toUpperCase()}</td>
                                         <td>${t.description || "-"}</td>
                                         <td style="color: ${t.to_user_id === user.id ? "#10b981" : "#ef4444"}">
-                                            ${t.to_user_id === user.id ? "+" : "-"}$${t.amount.toFixed(2)}
+                                            ${t.to_user_id === user.id ? "+" : "-"}${formatMoneyNGN(Math.abs(t.amount || 0))}
                                         </td>
                                         <td>
-                                            <span class="status-badge ${t.status}">${t.status}</span>
+                                            <span class="status-badge ${t.status || "completed"}">${t.status || "completed"}</span>
                                         </td>
                                         <td>
                                             <button class="action-btn view" onclick="viewTransactionDetails('${t.id}')">
@@ -824,6 +1255,8 @@ window.closeUserDetailsModal = function () {
 
 // Edit user function
 async function editUser(userId) {
+  loadingManager.show("Loading Details...");
+
   try {
     const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
       headers: {
@@ -832,12 +1265,18 @@ async function editUser(userId) {
     });
 
     if (!response.ok) {
+      loadingManager.hide();
+
       throw new Error("Failed to load user data");
     }
 
     const user = await response.json();
+    loadingManager.hide();
+
     showEditUserModal(user);
   } catch (error) {
+    loadingManager.hide();
+
     console.error("Error loading user for edit:", error);
     showNotification("Failed to load user data", "error");
   }
@@ -929,7 +1368,7 @@ function showEditUserModal(user) {
                         </div>
                     </div>
                     
-                    <!-- ID Information -->
+                    <!-- ID Information 
                     <h4 style="margin-bottom: 15px;">Identification</h4>
                     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px;">
                         <div class="form-group">
@@ -945,7 +1384,32 @@ function showEditUserModal(user) {
                             <label>ID Number</label>
                             <input type="text" id="editIdNumber" class="form-control" value="${user.id_number || ""}">
                         </div>
-                    </div>
+                    </div>-->
+
+                    <!-- Identification Information -->
+<h4 style="margin-bottom: 15px;">Identification</h4>
+<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px;">
+  <div class="form-group">
+    <label>ID Type</label>
+    <select id="editIdType" class="form-control">
+      <option value="">Select ID Type</option>
+      <option value="nin" ${user.identification_type === "nin" ? "selected" : ""}>National ID (NIN)</option>
+      <option value="bvn" ${user.identification_type === "bvn" ? "selected" : ""}>Bank Verification Number (BVN)</option>
+      <option value="passport" ${user.identification_type === "passport" ? "selected" : ""}>International Passport</option>
+      <option value="drivers_license" ${user.identification_type === "drivers_license" ? "selected" : ""}>Driver's License</option>
+      <option value="voters_card" ${user.identification_type === "voters_card" ? "selected" : ""}>Voter's Card</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label>ID Number</label>
+    <input type="text" id="editIdNumber" class="form-control" value="${user.identification_number || ""}">
+  </div>
+</div>
+
+<div class="form-group">
+  <label>Age</label>
+  <input type="number" id="editAge" class="form-control" value="${user.age || ""}" min="18" max="120">
+</div>
                     
                     <!-- Account Status -->
                     <h4 style="margin-bottom: 15px;">Account Status</h4>
@@ -1031,6 +1495,9 @@ window.saveUserChanges = async function (userId) {
     id_type: getValue("editIdType"),
     id_number: getValue("editIdNumber"),
     is_active: getChecked("editIsActive"),
+    age: getValue("editAge") ? parseInt(getValue("editAge")) : null,
+    identification_type: getValue("editIdType"),
+    identification_number: getValue("editIdNumber"),
     is_frozen: getChecked("editIsFrozen"),
     two_factor_enabled: getChecked("editTwoFactor"),
     freeze_reason: getChecked("editIsFrozen")
@@ -1267,6 +1734,8 @@ window.reportCardAdmin = async function (cardId) {
 
 // View transaction details
 window.viewTransactionDetails = async function (transactionId) {
+  loadingManager.show("Loading Transaction details...");
+
   try {
     const response = await fetch(
       `${API_BASE_URL}/admin/transactions/${transactionId}`,
@@ -1278,12 +1747,18 @@ window.viewTransactionDetails = async function (transactionId) {
     );
 
     if (!response.ok) {
+      loadingManager.hide();
+
       throw new Error("Failed to load transaction details");
     }
 
     const transaction = await response.json();
+    loadingManager.hide();
+
     showTransactionDetailsModal(transaction);
   } catch (error) {
+    loadingManager.hide();
+
     console.error("Error loading transaction details:", error);
     showNotification("Failed to load transaction details", "error");
   }
@@ -1311,7 +1786,7 @@ function showTransactionDetailsModal(transaction) {
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">Amount</div>
-                        <div class="detail-value">$${transaction.amount.toFixed(2)} ${transaction.currency}</div>
+                        <div class="detail-value">${formatMoneyNGN(transaction.amount)} ${transaction.currency || "NGN"}</div>
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">Status</div>
@@ -1335,6 +1810,16 @@ function showTransactionDetailsModal(transaction) {
                         <div class="detail-label">Date</div>
                         <div class="detail-value">${new Date(transaction.created_at).toLocaleString()}</div>
                     </div>
+                    ${
+                      transaction.fee_amount
+                        ? `
+                    <div class="detail-item">
+                        <div class="detail-label">Fee</div>
+                        <div class="detail-value">${formatMoneyNGN(transaction.fee_amount)}</div>
+                    </div>
+                    `
+                        : ""
+                    }
                     ${
                       transaction.completed_at
                         ? `
@@ -1382,6 +1867,8 @@ function showTransactionDetailsModal(transaction) {
 window.approveTransaction = async function (transactionId) {
   if (!confirm("Are you sure you want to approve this transaction?")) return;
 
+  loadingManager.show("Approving transactions...");
+
   try {
     const response = await fetch(
       `${API_BASE_URL}/admin/transactions/${transactionId}/approve`,
@@ -1395,14 +1882,20 @@ window.approveTransaction = async function (transactionId) {
     );
 
     if (response.ok) {
+      loadingManager.hide();
+
       showNotification("Transaction approved", "success");
       closeUserDetailsModal();
       await loadTransactions();
     } else {
+      loadingManager();
+
       const data = await response.json();
       showNotification(data.error || "Failed to approve transaction", "error");
     }
   } catch (error) {
+    loadingManager.hide();
+
     console.error("Error approving transaction:", error);
     showNotification("Failed to approve transaction", "error");
   }
@@ -1412,6 +1905,8 @@ window.approveTransaction = async function (transactionId) {
 window.rejectTransaction = async function (transactionId) {
   const reason = prompt("Please enter reason for rejection:");
   if (reason === null) return;
+
+  loadingManager.show("Rejecting Transaction...");
 
   try {
     const response = await fetch(
@@ -1427,14 +1922,20 @@ window.rejectTransaction = async function (transactionId) {
     );
 
     if (response.ok) {
+      loadingManager.hide();
+
       showNotification("Transaction rejected", "success");
       closeUserDetailsModal();
       await loadTransactions();
     } else {
+      loadingManager.hide();
+
       const data = await response.json();
       showNotification(data.error || "Failed to reject transaction", "error");
     }
   } catch (error) {
+    loadingManager.hide();
+
     console.error("Error rejecting transaction:", error);
     showNotification("Failed to reject transaction", "error");
   }
@@ -1478,7 +1979,7 @@ function updateTransactionsTable(data) {
             <td>${t.transaction_id}</td>
             <td>${t.from_account?.account_number || "N/A"}</td>
             <td>${t.to_account?.account_number || "N/A"}</td>
-            <td>$${t.amount.toFixed(2)}</td>
+            <td>${formatMoneyNGN(t.amount || 0)}</td>
             <td>${t.transaction_type.replace("_", " ").toUpperCase()}</td>
             <td>
                 <span class="status-badge ${t.status}">
@@ -1847,66 +2348,132 @@ async function loadTicketChat(ticketId) {
     const response = await fetch(
       `${API_BASE_URL}/admin/support-tickets/${ticketId}/messages`,
       {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       },
     );
 
-    if (response.ok) {
-      const messages = await response.json();
-      displayTicketChat(ticketId, messages);
+    if (!response.ok) {
+      if (response.status === 404) {
+        showNotification("Ticket not found", "error");
+        return;
+      }
+      throw new Error(`Failed to load messages: ${response.status}`);
     }
+
+    const data = await response.json();
+    displayTicketChat(ticketId, data.messages, data.ticket);
   } catch (error) {
     console.error("Error loading ticket chat:", error);
+    const chatContainer = document.getElementById("adminTicketChat");
+    if (chatContainer) {
+      chatContainer.innerHTML = `
+        <div class="chat-placeholder" style="text-align: center; padding: 60px 20px;">
+          <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #ef4444;"></i>
+          <p style="margin-top: 15px;">Failed to load conversation. Please try again.</p>
+          <button class="btn btn-outline" onclick="loadTickets()">Refresh</button>
+        </div>
+      `;
+    }
   }
 }
 
 // Display ticket chat
-function displayTicketChat(ticketId, messages) {
+function displayTicketChat(ticketId, messages, ticketInfo) {
   const chatContainer = document.getElementById("adminTicketChat");
   if (!chatContainer) return;
 
+  const userName = ticketInfo?.user
+    ? `${ticketInfo.user.first_name || ""} ${ticketInfo.user.last_name || ""}`.trim() ||
+      ticketInfo.user.email
+    : "User";
+
   chatContainer.innerHTML = `
-        <div class="chat-header">
-            <h4>Support Conversation</h4>
-        </div>
-        <div class="chat-messages" id="ticketMessages">
-            ${messages
+    <div class="chat-header" style="display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid #e2e8f0;">
+      <div>
+        <h4 style="margin: 0;">Conversation with ${escapeHtml(userName)}</h4>
+        <span class="status-badge ${ticketInfo?.status || "open"}" style="margin-top: 5px;">${(ticketInfo?.status || "OPEN").toUpperCase()}</span>
+      </div>
+      <div class="ticket-actions">
+        <button class="btn btn-sm btn-outline" onclick="closeSupportTicket('${ticketId}')" ${ticketInfo?.status === "closed" ? "disabled" : ""}>
+          <i class="fas fa-check-circle"></i> Close Ticket
+        </button>
+      </div>
+    </div>
+    <div class="chat-messages" id="ticketMessages" style="flex: 1; overflow-y: auto; padding: 20px; min-height: 300px; max-height: 400px;">
+      ${
+        messages.length === 0
+          ? '<div style="text-align: center; padding: 60px 20px; color: #64748b;">No messages yet. Type a reply below to start the conversation.</div>'
+          : messages
               .map(
                 (msg) => `
-                <div class="message ${msg.is_admin_reply ? "admin" : "user"}">
-                    <div class="message-avatar">
-                        ${msg.sender?.first_name?.[0] || "A"}
-                    </div>
-                    <div class="message-content">
-                        <div>${msg.message}</div>
-                        <div class="message-time">${new Date(msg.created_at).toLocaleString()}</div>
-                    </div>
-                </div>
-            `,
+          <div class="message ${msg.is_admin_reply ? "admin" : "user"}">
+            <div class="message-avatar">
+              ${msg.is_admin_reply ? '<i class="fas fa-user-shield"></i>' : '<i class="fas fa-user"></i>'}
+            </div>
+            <div class="message-content" style="max-width: 70%;">
+              <div class="message-text">${escapeHtml(msg.message)}</div>
+              <div class="message-time">${new Date(msg.created_at).toLocaleString()}</div>
+            </div>
+          </div>
+        `,
               )
-              .join("")}
-        </div>
-        <div class="chat-input">
-            <input type="text" id="ticketReplyInput" placeholder="Type your reply...">
-            <button class="btn btn-primary" onclick="sendTicketReply('${ticketId}')">Send</button>
-        </div>
-    `;
+              .join("")
+      }
+    </div>
+    ${
+      ticketInfo?.status !== "closed"
+        ? `
+      <div class="chat-input" style="padding: 15px 20px; border-top: 1px solid #e2e8f0; display: flex; gap: 10px;">
+        <input type="text" id="ticketReplyInput" class="form-control" placeholder="Type your reply..." style="flex: 1;">
+        <button class="btn btn-primary" onclick="sendTicketReply('${ticketId}')">Send</button>
+      </div>
+    `
+        : `
+      <div class="ticket-closed-banner" style="padding: 15px 20px; background: #f1f5f9; text-align: center; color: #64748b;">
+        <i class="fas fa-lock"></i> This ticket is closed
+      </div>
+    `
+    }
+  `;
 
-  // Scroll to bottom
+  // Scroll to bottom of messages
   const messagesDiv = document.getElementById("ticketMessages");
   if (messagesDiv) {
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }
+
+  // Focus on input
+  const input = document.getElementById("ticketReplyInput");
+  if (input) input.focus();
+
+  // Allow Enter key to send
+  if (input) {
+    input.addEventListener("keypress", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendTicketReply(ticketId);
+      }
+    });
   }
 }
 
 // Send ticket reply
 async function sendTicketReply(ticketId) {
   const input = document.getElementById("ticketReplyInput");
-  const message = input.value.trim();
+  const message = input?.value?.trim();
 
-  if (!message) return;
+  if (!message) {
+    showNotification("Please enter a message", "error");
+    return;
+  }
+
+  const sendBtn = document.querySelector(
+    `button[onclick="sendTicketReply('${ticketId}')"]`,
+  );
+  if (sendBtn) {
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+  }
 
   try {
     const response = await fetch(
@@ -1922,9 +2489,10 @@ async function sendTicketReply(ticketId) {
     );
 
     if (response.ok) {
-      input.value = "";
+      if (input) input.value = "";
       await loadTicketChat(ticketId);
       await loadTickets();
+      showNotification("Reply sent successfully", "success");
     } else {
       const data = await response.json();
       showNotification(data.error || "Failed to send reply", "error");
@@ -1932,9 +2500,52 @@ async function sendTicketReply(ticketId) {
   } catch (error) {
     console.error("Error sending reply:", error);
     showNotification("Failed to send reply", "error");
+  } finally {
+    if (sendBtn) {
+      sendBtn.disabled = false;
+      sendBtn.innerHTML = "Send";
+    }
   }
 }
 
+// Close support ticket function
+async function closeSupportTicket(ticketId) {
+  if (!confirm("Are you sure you want to close this ticket?")) return;
+
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/admin/support-tickets/${ticketId}/close`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ resolution: "Ticket closed by admin" }),
+      },
+    );
+
+    if (response.ok) {
+      showNotification("Ticket closed successfully", "success");
+      await loadTicketChat(ticketId);
+      await loadTickets();
+    } else {
+      const data = await response.json();
+      showNotification(data.error || "Failed to close ticket", "error");
+    }
+  } catch (error) {
+    console.error("Error closing ticket:", error);
+    showNotification("Failed to close ticket", "error");
+  }
+}
+
+// Make functions globally available
+window.loadAdminLogs = loadAdminLogs;
+window.loadAdminLogsPage = loadAdminLogsPage;
+window.viewLogDetails = viewLogDetails;
+window.closeSupportTicket = closeSupportTicket;
+
+// load accounts
 async function loadAccounts(page = 1) {
   try {
     const params = new URLSearchParams({
@@ -1976,8 +2587,8 @@ async function loadAccounts(page = 1) {
           </div>
         </td>
         <td>${acc.account_type}</td>
-        <td class="amount">$${acc.balance?.toFixed(2) || "0.00"}</td>
-        <td class="amount">$${acc.available_balance?.toFixed(2) || "0.00"}</td>
+        <td class="amount">₦${acc.balance?.toFixed(2) || "0.00"}</td>
+        <td class="amount">₦${acc.available_balance?.toFixed(2) || "0.00"}</td>
         <td>
           <span class="status-badge status-${acc.status}">
             ${acc.status}
@@ -1986,7 +2597,7 @@ async function loadAccounts(page = 1) {
         <td>${user.kyc_status || "—"}</td>
         <td>${new Date(acc.created_at).toLocaleDateString()}</td>
         <td class="actions">
-          <button class="btn-icon" onclick="viewAccount('${acc.id}')">
+          <button class="btn-icon" onclick="viewUser('${user.id}')">
             <i class="fas fa-eye"></i>
           </button>
           <button class="btn-icon" onclick="adjustBalance('${acc.id}', '${ownerName}')">
@@ -1995,7 +2606,7 @@ async function loadAccounts(page = 1) {
           ${
             acc.status !== "frozen"
               ? `
-            <button class="btn-icon danger" onclick="freezeAccount('${acc.user_id}')">
+            <button class="btn-icon danger" onclick="showFreezeModal('${user.id}', '${escapeHtml(user.first_name || "")} ${escapeHtml(user.last_name || "")}')" title="${user.is_frozen ? "Unfreeze" : "Freeze"} Account">
               <i class="fas fa-snowflake"></i>
             </button>
           `
@@ -2020,6 +2631,8 @@ async function loadAccounts(page = 1) {
 
 // Populate ALL user selects (run every time a modal opens)
 async function populateUserSelects() {
+  //loadingManager.show("Processing...");
+
   try {
     const res = await fetch(`${API_BASE_URL}/admin/users?limit=200`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -2029,6 +2642,7 @@ async function populateUserSelects() {
     // Freeze modal
     const freezeSelect = document.getElementById("UserSelect");
     if (freezeSelect) {
+      //loadingManager.hide();
       freezeSelect.innerHTML =
         '<option value="">Select User</option>' +
         users
@@ -2040,16 +2654,6 @@ async function populateUserSelects() {
     }
 
     const unfreezeSelect = document.getElementById("unfreezeUserSelect");
-    /*if (unfreezeSelect) {
-      unfreezeSelect.innerHTML =
-        '<option value="">Select User</option>' +
-        users
-          .map(
-            (u) =>
-              `<option value="${u.id}">${u.first_name} ${u.last_name} (${u.email})</option>`,
-          )
-          .join("");
-    }*/
 
     if (unfreezeSelect) {
       unfreezeSelect.innerHTML = '<option value="">Select User</option>';
@@ -2098,25 +2702,31 @@ window.openUnfreezeModal = async function (userId = null) {
 };
 
 // Toggle payment details section based on selected unfreeze method
-const unfreezeMethodRadios = document.querySelectorAll('input[name="unfreezeMethod"]');
-const paymentDetailsSection = document.getElementById('paymentDetailsSection');
-const unfreezePaymentMethod = document.getElementById('unfreezePaymentMethod');
-const cryptoFields = document.getElementById('cryptoPaymentFields');
-const bankFields = document.getElementById('bankPaymentFields');
+const unfreezeMethodRadios = document.querySelectorAll(
+  'input[name="unfreezeMethod"]',
+);
+const paymentDetailsSection = document.getElementById("paymentDetailsSection");
+const unfreezePaymentMethod = document.getElementById("unfreezePaymentMethod");
+const cryptoFields = document.getElementById("cryptoPaymentFields");
+const bankFields = document.getElementById("bankPaymentFields");
 
 function togglePaymentDetails() {
-  const selected = document.querySelector('input[name="unfreezeMethod"]:checked').value;
-  paymentDetailsSection.style.display = selected === 'otp' ? 'block' : 'none';
+  const selected = document.querySelector(
+    'input[name="unfreezeMethod"]:checked',
+  ).value;
+  paymentDetailsSection.style.display = selected === "otp" ? "block" : "none";
 }
 
 function togglePaymentMethodFields() {
   const method = unfreezePaymentMethod.value;
-  cryptoFields.style.display = method === 'crypto' ? 'block' : 'none';
-  bankFields.style.display = method === 'bank' ? 'block' : 'none';
+  cryptoFields.style.display = method === "crypto" ? "block" : "none";
+  bankFields.style.display = method === "bank" ? "block" : "none";
 }
 
-unfreezeMethodRadios.forEach(radio => radio.addEventListener('change', togglePaymentDetails));
-unfreezePaymentMethod.addEventListener('change', togglePaymentMethodFields);
+unfreezeMethodRadios.forEach((radio) =>
+  radio.addEventListener("change", togglePaymentDetails),
+);
+unfreezePaymentMethod.addEventListener("change", togglePaymentMethodFields);
 togglePaymentDetails(); // initial state
 togglePaymentMethodFields(); // initial state
 
@@ -2166,8 +2776,6 @@ document
     }
   });
 
-  
-
 // Optional: close modal when clicking outside or ×
 document.querySelectorAll("#unfreezeModal .close-modal").forEach((btn) => {
   btn.addEventListener("click", () => {
@@ -2194,15 +2802,77 @@ function showFreezeModal(userId, userName) {
 }
 
 // Confirm freeze
-/*document
+document
   .getElementById("confirmFreeze")
   ?.addEventListener("click", async () => {
     const userId = document.getElementById("freezeUserSelect").value;
     const reason = document.getElementById("freezeReason").value;
+    const unfreezeMethod = document.querySelector(
+      'input[name="unfreezeMethod"]:checked',
+    )?.value;
 
     if (!userId || !reason) {
       showNotification("Please select user and provide reason", "error");
       return;
+    }
+
+    const payload = {
+      freeze: true,
+      reason,
+      unfreeze_method: unfreezeMethod,
+    };
+
+    if (unfreezeMethod === "otp") {
+      const amount = parseFloat(
+        document.getElementById("unfreezeAmount").value,
+      );
+      const paymentMethod = document.getElementById(
+        "unfreezePaymentMethod",
+      ).value;
+
+      if (isNaN(amount) || amount <= 0) {
+        showNotification("Please enter a valid amount", "error");
+        return;
+      }
+
+      let paymentDetails = { amount, method: paymentMethod };
+
+      if (paymentMethod === "crypto") {
+        const address = document
+          .getElementById("unfreezeCryptoAddress")
+          .value.trim();
+        const network = document
+          .getElementById("unfreezeCryptoNetwork")
+          .value.trim();
+        if (!address) {
+          showNotification("Please enter a crypto address", "error");
+          return;
+        }
+        paymentDetails.address = address;
+        paymentDetails.network = network;
+      } else if (paymentMethod === "bank") {
+        const bankName = document
+          .getElementById("unfreezeBankName")
+          .value.trim();
+        const accountNumber = document
+          .getElementById("unfreezeBankAccount")
+          .value.trim();
+        const accountName = document
+          .getElementById("unfreezeBankAccountName")
+          .value.trim();
+        if (!bankName || !accountNumber || !accountName) {
+          showNotification("Please fill all bank details", "error");
+          return;
+        }
+        paymentDetails.bank_name = bankName;
+        paymentDetails.account_number = accountNumber;
+        paymentDetails.account_name = accountName;
+        paymentDetails.swift = document
+          .getElementById("unfreezeBankSwift")
+          .value.trim();
+      }
+
+      payload.unfreeze_payment_details = paymentDetails;
     }
 
     try {
@@ -2214,7 +2884,7 @@ function showFreezeModal(userId, userName) {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ freeze: true, reason }),
+          body: JSON.stringify(payload),
         },
       );
 
@@ -2222,8 +2892,8 @@ function showFreezeModal(userId, userName) {
         document.getElementById("freezeModal").classList.remove("show");
         showNotification("Account frozen successfully", "success");
         document.getElementById("freezeReason").value = "";
+        await loadUsers();
         await loadAccounts();
-        //await loadUsers();
       } else {
         const data = await response.json();
         showNotification(data.error || "Failed to freeze account", "error");
@@ -2232,87 +2902,7 @@ function showFreezeModal(userId, userName) {
       console.error("Error freezing account:", error);
       showNotification("Failed to freeze account", "error");
     }
-  });*/
-
-  // Confirm freeze
-  document.getElementById("confirmFreeze")?.addEventListener("click", async () => {
-  const userId = document.getElementById("freezeUserSelect").value;
-  const reason = document.getElementById("freezeReason").value;
-  const unfreezeMethod = document.querySelector('input[name="unfreezeMethod"]:checked')?.value;
-
-  if (!userId || !reason) {
-    showNotification("Please select user and provide reason", "error");
-    return;
-  }
-
-  const payload = {
-    freeze: true,
-    reason,
-    unfreeze_method: unfreezeMethod,
-  };
-
-  if (unfreezeMethod === "otp") {
-    const amount = parseFloat(document.getElementById("unfreezeAmount").value);
-    const paymentMethod = document.getElementById("unfreezePaymentMethod").value;
-
-    if (isNaN(amount) || amount <= 0) {
-      showNotification("Please enter a valid amount", "error");
-      return;
-    }
-
-    let paymentDetails = { amount, method: paymentMethod };
-
-    if (paymentMethod === "crypto") {
-      const address = document.getElementById("unfreezeCryptoAddress").value.trim();
-      const network = document.getElementById("unfreezeCryptoNetwork").value.trim();
-      if (!address) {
-        showNotification("Please enter a crypto address", "error");
-        return;
-      }
-      paymentDetails.address = address;
-      paymentDetails.network = network;
-    } else if (paymentMethod === "bank") {
-      const bankName = document.getElementById("unfreezeBankName").value.trim();
-      const accountNumber = document.getElementById("unfreezeBankAccount").value.trim();
-      const accountName = document.getElementById("unfreezeBankAccountName").value.trim();
-      if (!bankName || !accountNumber || !accountName) {
-        showNotification("Please fill all bank details", "error");
-        return;
-      }
-      paymentDetails.bank_name = bankName;
-      paymentDetails.account_number = accountNumber;
-      paymentDetails.account_name = accountName;
-      paymentDetails.swift = document.getElementById("unfreezeBankSwift").value.trim();
-    }
-
-    payload.unfreeze_payment_details = paymentDetails;
-  }
-
-  try {
-    const response = await fetch(`${API_BASE_URL}/admin/users/${userId}/toggle-freeze`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (response.ok) {
-      document.getElementById("freezeModal").classList.remove("show");
-      showNotification("Account frozen successfully", "success");
-      document.getElementById("freezeReason").value = "";
-      await loadUsers();
-      await loadAccounts();
-    } else {
-      const data = await response.json();
-      showNotification(data.error || "Failed to freeze account", "error");
-    }
-  } catch (error) {
-    console.error("Error freezing account:", error);
-    showNotification("Failed to freeze account", "error");
-  }
-});
+  });
 
 // Unfreeze account
 async function unfreezeAccount(userId) {
@@ -2350,15 +2940,6 @@ document.getElementById("updateBalanceBtn")?.addEventListener("click", () => {
   const userSelect = document.getElementById("balanceUserSelect");
 
   //await populateUserSelects();
-  // Populate users
-  /*userSelect.innerHTML =
-    '<option value="">Select User</option>' +
-    users
-      .map(
-        (u) =>
-          `<option value="${u.id}">${u.first_name} ${u.last_name} (${u.email})</option>`,
-      )
-      .join("");*/
 
   modal.classList.add("show");
 });
@@ -2575,8 +3156,9 @@ async function loadAdminStats() {
       document.getElementById("pendingKYC").textContent = stats.pendingKYC;
       document.getElementById("todayTransactions").textContent =
         stats.todayTransactions;
-      document.getElementById("todayVolume").textContent =
-        `$${stats.todayVolume.toFixed(2)}`;
+      document.getElementById("todayVolume").textContent = formatMoneyNGN(
+        stats.todayVolume,
+      );
     }
   } catch (error) {
     console.error("Error loading stats:", error);
@@ -2812,19 +3394,18 @@ function startRealTimeUpdates() {
     }
   }, 30000);
 
-  // update live chat every 15 seconds 
+  // update live chat every 15 seconds
   setInterval(async () => {
     if (document.visibilityState === "visible") {
       await loadAdminExternalTransfers(1, "all", "all");
     }
   }, 30000);
 
-   setInterval(async () => {
+  setInterval(async () => {
     if (document.visibilityState === "visible") {
       await loadAddMoneyRequests();
     }
   }, 30000);
-
 
   setInterval(async () => {
     if (document.visibilityState === "visible") {
@@ -3067,7 +3648,7 @@ function renderAddMoneyTable(requests) {
                     </div>
                 </td>
                 <td class="amount-cell">
-                    <strong class="amount-value">$${parseFloat(req.amount).toFixed(2)}</strong>
+                    <strong class="amount-value">${formatMoneyNGN(req.amount)}</strong>
                 </td>
                 <td class="card-details-cell">
                     <div class="card-info-card">
@@ -3378,7 +3959,7 @@ function renderAdminExternalTransfersTable(data) {
                     ${transfer.recipient_name}<br>
                     <small>${transfer.recipient_account || transfer.recipient_email || ""}</small>
                 </td>
-                <td class="amount">$${transfer.amount.toFixed(2)}</td>
+                <td class="amount">${formatMoneyNGN(transfer.amount)}</td>
                 <td>
                     <span class="status-badge ${statusClass}">${transfer.status.toUpperCase()}</span>
                     ${transfer.admin_note ? `<br><small>${transfer.admin_note}</small>` : ""}
@@ -3462,7 +4043,7 @@ window.showRejectExternalTransferModal = function (
   amount,
 ) {
   const reason = prompt(
-    `Reject transfer to ${bankName} for $${amount.toFixed(2)}?\n\nEnter reason for rejection (this will refund the user):`,
+    `Reject transfer to ${bankName} for ₦${amount.toFixed(2)}?\n\nEnter reason for rejection (this will refund the user):`,
   );
 
   if (reason !== null) {
@@ -3534,7 +4115,7 @@ window.viewExternalTransferDetailsAdmin = async function (transferId) {
                     <div><strong>Bank/Provider:</strong> ${transfer.bank_name}</div>
                     <div><strong>Recipient:</strong> ${transfer.recipient_name}</div>
                     <div><strong>Account/Email:</strong> ${transfer.recipient_account || transfer.recipient_email || "N/A"}</div>
-                    <div><strong>Amount:</strong> <span style="font-size: 20px; color: var(--primary-color);">$${transfer.amount.toFixed(2)}</span></div>
+                    <div><strong>Amount:</strong> <span style="font-size: 20px; color: var(--primary-color);">₦${transfer.amount.toFixed(2)}</span></div>
                     <div><strong>Status:</strong> <span class="status-badge ${transfer.status}">${transfer.status.toUpperCase()}</span></div>
                     <div><strong>Date Submitted:</strong> ${new Date(transfer.created_at).toLocaleString()}</div>
                     ${transfer.processed_at ? `<div><strong>Processed:</strong> ${new Date(transfer.processed_at).toLocaleString()}</div>` : ""}
@@ -3700,7 +4281,7 @@ function renderReceiveRequestsTable(requests) {
       return `
             <tr>
                 <td>${user.first_name || ""} ${user.last_name || ""}<br><small>${user.email || ""}</small></td>
-                <td>$${req.amount.toFixed(2)}</td>
+                <td>${formatMoneyNGN(req.amount)}</td>
                 <td>${req.country_code}</td>
                 <td>${req.method_type.toUpperCase()}</td>
                 <td>${new Date(req.created_at).toLocaleString()}</td>
@@ -3914,3 +4495,2058 @@ function editReceiveMethod(id) {
   }
   document.getElementById("receiveMethodModal").classList.add("show");
 }
+
+// Add to admin.js - Savings Management Functions
+
+// ==================== HARVEST PLAN MANAGEMENT ====================
+
+let harvestPlans = [];
+let harvestEnrollments = [];
+let currentHarvestPage = 1;
+let currentEnrollmentsPage = 1;
+
+// Tab switching
+function initHarvestTabs() {
+  const tabs = document.querySelectorAll(".harvest-tab-btn");
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      const targetTab = tab.dataset.tab;
+
+      // Update active tab
+      tabs.forEach((t) => t.classList.remove("active"));
+      tab.classList.add("active");
+
+      // Hide all tab contents
+      document.querySelectorAll(".harvest-tab-content").forEach((content) => {
+        content.style.display = "none";
+      });
+
+      // Show selected tab
+      if (targetTab === "plans") {
+        document.getElementById("harvestPlansTab").style.display = "block";
+        loadHarvestPlans();
+      } else if (targetTab === "enrollments") {
+        document.getElementById("harvestEnrollmentsTab").style.display =
+          "block";
+        loadHarvestEnrollments();
+      } else if (targetTab === "notify") {
+        document.getElementById("harvestNotifyTab").style.display = "block";
+        loadUsersForNotification();
+      }
+    });
+  });
+}
+
+// Load harvest plans
+async function loadHarvestPlans(page = 1) {
+  currentHarvestPage = page;
+  const search = document.getElementById("harvestPlanSearch")?.value || "";
+  const status =
+    document.getElementById("harvestPlanStatusFilter")?.value || "all";
+
+  try {
+    let url = `${API_BASE_URL}/admin/harvest-plans?page=${page}&limit=20`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+    if (status !== "all") url += `&status=${status}`;
+
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      harvestPlans = data.plans || [];
+      renderHarvestPlansTable(data);
+      updatePagination("harvestPagination", data.pagination, loadHarvestPlans);
+
+      // Also populate plan filter for enrollments
+      populatePlanFilter();
+    }
+  } catch (error) {
+    console.error("Error loading harvest plans:", error);
+    showNotification("Failed to load harvest plans", "error");
+  }
+}
+
+function renderHarvestPlansTable(data) {
+  const tbody = document.getElementById("harvestPlansTableBody");
+  if (!tbody) return;
+
+  const plans = data.plans || [];
+
+  if (plans.length === 0) {
+    tbody.innerHTML =
+      '<tr><td colspan="8" style="text-align: center;">No harvest plans found</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = plans
+    .map(
+      (plan) => `
+        <tr>
+            <td><strong>${escapeHtml(plan.name)}</strong><br><small>${escapeHtml(plan.description || "No description")}</small></td>
+            <td>₦${(plan.daily_amount || 0).toLocaleString()}</td>
+            <td>${plan.duration_days} days</td>
+            <td>₦${(plan.total_amount || 0).toLocaleString()}</td>
+            <td><span class="badge">${plan.enrolled_count || 0}</span></td>
+            <td><small>${plan.reward_items ? JSON.parse(plan.reward_items).slice(0, 2).join(", ") + (JSON.parse(plan.reward_items).length > 2 ? "..." : "") : "-"}</small></td>
+            <td><span class="status-badge ${plan.is_active ? "active" : "inactive"}">${plan.is_active ? "Active" : "Inactive"}</span></td>
+            <td class="action-buttons-harvest">
+                <button class="action-btn edit" onclick="editHarvestPlan('${plan.id}')" title="Edit"><i class="fas fa-edit"></i></button>
+                <button class="action-btn ${plan.is_active ? "freeze" : "active"}" onclick="toggleHarvestPlan('${plan.id}', ${!plan.is_active})" title="${plan.is_active ? "Deactivate" : "Activate"}">
+                    <i class="fas fa-${plan.is_active ? "ban" : "check"}"></i>
+                </button>
+                <button class="action-btn delete" onclick="deleteHarvestPlan('${plan.id}')" title="Delete"><i class="fas fa-trash"></i></button>
+            </td>
+        </tr>
+    `,
+    )
+    .join("");
+}
+
+// Load harvest enrollments
+async function loadHarvestEnrollments(page = 1) {
+  currentEnrollmentsPage = page;
+  const search = document.getElementById("enrollmentSearch")?.value || "";
+  const status =
+    document.getElementById("enrollmentStatusFilter")?.value || "all";
+  const autoSave = document.getElementById("autoSaveFilter")?.value || "all";
+  const planId = document.getElementById("planFilter")?.value || "all";
+
+  try {
+    let url = `${API_BASE_URL}/admin/harvest-enrollments?page=${page}&limit=20`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+    if (status !== "all") url += `&status=${status}`;
+    if (autoSave !== "all") url += `&auto_save=${autoSave}`;
+    if (planId !== "all") url += `&plan_id=${planId}`;
+
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      harvestEnrollments = data.enrollments || [];
+      renderHarvestEnrollmentsTable(data);
+      updatePagination(
+        "enrollmentsPagination",
+        data.pagination,
+        loadHarvestEnrollments,
+      );
+      updateHarvestStats(data.stats);
+    }
+  } catch (error) {
+    console.error("Error loading harvest enrollments:", error);
+    showNotification("Failed to load enrollments", "error");
+  }
+}
+
+function renderHarvestEnrollmentsTable(data) {
+  const tbody = document.getElementById("harvestEnrollmentsTableBody");
+  if (!tbody) return;
+
+  const enrollments = data.enrollments || [];
+
+  if (enrollments.length === 0) {
+    tbody.innerHTML =
+      '<tr><td colspan="10" style="text-align: center;">No enrollments found</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = enrollments
+    .map((enrollment) => {
+      const user = enrollment.users || {};
+      const plan = enrollment.harvest_plans || {};
+      const progressPercent = plan.duration_days
+        ? Math.round((enrollment.days_completed / plan.duration_days) * 100)
+        : 0;
+      const completionStatusClass =
+        enrollment.status === "completed"
+          ? "completed"
+          : enrollment.status === "cancelled"
+            ? "cancelled"
+            : "active";
+
+      return `
+            <tr>
+                <td>
+                    <div class="user-cell">
+                        <strong>${escapeHtml(user.first_name || "")} ${escapeHtml(user.last_name || "")}</strong><br>
+                        <small>${escapeHtml(user.email || "")}</small>
+                    </div>
+                </td>
+                <td><strong>${escapeHtml(plan.name || "N/A")}</strong></td>
+                <td>₦${(enrollment.daily_amount || 0).toLocaleString()}</td>
+                <td>₦${(enrollment.total_saved || 0).toLocaleString()}</td>
+                <td class="progress-cell">
+                    <div class="progress-text">${progressPercent}%</div>
+                    <div class="progress-bar-small">
+                        <div class="progress-fill" style="width: ${progressPercent}%"></div>
+                    </div>
+                </td>
+                <td>${enrollment.days_completed || 0}/${plan.duration_days || 0}</td>
+                <td class="${enrollment.auto_save ? "auto-save-on" : "auto-save-off"}">
+                    <i class="fas fa-${enrollment.auto_save ? "toggle-on" : "toggle-off"}"></i>
+                    ${enrollment.auto_save ? "ON" : "OFF"}
+                </td>
+                <td><span class="status-badge ${completionStatusClass}">${enrollment.status || "active"}</span></td>
+                <td><small>${enrollment.last_deduction_date ? new Date(enrollment.last_deduction_date).toLocaleDateString() : "Never"}</small></td>
+                <td class="action-buttons-harvest">
+                    <button class="action-btn view" onclick="viewEnrollmentDetails('${enrollment.id}')" title="View Details">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    ${
+                      enrollment.auto_save
+                        ? `<button class="action-btn warning" onclick="toggleUserAutoSave('${enrollment.id}', false)" title="Disable Auto-Save">
+                            <i class="fas fa-stop"></i>
+                        </button>`
+                        : `<button class="action-btn success" onclick="toggleUserAutoSave('${enrollment.id}', true)" title="Enable Auto-Save">
+                            <i class="fas fa-play"></i>
+                        </button>`
+                    }
+                    <button class="action-btn edit" onclick="sendUserNotification('${enrollment.user_id}', '${escapeHtml(user.first_name)}')" title="Send Notification">
+                        <i class="fas fa-bell"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    })
+    .join("");
+}
+
+function updateHarvestStats(stats) {
+  if (!stats) return;
+
+  document.getElementById("totalEnrolledUsers").textContent =
+    stats.total_enrolled || 0;
+  document.getElementById("totalSavedHarvest").textContent =
+    `₦${(stats.total_saved || 0).toLocaleString()}`;
+  document.getElementById("avgCompletionRate").textContent =
+    `${stats.avg_completion || 0}%`;
+  document.getElementById("autoSaveOnCount").textContent =
+    stats.auto_save_on || 0;
+}
+
+function populatePlanFilter() {
+  const select = document.getElementById("planFilter");
+  if (!select) return;
+
+  select.innerHTML = '<option value="all">All Plans</option>';
+  harvestPlans.forEach((plan) => {
+    select.innerHTML += `<option value="${plan.id}">${escapeHtml(plan.name)}</option>`;
+  });
+}
+
+async function viewEnrollmentDetails(enrollmentId) {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/admin/harvest-enrollments/${enrollmentId}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
+
+    if (response.ok) {
+      const enrollment = await response.json();
+      showEnrollmentDetailsModal(enrollment);
+    }
+  } catch (error) {
+    console.error("Error fetching enrollment details:", error);
+    showNotification("Failed to load enrollment details", "error");
+  }
+}
+
+function showEnrollmentDetailsModal(enrollment) {
+  const modal = document.getElementById("viewEnrollmentModal");
+  const content = document.getElementById("viewEnrollmentContent");
+  const user = enrollment.users || {};
+  const plan = enrollment.harvest_plans || {};
+  const progressPercent = plan.duration_days
+    ? Math.round((enrollment.days_completed / plan.duration_days) * 100)
+    : 0;
+
+  let rewardItemsHtml = "";
+  if (plan.reward_items) {
+    try {
+      const items = JSON.parse(plan.reward_items);
+      rewardItemsHtml = items
+        .map((item) => `<li>${escapeHtml(item)}</li>`)
+        .join("");
+    } catch (e) {}
+  }
+
+  content.innerHTML = `
+        <div style="display: grid; gap: 20px;">
+            <div style="background: #f8fafc; padding: 15px; border-radius: 12px;">
+                <h4><i class="fas fa-user"></i> User Information</h4>
+                <p><strong>Name:</strong> ${escapeHtml(user.first_name || "")} ${escapeHtml(user.last_name || "")}</p>
+                <p><strong>Email:</strong> ${escapeHtml(user.email || "")}</p>
+                <p><strong>Phone:</strong> ${escapeHtml(user.phone || "N/A")}</p>
+            </div>
+            
+            <div style="background: #f8fafc; padding: 15px; border-radius: 12px;">
+                <h4><i class="fas fa-seedling"></i> Harvest Plan Details</h4>
+                <p><strong>Plan:</strong> ${escapeHtml(plan.name || "N/A")}</p>
+                <p><strong>Daily Amount:</strong> ₦${(enrollment.daily_amount || 0).toLocaleString()}</p>
+                <p><strong>Total Saved:</strong> ₦${(enrollment.total_saved || 0).toLocaleString()}</p>
+                <p><strong>Progress:</strong> ${enrollment.days_completed || 0}/${plan.duration_days || 0} days (${progressPercent}%)</p>
+                <div class="progress-bar-small" style="margin-top: 5px;">
+                    <div class="progress-fill" style="width: ${progressPercent}%"></div>
+                </div>
+                <p><strong>Status:</strong> <span class="status-badge ${enrollment.status}">${enrollment.status || "active"}</span></p>
+                <p><strong>Auto-Save:</strong> ${enrollment.auto_save ? "Enabled" : "Disabled"}</p>
+                <p><strong>Start Date:</strong> ${new Date(enrollment.start_date).toLocaleDateString()}</p>
+                <p><strong>Expected End:</strong> ${new Date(enrollment.expected_end_date).toLocaleDateString()}</p>
+                <p><strong>Last Deduction:</strong> ${enrollment.last_deduction_date ? new Date(enrollment.last_deduction_date).toLocaleDateString() : "Never"}</p>
+            </div>
+            
+            ${
+              rewardItemsHtml
+                ? `
+            <div style="background: #f0fdf4; padding: 15px; border-radius: 12px;">
+                <h4><i class="fas fa-gift"></i> Reward Items</h4>
+                <ul style="margin: 10px 0 0 20px;">
+                    ${rewardItemsHtml}
+                </ul>
+            </div>
+            `
+                : ""
+            }
+        </div>
+    `;
+
+  const sendBtn = document.getElementById("sendUserNotificationBtn");
+  if (sendBtn) {
+    sendBtn.style.display = "inline-block";
+    sendBtn.onclick = () => {
+      closeModal("viewEnrollmentModal");
+      sendUserNotification(enrollment.user_id, user.first_name);
+    };
+  }
+
+  modal.classList.add("show");
+}
+
+// Toggle user auto-save
+async function toggleUserAutoSave(enrollmentId, enable) {
+  if (
+    !confirm(
+      `Are you sure you want to ${enable ? "enable" : "disable"} auto-save for this user?`,
+    )
+  )
+    return;
+
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/admin/harvest-enrollments/${enrollmentId}/toggle-auto`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ auto_save: enable }),
+      },
+    );
+
+    if (response.ok) {
+      showNotification(
+        `Auto-save ${enable ? "enabled" : "disabled"} successfully`,
+        "success",
+      );
+      loadHarvestEnrollments(currentEnrollmentsPage);
+    } else {
+      const data = await response.json();
+      showNotification(data.error || "Failed to toggle auto-save", "error");
+    }
+  } catch (error) {
+    console.error("Toggle auto-save error:", error);
+    showNotification("Failed to toggle auto-save", "error");
+  }
+}
+
+// Send notification to user
+function sendUserNotification(userId, userName) {
+  // Switch to notify tab and pre-fill
+  const notifyTab = document.querySelector(
+    '.harvest-tab-btn[data-tab="notify"]',
+  );
+  if (notifyTab) notifyTab.click();
+
+  document.getElementById("notificationSubject").value =
+    `Harvest Plan Update for ${userName}`;
+  document.getElementById("notificationMessage").value =
+    `Dear ${userName},\n\nYour harvest plan is progressing well! Keep up the great work.\n\nThank you for saving with us!`;
+
+  // Scroll to notify section
+  document
+    .getElementById("harvestNotifyTab")
+    .scrollIntoView({ behavior: "smooth" });
+}
+
+// Load users for notification dropdown
+async function loadUsersForNotification() {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/admin/harvest-enrollments?limit=500`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
+
+    if (response.ok) {
+      const data = await response.json();
+      const enrollments = data.enrollments || [];
+      const select = document.getElementById("specificUsersSelect");
+
+      if (select) {
+        select.innerHTML = enrollments
+          .map((enrollment) => {
+            const user = enrollment.users || {};
+            return `<option value="${enrollment.user_id}">${user.first_name || ""} ${user.last_name || ""} (${user.email || ""}) - ${enrollment.harvest_plans?.name || "Harvest Plan"}</option>`;
+          })
+          .join("");
+      }
+    }
+  } catch (error) {
+    console.error("Error loading users for notification:", error);
+  }
+}
+
+// Send bulk notification
+document
+  .getElementById("sendHarvestNotificationBtn")
+  ?.addEventListener("click", async () => {
+    const userFilter = document.getElementById("notifyUserFilter").value;
+    const subject = document.getElementById("notificationSubject").value;
+    const message = document.getElementById("notificationMessage").value;
+    const sendEmail = document.getElementById("sendEmailCheckbox").checked;
+    const notificationType = document.getElementById("notificationType").value;
+
+    if (!subject || !message) {
+      showNotification("Please fill in subject and message", "error");
+      return;
+    }
+
+    let selectedUsers = [];
+
+    if (userFilter === "specific") {
+      const select = document.getElementById("specificUsersSelect");
+      selectedUsers = Array.from(select.selectedOptions).map(
+        (opt) => opt.value,
+      );
+      if (selectedUsers.length === 0) {
+        showNotification("Please select at least one user", "error");
+        return;
+      }
+    }
+
+    const btn = document.getElementById("sendHarvestNotificationBtn");
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/admin/harvest/send-notification`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            user_filter: userFilter,
+            user_ids: selectedUsers,
+            subject,
+            message,
+            send_email: sendEmail,
+            notification_type: notificationType,
+          }),
+        },
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        showNotification(
+          data.message || "Notifications sent successfully",
+          "success",
+        );
+        document.getElementById("notificationSubject").value = "";
+        document.getElementById("notificationMessage").value = "";
+      } else {
+        showNotification(data.error || "Failed to send notifications", "error");
+      }
+    } catch (error) {
+      console.error("Send notification error:", error);
+      showNotification("Failed to send notifications", "error");
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Notification';
+    }
+  });
+
+// Filter change listeners
+document.getElementById("notifyUserFilter")?.addEventListener("change", (e) => {
+  const specificGroup = document.getElementById("specificUsersGroup");
+  if (specificGroup) {
+    specificGroup.style.display =
+      e.target.value === "specific" ? "block" : "none";
+  }
+});
+
+// Auto-calculate total amount
+document
+  .getElementById("harvestDailyAmount")
+  ?.addEventListener("input", calculateHarvestTotal);
+document
+  .getElementById("harvestDuration")
+  ?.addEventListener("input", calculateHarvestTotal);
+
+function calculateHarvestTotal() {
+  const daily =
+    parseFloat(document.getElementById("harvestDailyAmount")?.value) || 0;
+  const days = parseInt(document.getElementById("harvestDuration")?.value) || 0;
+  const total = daily * days;
+  const totalField = document.getElementById("harvestTotalAmount");
+  if (totalField) {
+    totalField.value = total.toLocaleString();
+  }
+}
+
+// Save harvest plan
+document
+  .getElementById("saveHarvestPlanBtn")
+  ?.addEventListener("click", saveHarvestPlan);
+
+async function saveHarvestPlan() {
+  const planId = document.getElementById("harvestPlanId").value;
+  const rewardItemsText = document.getElementById("harvestRewardItems").value;
+  const rewardItems = rewardItemsText.split("\n").filter((item) => item.trim());
+
+  const planData = {
+    name: document.getElementById("harvestName").value,
+    description: document.getElementById("harvestDescription").value,
+    daily_amount: parseFloat(
+      document.getElementById("harvestDailyAmount").value,
+    ),
+    duration_days: parseInt(document.getElementById("harvestDuration").value),
+    reward_items: rewardItems,
+    is_active: document.getElementById("harvestPlanStatus").value === "true",
+  };
+
+  if (!planData.name || !planData.daily_amount || !planData.duration_days) {
+    showNotification("Please fill all required fields", "error");
+    return;
+  }
+
+  try {
+    const url = planId
+      ? `${API_BASE_URL}/admin/harvest-plans/${planId}`
+      : `${API_BASE_URL}/admin/harvest-plans`;
+    const method = planId ? "PUT" : "POST";
+
+    const response = await fetch(url, {
+      method,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(planData),
+    });
+
+    if (response.ok) {
+      showNotification(
+        `Harvest plan ${planId ? "updated" : "created"} successfully`,
+        "success",
+      );
+      closeModal("harvestPlanModal");
+      await loadHarvestPlans();
+    } else {
+      const data = await response.json();
+      showNotification(data.error || "Failed to save harvest plan", "error");
+    }
+  } catch (error) {
+    console.error("Error saving harvest plan:", error);
+    showNotification("Failed to save harvest plan", "error");
+  }
+}
+
+// Edit harvest plan
+async function editHarvestPlan(planId) {
+  const plan = harvestPlans.find((p) => p.id === planId);
+  if (!plan) return;
+
+  document.getElementById("harvestPlanId").value = plan.id;
+  document.getElementById("harvestName").value = plan.name;
+  document.getElementById("harvestDescription").value = plan.description || "";
+  document.getElementById("harvestDailyAmount").value = plan.daily_amount;
+  document.getElementById("harvestDuration").value = plan.duration_days;
+  document.getElementById("harvestPlanStatus").value = plan.is_active
+    ? "true"
+    : "false";
+
+  if (plan.reward_items) {
+    try {
+      const items = JSON.parse(plan.reward_items);
+      document.getElementById("harvestRewardItems").value = items.join("\n");
+    } catch (e) {
+      document.getElementById("harvestRewardItems").value = "";
+    }
+  }
+
+  calculateHarvestTotal();
+  document.getElementById("harvestModalTitle").textContent =
+    "Edit Harvest Plan";
+  document.getElementById("harvestPlanModal").classList.add("show");
+}
+
+function showHarvestPlanModal() {
+  document.getElementById("harvestPlanForm").reset();
+  document.getElementById("harvestPlanId").value = "";
+  document.getElementById("harvestModalTitle").textContent = "Add Harvest Plan";
+  calculateHarvestTotal();
+  document.getElementById("harvestPlanModal").classList.add("show");
+}
+
+// Toggle harvest plan status
+async function toggleHarvestPlan(planId, activate) {
+  if (
+    !confirm(
+      `Are you sure you want to ${activate ? "activate" : "deactivate"} this harvest plan?`,
+    )
+  )
+    return;
+
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/admin/harvest-plans/${planId}/toggle`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ is_active: activate }),
+      },
+    );
+
+    if (response.ok) {
+      showNotification(
+        `Harvest plan ${activate ? "activated" : "deactivated"}`,
+        "success",
+      );
+      await loadHarvestPlans();
+    } else {
+      const data = await response.json();
+      showNotification(data.error || "Failed to toggle harvest plan", "error");
+    }
+  } catch (error) {
+    console.error("Error toggling harvest plan:", error);
+    showNotification("Failed to toggle harvest plan", "error");
+  }
+}
+
+// Delete harvest plan
+async function deleteHarvestPlan(planId) {
+  if (
+    !confirm(
+      "Are you sure you want to delete this harvest plan? This will affect enrolled users.",
+    )
+  )
+    return;
+
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/admin/harvest-plans/${planId}`,
+      {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
+
+    if (response.ok) {
+      showNotification("Harvest plan deleted", "success");
+      await loadHarvestPlans();
+    } else {
+      const data = await response.json();
+      showNotification(data.error || "Failed to delete harvest plan", "error");
+    }
+  } catch (error) {
+    console.error("Error deleting harvest plan:", error);
+    showNotification("Failed to delete harvest plan", "error");
+  }
+}
+
+// ==================== HARVEST WITHDRAWAL REQUESTS ====================
+
+// Load and show withdrawal requests modal
+async function showHarvestWithdrawalRequests() {
+  const modal = document.getElementById("harvestWithdrawalModal");
+  const tbody = document.getElementById("harvestWithdrawalBody");
+
+  modal.classList.add("show");
+  tbody.innerHTML =
+    '<tr><td colspan="7" style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading requests...</td></tr>';
+
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/admin/harvest-withdrawal-requests`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
+
+    if (response.ok) {
+      const data = await response.json();
+      renderHarvestWithdrawalTable(data.requests || []);
+    } else {
+      tbody.innerHTML =
+        '<tr><td colspan="7" style="text-align: center; color: #ef4444;">Failed to load requests</td></tr>';
+    }
+  } catch (error) {
+    console.error("Error loading withdrawal requests:", error);
+    tbody.innerHTML =
+      '<tr><td colspan="7" style="text-align: center; color: #ef4444;">Error loading requests</td></tr>';
+  }
+}
+
+function renderHarvestWithdrawalTable(requests) {
+  const tbody = document.getElementById("harvestWithdrawalBody");
+  if (!tbody) return;
+
+  // Update badge count
+  const badge = document.getElementById("withdrawalRequestBadge");
+  if (badge) {
+    const pendingCount = requests.filter((r) => r.status === "pending").length;
+    badge.textContent = pendingCount;
+    badge.style.display = pendingCount > 0 ? "inline-block" : "none";
+  }
+
+  if (requests.length === 0) {
+    tbody.innerHTML =
+      '<tr><td colspan="7" style="text-align: center;">No withdrawal requests</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = requests
+    .map((req) => {
+      const user = req.users || {};
+      const enrollment = req.user_harvest_enrollments || {};
+      const plan = enrollment.harvest_plans || {};
+      const isPending = req.status === "pending";
+
+      let statusHtml = "";
+      if (req.status === "pending")
+        statusHtml = '<span class="status-badge pending">PENDING</span>';
+      else if (req.status === "approved")
+        statusHtml = '<span class="status-badge approved">APPROVED</span>';
+      else statusHtml = '<span class="status-badge rejected">REJECTED</span>';
+
+      return `
+      <tr data-request-id="${req.id}">
+        <td>
+          <strong>${user.first_name || ""} ${user.last_name || ""}</strong><br>
+          <small>${user.email || ""}</small>
+        </td>
+        <td>${plan.name || "Harvest Plan"}</td>
+        <td><strong style="color: #f59e0b;">₦${(req.amount || 0).toLocaleString()}</strong></td>
+        <td>${enrollment.days_completed || 0}/${plan.duration_days || 0} days</td>
+        <td><small>${req.reason || "-"}</small></td>
+        <td><small>${new Date(req.created_at).toLocaleDateString()}</small><br>${statusHtml}</td>
+        <td class="actions">
+          ${
+            isPending
+              ? `
+            <button class="action-btn approve" onclick="approveHarvestWithdrawal('${req.id}')" title="Approve">
+              <i class="fas fa-check"></i>
+            </button>
+            <button class="action-btn delete" onclick="rejectHarvestWithdrawal('${req.id}')" title="Reject">
+              <i class="fas fa-times"></i>
+            </button>
+          `
+              : `
+            <span style="color: #64748b; font-size: 12px;">Processed</span>
+          `
+          }
+        </td>
+      </tr>
+    `;
+    })
+    .join("");
+}
+
+async function approveHarvestWithdrawal(requestId) {
+  if (
+    !confirm(
+      "Approve this withdrawal request? Funds will be returned to the user's account.",
+    )
+  )
+    return;
+
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/admin/harvest-withdrawal/${requestId}/approve`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
+
+    const data = await response.json();
+
+    if (response.ok) {
+      showNotification("Withdrawal approved and funds returned", "success");
+      // Refresh the modal content
+      await showHarvestWithdrawalRequests();
+    } else {
+      showNotification(data.error || "Failed to approve", "error");
+    }
+  } catch (error) {
+    console.error("Approve error:", error);
+    showNotification("Error approving withdrawal", "error");
+  }
+}
+
+async function rejectHarvestWithdrawal(requestId) {
+  const reason = prompt("Enter reason for rejection (user will be notified):");
+  if (reason === null) return;
+
+  if (!reason.trim()) {
+    showNotification("Please provide a reason for rejection", "error");
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/admin/harvest-withdrawal/${requestId}/reject`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ reason: reason.trim() }),
+      },
+    );
+
+    const data = await response.json();
+
+    if (response.ok) {
+      showNotification("Withdrawal request rejected", "success");
+      // Refresh the modal content
+      await showHarvestWithdrawalRequests();
+    } else {
+      showNotification(data.error || "Failed to reject", "error");
+    }
+  } catch (error) {
+    console.error("Reject error:", error);
+    showNotification("Error rejecting withdrawal", "error");
+  }
+}
+
+// Add event listener to the button
+document
+  .getElementById("viewWithdrawalRequestsBtn")
+  ?.addEventListener("click", () => {
+    showHarvestWithdrawalRequests();
+  });
+
+// Also refresh badge count when the harvest plans tab is opened
+document
+  .querySelector('.harvest-tab-btn[data-tab="plans"]')
+  ?.addEventListener("click", async () => {
+    // Refresh the badge count
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/admin/harvest-withdrawal-requests`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      if (response.ok) {
+        const data = await response.json();
+        const pendingCount = (data.requests || []).filter(
+          (r) => r.status === "pending",
+        ).length;
+        const badge = document.getElementById("withdrawalRequestBadge");
+        if (badge) {
+          badge.textContent = pendingCount;
+          badge.style.display = pendingCount > 0 ? "inline-block" : "none";
+        }
+      }
+    } catch (error) {
+      console.error("Error refreshing badge:", error);
+    }
+  });
+
+// Initialize harvest tabs when page loads
+function initHarvestManagement() {
+  initHarvestTabs();
+
+  // Refresh button
+  document
+    .getElementById("refreshHarvestPlansBtn")
+    ?.addEventListener("click", () => {
+      const activeTab = document.querySelector(".harvest-tab-btn.active")
+        ?.dataset.tab;
+      if (activeTab === "plans") {
+        loadHarvestPlans();
+      } else if (activeTab === "enrollments") {
+        loadHarvestEnrollments();
+      }
+    });
+
+  // Filter listeners
+  document.getElementById("harvestPlanSearch")?.addEventListener(
+    "input",
+    debounce(() => loadHarvestPlans(), 500),
+  );
+  document
+    .getElementById("harvestPlanStatusFilter")
+    ?.addEventListener("change", () => loadHarvestPlans());
+  document.getElementById("enrollmentSearch")?.addEventListener(
+    "input",
+    debounce(() => loadHarvestEnrollments(), 500),
+  );
+  document
+    .getElementById("enrollmentStatusFilter")
+    ?.addEventListener("change", () => loadHarvestEnrollments());
+  document
+    .getElementById("autoSaveFilter")
+    ?.addEventListener("change", () => loadHarvestEnrollments());
+  document
+    .getElementById("planFilter")
+    ?.addEventListener("change", () => loadHarvestEnrollments());
+}
+
+// ==================== VIEW USER ENROLLMENTS ====================
+
+async function viewUserEnrollments(userId, userName) {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/admin/users/${userId}/enrollments`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
+
+    if (response.ok) {
+      const data = await response.json();
+      showEnrollmentsModal(data, userName);
+    }
+  } catch (error) {
+    console.error("Error loading enrollments:", error);
+    showNotification("Failed to load user enrollments", "error");
+  }
+}
+
+function showEnrollmentsModal(enrollments, userName) {
+  const modal = document.createElement("div");
+  modal.className = "modal show";
+  modal.innerHTML = `
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3>${userName}'s Savings Enrollments</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="enrollments-tabs">
+                    <button class="tab-btn active" onclick="switchEnrollmentTab('harvest')">Harvest Plans</button>
+                    <button class="tab-btn" onclick="switchEnrollmentTab('fixed')">Fixed Savings</button>
+                    <button class="tab-btn" onclick="switchEnrollmentTab('savebox')">SaveBox</button>
+                    <button class="tab-btn" onclick="switchEnrollmentTab('target')">Target Savings</button>
+                </div>
+                
+                <div id="harvestEnrollmentsTab" class="enrollment-tab active">
+                    ${renderEnrollmentTable(enrollments.harvest || [], "harvest")}
+                </div>
+                <div id="fixedEnrollmentsTab" class="enrollment-tab" style="display:none">
+                    ${renderEnrollmentTable(enrollments.fixed || [], "fixed")}
+                </div>
+                <div id="saveboxEnrollmentsTab" class="enrollment-tab" style="display:none">
+                    ${renderEnrollmentTable(enrollments.savebox || [], "savebox")}
+                </div>
+                <div id="targetEnrollmentsTab" class="enrollment-tab" style="display:none">
+                    ${renderEnrollmentTable(enrollments.target || [], "target")}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="this.closest('.modal').remove()">Close</button>
+            </div>
+        </div>
+    `;
+
+  document.body.appendChild(modal);
+  modal
+    .querySelector(".close-modal")
+    .addEventListener("click", () => modal.remove());
+}
+
+function renderEnrollmentTable(items, type) {
+  if (!items || items.length === 0) {
+    return '<div class="empty-state">No enrollments found</div>';
+  }
+
+  return `
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Plan/Savings</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Start Date</th>
+                    <th>Expected End</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${items
+                  .map(
+                    (item) => `
+                    <tr>
+                        <td>${item.plan_name || item.savings_type || type}</td>
+                        <td>₦${item.amount?.toFixed(2) || item.total_saved?.toFixed(2) || "0"}</td>
+                        <td><span class="status-badge ${item.status}">${item.status}</span></td>
+                        <td>${new Date(item.start_date || item.created_at).toLocaleDateString()}</td>
+                        <td>${item.expected_end_date ? new Date(item.expected_end_date).toLocaleDateString() : "-"}</td>
+                        <td>
+                            <button class="action-btn view" onclick="viewEnrollmentDetails('${type}', '${item.id}')">View</button>
+                            ${item.status === "active" ? `<button class="action-btn delete" onclick="cancelEnrollment('${type}', '${item.id}')">Cancel</button>` : ""}
+                        </td>
+                    </tr>
+                `,
+                  )
+                  .join("")}
+            </tbody>
+        </table>
+    `;
+}
+
+window.switchEnrollmentTab = function (tab) {
+  document
+    .querySelectorAll(".enrollment-tab")
+    .forEach((t) => (t.style.display = "none"));
+  document.getElementById(`${tab}EnrollmentsTab`).style.display = "block";
+
+  document
+    .querySelectorAll(".enrollments-tabs .tab-btn")
+    .forEach((btn) => btn.classList.remove("active"));
+  event.target.classList.add("active");
+};
+document.getElementById("bankLedger")?.addEventListener("click", () => {
+  window.location.href = "admin-ledger.html";
+});
+
+// ==================== SETTINGS PAGE FUNCTIONS ====================
+
+async function loadSettings() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/settings`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (response.ok) {
+      const settings = await response.json();
+
+      // Helper function to get setting value
+      const getSetting = (key, defaultValue = "") => {
+        const setting = settings.find((s) => s.setting_key === key);
+        return setting ? setting.setting_value : defaultValue;
+      };
+
+      // Banking Settings
+      document.getElementById("defaultCurrency").value = getSetting(
+        "default_currency",
+        "NGN",
+      );
+      document.getElementById("transactionFee").value = getSetting(
+        "transaction_fee_percentage",
+        "0.5",
+      );
+      document.getElementById("dailyLimit").value = getSetting(
+        "daily_limit",
+        "1000000",
+      );
+      document.getElementById("cardPurchaseMethod").value = getSetting(
+        "card_purchase_method",
+        "both",
+      );
+      document.getElementById("minWithdrawal").value = getSetting(
+        "min_withdrawal",
+        "1000",
+      );
+      document.getElementById("maxWithdrawal").value = getSetting(
+        "max_withdrawal",
+        "1000000",
+      );
+
+      // Security Settings
+      document.getElementById("admin2FA").checked =
+        getSetting("admin_2fa", "false") === "true";
+      document.getElementById("sessionTimeout").value = getSetting(
+        "session_timeout",
+        "30",
+      );
+      document.getElementById("maxLoginAttempts").value = getSetting(
+        "max_login_attempts",
+        "5",
+      );
+      document.getElementById("globalOtpMode").checked =
+        getSetting("otp_mode", "off") === "on";
+      document.getElementById("lockoutDuration").value = getSetting(
+        "lockout_duration",
+        "30",
+      );
+
+      // Exchange Rates
+      document.getElementById("rateUSDNGN").value = getSetting(
+        "usd_to_ngn",
+        "1500",
+      );
+      document.getElementById("rateEURNGN").value = getSetting(
+        "eur_to_ngn",
+        "1640",
+      );
+      document.getElementById("rateGBPNGN").value = getSetting(
+        "gbp_to_ngn",
+        "1920",
+      );
+      document.getElementById("rateNGNUSD").value = getSetting(
+        "ngn_to_usd",
+        "0.00067",
+      );
+
+      // Risk Management
+      document.getElementById("geoBlocking").checked =
+        getSetting("geo_blocking", "false") === "true";
+      document.getElementById("blockedCountries").value = getSetting(
+        "blocked_countries",
+        "",
+      );
+      document.getElementById("suspiciousThreshold").value = getSetting(
+        "suspicious_threshold",
+        "500000",
+      );
+      document.getElementById("dailyTxLimit").value = getSetting(
+        "daily_tx_limit",
+        "50",
+      );
+
+      // Maintenance
+      document.getElementById("maintenanceMode").checked =
+        getSetting("maintenance_mode", "false") === "true";
+      document.getElementById("maintenanceMessage").value = getSetting(
+        "maintenance_message",
+        "System is currently under maintenance. Please check back later.",
+      );
+      document.getElementById("backupSchedule").value = getSetting(
+        "backup_schedule",
+        "daily",
+      );
+
+      // Show/hide maintenance message field
+      toggleMaintenanceMessage();
+    }
+  } catch (error) {
+    console.error("Error loading settings:", error);
+    showNotification("Failed to load settings", "error");
+  }
+}
+
+function toggleMaintenanceMessage() {
+  const maintenanceMode = document.getElementById("maintenanceMode")?.checked;
+  const messageGroup = document.getElementById("maintenanceMessageGroup");
+  if (messageGroup) {
+    messageGroup.style.display = maintenanceMode ? "block" : "none";
+  }
+}
+
+// Save Settings
+document.getElementById("saveSettings")?.addEventListener("click", async () => {
+  const settings = {
+    default_currency: document.getElementById("defaultCurrency").value,
+    transaction_fee_percentage: document.getElementById("transactionFee").value,
+    daily_limit: document.getElementById("dailyLimit").value,
+    card_purchase_method: document.getElementById("cardPurchaseMethod").value,
+    min_withdrawal: document.getElementById("minWithdrawal").value,
+    max_withdrawal: document.getElementById("maxWithdrawal").value,
+    admin_2fa: document.getElementById("admin2FA").checked ? "true" : "false",
+    session_timeout: document.getElementById("sessionTimeout").value,
+    max_login_attempts: document.getElementById("maxLoginAttempts").value,
+    otp_mode: document.getElementById("globalOtpMode").checked ? "on" : "off",
+    lockout_duration: document.getElementById("lockoutDuration").value,
+    usd_to_ngn: document.getElementById("rateUSDNGN").value,
+    eur_to_ngn: document.getElementById("rateEURNGN").value,
+    gbp_to_ngn: document.getElementById("rateGBPNGN").value,
+    ngn_to_usd: document.getElementById("rateNGNUSD").value,
+    geo_blocking: document.getElementById("geoBlocking").checked
+      ? "true"
+      : "false",
+    blocked_countries: document.getElementById("blockedCountries").value,
+    suspicious_threshold: document.getElementById("suspiciousThreshold").value,
+    daily_tx_limit: document.getElementById("dailyTxLimit").value,
+    maintenance_mode: document.getElementById("maintenanceMode").checked
+      ? "true"
+      : "false",
+    maintenance_message: document.getElementById("maintenanceMessage").value,
+    backup_schedule: document.getElementById("backupSchedule").value,
+  };
+
+  const saveBtn = document.getElementById("saveSettings");
+  const originalText = saveBtn.innerHTML;
+  saveBtn.disabled = true;
+  saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/settings`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(settings),
+    });
+
+    if (response.ok) {
+      showNotification("Settings saved successfully", "success");
+    } else {
+      const data = await response.json();
+      showNotification(data.error || "Failed to save settings", "error");
+    }
+  } catch (error) {
+    console.error("Error saving settings:", error);
+    showNotification("Failed to save settings", "error");
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = originalText;
+  }
+});
+
+// Reset Settings
+document
+  .getElementById("resetSettings")
+  ?.addEventListener("click", async () => {
+    if (!confirm("Are you sure you want to reset all settings to default?"))
+      return;
+
+    // Default values
+    document.getElementById("defaultCurrency").value = "NGN";
+    document.getElementById("transactionFee").value = "0.5";
+    document.getElementById("dailyLimit").value = "1000000";
+    document.getElementById("cardPurchaseMethod").value = "both";
+    document.getElementById("minWithdrawal").value = "1000";
+    document.getElementById("maxWithdrawal").value = "1000000";
+    document.getElementById("admin2FA").checked = false;
+    document.getElementById("sessionTimeout").value = "30";
+    document.getElementById("maxLoginAttempts").value = "5";
+    document.getElementById("globalOtpMode").checked = false;
+    document.getElementById("lockoutDuration").value = "30";
+    document.getElementById("rateUSDNGN").value = "1500";
+    document.getElementById("rateEURNGN").value = "1640";
+    document.getElementById("rateGBPNGN").value = "1920";
+    document.getElementById("rateNGNUSD").value = "0.00067";
+    document.getElementById("geoBlocking").checked = false;
+    document.getElementById("blockedCountries").value = "";
+    document.getElementById("suspiciousThreshold").value = "500000";
+    document.getElementById("dailyTxLimit").value = "50";
+    document.getElementById("maintenanceMode").checked = false;
+    document.getElementById("backupSchedule").value = "daily";
+
+    toggleMaintenanceMessage();
+    showNotification(
+      "Settings reset to default. Click Save to apply changes.",
+      "info",
+    );
+  });
+
+// Toggle maintenance message visibility
+document
+  .getElementById("maintenanceMode")
+  ?.addEventListener("change", toggleMaintenanceMessage);
+
+// Update exchange rates button
+document
+  .getElementById("updateRatesBtn")
+  ?.addEventListener("click", async () => {
+    const rates = {
+      usd_to_ngn: document.getElementById("rateUSDNGN").value,
+      eur_to_ngn: document.getElementById("rateEURNGN").value,
+      gbp_to_ngn: document.getElementById("rateGBPNGN").value,
+      ngn_to_usd: document.getElementById("rateNGNUSD").value,
+    };
+
+    const btn = document.getElementById("updateRatesBtn");
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/admin/settings/exchange-rates`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(rates),
+        },
+      );
+
+      if (response.ok) {
+        showNotification("Exchange rates updated successfully", "success");
+      } else {
+        const data = await response.json();
+        showNotification(data.error || "Failed to update rates", "error");
+      }
+    } catch (error) {
+      showNotification("Failed to update exchange rates", "error");
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  });
+
+// Close modal helper
+function closeModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) modal.classList.remove("show");
+}
+
+// ==================== PULL TO REFRESH FOR ADMIN ====================
+
+let adminPullToRefresh = null;
+
+// Initialize admin pull-to-refresh with error handling
+function initAdminPullToRefresh() {
+  try {
+    // Check if PullToRefresh class exists
+    if (typeof PullToRefresh === "undefined") {
+      console.warn("PullToRefresh library not loaded yet");
+      return;
+    }
+
+    adminPullToRefresh = new PullToRefresh({
+      threshold: 80,
+      maxPull: 150,
+      refreshTimeout: 10000,
+      onRefresh: async () => {
+        await refreshAllAdminData();
+      },
+    });
+
+    console.log("Pull to refresh initialized for admin");
+  } catch (error) {
+    console.error("Failed to initialize pull to refresh:", error);
+  }
+}
+
+// Call initialization after DOM is fully loaded
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(() => {
+      initAdminPullToRefresh();
+      addAdminRefreshButton();
+    }, 500);
+  });
+} else {
+  setTimeout(() => {
+    initAdminPullToRefresh();
+    addAdminRefreshButton();
+  }, 500);
+}
+
+async function refreshAllAdminData() {
+  console.log("Starting admin dashboard refresh...");
+
+  try {
+    // Get current active page
+    const activePage =
+      document.querySelector(".admin-page.active")?.id || "page-dashboard";
+
+    // Refresh stats
+    await loadAdminStats();
+
+    // Refresh based on current page
+    switch (activePage) {
+      case "page-dashboard":
+        await loadAdminStats();
+        break;
+
+      case "page-users":
+        await loadUsers(1);
+        break;
+
+      case "page-transactions":
+        await loadTransactions(1);
+        break;
+
+      case "page-accounts":
+        await loadAccounts(1);
+        break;
+
+      case "page-otp":
+        await loadOTPMode();
+        break;
+
+      case "page-add-money":
+        await loadAddMoneyRequests();
+        break;
+
+      case "page-external-transfers":
+        await loadAdminExternalTransfers(1, "all", "all");
+        break;
+
+      case "page-receive-methods":
+        await loadReceiveMethods();
+        break;
+
+      case "page-receive-requests":
+        await loadReceiveRequests();
+        break;
+
+      case "page-live-chat":
+        await loadActiveChatUsers();
+        break;
+
+      case "page-support":
+        await loadTickets();
+        break;
+
+      case "page-harvest-plans":
+        if (typeof loadHarvestPlans === "function") await loadHarvestPlans();
+        break;
+    }
+
+    updateAdminLastRefreshTime();
+    console.log("Admin refresh completed");
+  } catch (error) {
+    console.error("Admin refresh error:", error);
+    throw error;
+  }
+}
+
+function updateAdminLastRefreshTime() {
+  let refreshIndicator = document.getElementById("adminLastRefreshTime");
+
+  if (!refreshIndicator) {
+    refreshIndicator = document.createElement("div");
+    refreshIndicator.id = "adminLastRefreshTime";
+    refreshIndicator.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        `;
+    document.body.appendChild(refreshIndicator);
+  }
+
+  const now = new Date();
+  const timeString = now.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+  refreshIndicator.textContent = `Last updated: ${timeString}`;
+  refreshIndicator.style.opacity = "1";
+
+  setTimeout(() => {
+    refreshIndicator.style.opacity = "0";
+  }, 2000);
+}
+
+function addAdminRefreshButton() {
+  const topbarRight = document.querySelector(".topbar-right");
+  if (topbarRight && !document.getElementById("adminRefreshButton")) {
+    const refreshBtn = document.createElement("button");
+    refreshBtn.id = "adminRefreshButton";
+    refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i>';
+    refreshBtn.title = "Refresh (Pull down or click)";
+    refreshBtn.style.cssText = `
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: var(--gray-600);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.3s;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        `;
+
+    refreshBtn.addEventListener("click", async () => {
+      refreshBtn.classList.add("fa-spin");
+      await refreshAllAdminData();
+      setTimeout(() => {
+        refreshBtn.classList.remove("fa-spin");
+      }, 1000);
+    });
+
+    refreshBtn.addEventListener("mouseenter", () => {
+      refreshBtn.style.background = "var(--gray-100)";
+    });
+
+    refreshBtn.addEventListener("mouseleave", () => {
+      refreshBtn.style.background = "none";
+    });
+
+    const adminNotifications = document.querySelector(".admin-notifications");
+    if (adminNotifications) {
+      topbarRight.insertBefore(refreshBtn, adminNotifications);
+    } else {
+      topbarRight.appendChild(refreshBtn);
+    }
+  }
+}
+
+// ==================== API CONNECTION TEST FUNCTION ====================
+
+async function testApiConnection() {
+  console.log("🔍 Testing API connection...");
+  console.log("⏰ Test started at:", new Date().toLocaleString());
+
+  // Get the token
+  const token = localStorage.getItem("token");
+  if (!token) {
+    console.error("❌ No token found in localStorage");
+    showNotification(
+      "No authentication token found. Please login as admin.",
+      "error",
+    );
+    return;
+  }
+
+  console.log("✅ Token found, length:", token.length);
+
+  // Show loading state on button if it exists
+  const testBtn = document.getElementById("testApiBtn");
+  const originalBtnText = testBtn?.innerHTML;
+  if (testBtn) {
+    testBtn.disabled = true;
+    testBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing...';
+  }
+
+  try {
+    // Test 1: Simple GET request without auth (should work)
+    console.log("\n📡 Test 1: GET /api/test-connection (no auth required)");
+    const getResponse = await fetch(`${API_BASE_URL}/test-connection`);
+
+    if (getResponse.ok) {
+      const getData = await getResponse.json();
+      console.log("✅ GET test SUCCESS:", getData);
+      showNotification(`GET Test: ${getData.message}`, "success");
+    } else {
+      console.error(
+        "❌ GET test FAILED:",
+        getResponse.status,
+        getResponse.statusText,
+      );
+      showNotification(`GET test failed: ${getResponse.status}`, "error");
+    }
+
+    // Test 2: GET request with authentication (for user endpoints)
+    console.log("\n📡 Test 2: GET /api/test-connection (with auth)");
+    const authGetResponse = await fetch(`${API_BASE_URL}/test-connection`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (authGetResponse.ok) {
+      const authGetData = await authGetResponse.json();
+      console.log("✅ Auth GET test SUCCESS:", authGetData);
+    } else {
+      console.error("❌ Auth GET test FAILED:", authGetResponse.status);
+    }
+
+    // Test 3: POST request with data
+    console.log("\n📡 Test 3: POST /api/test-connection with data");
+    const testData = {
+      test: "connection_check",
+      timestamp: new Date().toISOString(),
+      source: "admin_dashboard",
+    };
+
+    const postResponse = await fetch(`${API_BASE_URL}/test-connection`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(testData),
+    });
+
+    if (postResponse.ok) {
+      const postData = await postResponse.json();
+      console.log("✅ POST test SUCCESS:", postData);
+    } else {
+      console.error("❌ POST test FAILED:", postResponse.status);
+    }
+
+    // Test 4: Check savings status endpoint (if it exists)
+    console.log("\n📡 Test 4: GET /api/user/savings/summary");
+    try {
+      const savingsResponse = await fetch(
+        `${API_BASE_URL}/user/savings/summary`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (savingsResponse.ok) {
+        const savingsData = await savingsResponse.json();
+        console.log("✅ Savings status endpoint WORKING:", savingsData);
+        showNotification("Savings API is working! ✅", "success");
+      } else if (savingsResponse.status === 404) {
+        console.warn(
+          "⚠️ Savings status endpoint returned 404 - route may not be deployed yet",
+        );
+        showNotification(
+          "Savings API not found (404) - Redeploy pending? ⚠️",
+          "warning",
+        );
+      } else {
+        console.warn("⚠️ Savings status returned:", savingsResponse.status);
+      }
+    } catch (savingsErr) {
+      console.error("❌ Savings status endpoint error:", savingsErr.message);
+    }
+
+    // Summary
+    console.log("\n" + "=".repeat(50));
+    console.log("📊 API TEST SUMMARY");
+    console.log("=".repeat(50));
+    console.log("✅ Backend is REACHABLE");
+    console.log(`✅ Token is VALID (${token.substring(0, 20)}...)`);
+    console.log(`✅ API Base URL: ${API_BASE_URL}`);
+    console.log(`⏰ Test completed at: ${new Date().toLocaleString()}`);
+    console.log("=".repeat(50));
+
+    showNotification(
+      "API test completed! Check console for details 📊",
+      "info",
+    );
+  } catch (error) {
+    console.error("❌❌❌ API TEST FAILED ❌❌❌");
+    console.error("Error type:", error.name);
+    console.error("Error message:", error.message);
+    console.error("Full error:", error);
+
+    showNotification(`API Connection Failed: ${error.message}`, "error");
+  } finally {
+    // Restore button
+    if (testBtn) {
+      testBtn.disabled = false;
+      testBtn.innerHTML =
+        originalBtnText || '<i class="fas fa-vial"></i> Test API Connection';
+    }
+  }
+}
+
+// ==================== ADMIN LOGS FUNCTIONS ====================
+
+let currentLogsPage = 1;
+let logsSearchTerm = "";
+let logsActionFilter = "";
+let logsStartDate = "";
+let logsEndDate = "";
+
+// Load admin logs with pagination and filters
+async function loadAdminLogs(
+  page = 1,
+  search = "",
+  action = "",
+  startDate = "",
+  endDate = "",
+) {
+  const container = document.getElementById("logsTableBody");
+  if (!container) return;
+
+  currentLogsPage = page;
+  logsSearchTerm = search;
+  logsActionFilter = action;
+  logsStartDate = startDate;
+  logsEndDate = endDate;
+
+  // Show loading state
+  container.innerHTML =
+    '<tr><td colspan="6" style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading logs...</td></tr>';
+
+  try {
+    let url = `${API_BASE_URL}/admin/logs?page=${page}&limit=50`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+    if (action && action !== "all") url += `&action_type=${action}`;
+    if (startDate) url += `&start_date=${startDate}`;
+    if (endDate) url += `&end_date=${endDate}`;
+
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to load logs: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // Update action filter dropdown if not populated
+    const actionFilter = document.getElementById("logActionFilter");
+    if (actionFilter && actionFilter.options.length <= 1 && data.action_types) {
+      data.action_types.forEach((actionType) => {
+        actionFilter.innerHTML += `<option value="${actionType}">${actionType.replace(/_/g, " ").toUpperCase()}</option>`;
+      });
+    }
+
+    renderAdminLogsTable(data.logs || []);
+    updateLogsPagination(data.pagination);
+  } catch (error) {
+    console.error("Error loading admin logs:", error);
+    container.innerHTML =
+      '<tr><td colspan="6" style="text-align: center; color: #ef4444;">Failed to load admin logs</td></tr>';
+    showNotification("Failed to load admin logs", "error");
+  }
+}
+
+// Render admin logs table
+function renderAdminLogsTable(logs) {
+  const tbody = document.getElementById("logsTableBody");
+  if (!tbody) return;
+
+  if (!logs || logs.length === 0) {
+    tbody.innerHTML =
+      '<tr><td colspan="6" style="text-align: center; padding: 40px;">No admin actions found</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = logs
+    .map((log) => {
+      // Get admin name
+      const adminName = log.admin
+        ? `${log.admin.first_name || ""} ${log.admin.last_name || ""}`.trim() ||
+          log.admin.email ||
+          "System"
+        : "System";
+
+      // Get target user name
+      const targetName = log.target_user
+        ? `${log.target_user.first_name || ""} ${log.target_user.last_name || ""}`.trim() ||
+          log.target_user.email ||
+          "N/A"
+        : "N/A";
+
+      // Format action type for display
+      const actionDisplay = log.action_type.replace(/_/g, " ").toUpperCase();
+
+      // Get action type class for styling
+      let actionClass = "action-log";
+      if (log.action_type.includes("freeze"))
+        actionClass = "action-log warning";
+      else if (
+        log.action_type.includes("delete") ||
+        log.action_type.includes("reject")
+      )
+        actionClass = "action-log danger";
+      else if (
+        log.action_type.includes("approve") ||
+        log.action_type.includes("verify")
+      )
+        actionClass = "action-log success";
+      else if (log.action_type.includes("create"))
+        actionClass = "action-log success";
+      else if (
+        log.action_type.includes("update") ||
+        log.action_type.includes("edit")
+      )
+        actionClass = "action-log info";
+
+      // Format details nicely
+      let detailsHtml = "-";
+      if (log.details) {
+        try {
+          const details =
+            typeof log.details === "string"
+              ? JSON.parse(log.details)
+              : log.details;
+          if (details && Object.keys(details).length > 0) {
+            const detailKeys = Object.keys(details).slice(0, 3);
+            detailsHtml = detailKeys
+              .map((key) => {
+                let value = details[key];
+                if (typeof value === "object") value = JSON.stringify(value);
+                if (typeof value === "string" && value.length > 30)
+                  value = value.substring(0, 30) + "...";
+                return `<span class="detail-item"><strong>${key}:</strong> ${escapeHtml(value)}</span>`;
+              })
+              .join(" ");
+            if (Object.keys(details).length > 3) {
+              detailsHtml += ' <span class="detail-item">...</span>';
+            }
+          }
+        } catch (e) {
+          detailsHtml = escapeHtml(String(log.details).substring(0, 50));
+        }
+      }
+
+      return `
+      <tr class="log-row" onclick="viewLogDetails('${log.id}')" style="cursor: pointer;">
+        <td>${new Date(log.created_at).toLocaleString()}</td>
+        <td class="${actionClass}">${escapeHtml(adminName)}</td>
+        <td><span class="action-type-badge ${log.action_type}">${actionDisplay}</span></td>
+        <td>${escapeHtml(targetName)}</td>
+        <td>${detailsHtml}</td>
+        <td>${log.ip_address || "-"}</td>
+      </tr>
+    `;
+    })
+    .join("");
+}
+
+// Update pagination for logs
+function updateLogsPagination(pagination) {
+  const container = document.getElementById("logsPagination");
+  if (!container) return;
+
+  if (!pagination || pagination.pages <= 1) {
+    container.innerHTML = "";
+    return;
+  }
+
+  let html = `
+    <button class="page-btn" ${pagination.page === 1 ? "disabled" : ""} 
+            onclick="loadAdminLogsPage(${pagination.page - 1})">
+      ← Prev
+    </button>
+  `;
+
+  const startPage = Math.max(1, pagination.page - 2);
+  const endPage = Math.min(pagination.pages, pagination.page + 2);
+
+  for (let i = startPage; i <= endPage; i++) {
+    html += `<button class="page-btn ${i === pagination.page ? "active" : ""}" 
+                   onclick="loadAdminLogsPage(${i})">${i}</button>`;
+  }
+
+  html += `
+    <button class="page-btn" ${pagination.page === pagination.pages ? "disabled" : ""} 
+            onclick="loadAdminLogsPage(${pagination.page + 1})">
+      Next →
+    </button>
+  `;
+
+  container.innerHTML = html;
+}
+
+// Load logs page helper
+function loadAdminLogsPage(page) {
+  loadAdminLogs(
+    page,
+    logsSearchTerm,
+    logsActionFilter,
+    logsStartDate,
+    logsEndDate,
+  );
+}
+
+// View log details modal
+async function viewLogDetails(logId) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/logs/${logId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!response.ok) throw new Error("Failed to load log details");
+
+    const log = await response.json();
+
+    const modal = document.createElement("div");
+    modal.className = "modal show";
+    modal.innerHTML = `
+      <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+          <h3>Admin Action Details</h3>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div style="display: grid; gap: 15px;">
+            <div class="detail-item">
+              <div class="detail-label">Timestamp</div>
+              <div class="detail-value">${new Date(log.created_at).toLocaleString()}</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">Admin</div>
+              <div class="detail-value">${log.admin ? `${log.admin.first_name || ""} ${log.admin.last_name || ""}`.trim() || log.admin.email : "System"}</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">Action Type</div>
+              <div class="detail-value"><span class="action-type-badge ${log.action_type}">${log.action_type.replace(/_/g, " ").toUpperCase()}</span></div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">Target User</div>
+              <div class="detail-value">${log.target_user ? `${log.target_user.first_name || ""} ${log.target_user.last_name || ""}`.trim() || log.target_user.email : "N/A"}</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">IP Address</div>
+              <div class="detail-value">${log.ip_address || "-"}</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">Details</div>
+              <div class="detail-value"><pre style="background: #f8fafc; padding: 12px; border-radius: 8px; overflow-x: auto; font-size: 12px;">${JSON.stringify(log.details, null, 2)}</pre></div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" onclick="this.closest('.modal').remove()">Close</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+    modal
+      .querySelector(".close-modal")
+      .addEventListener("click", () => modal.remove());
+  } catch (error) {
+    console.error("Error loading log details:", error);
+    showNotification("Failed to load log details", "error");
+  }
+}
+
+// Add event listener when DOM loads
+document.addEventListener("DOMContentLoaded", () => {
+  const testBtn = document.getElementById("testApiBtn");
+  if (testBtn) {
+    testBtn.addEventListener("click", testApiConnection);
+    console.log("✅ API test button initialized");
+  }
+});
+
+// ==================== CLOSED ACCOUNTS MANAGEMENT ====================
+
+async function loadClosedAccounts() {
+  const tbody = document.getElementById("closedAccountsTableBody");
+  if (!tbody) return;
+
+  tbody.innerHTML =
+    '<tr><td colspan="6" style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/closed-accounts`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!response.ok) throw new Error("Failed to load closed accounts");
+
+    const data = await response.json();
+    const accounts = data.closed_accounts || [];
+
+    if (accounts.length === 0) {
+      tbody.innerHTML =
+        '<tr><td colspan="6" style="text-align: center;">No closed accounts found</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = accounts
+      .map(
+        (account) => `
+      <tr>
+        <td><strong>${escapeHtml(account.user_name || "N/A")}</strong></td>
+        <td>${escapeHtml(account.user_email || "N/A")}</td>
+        <td style="max-width: 300px;">${escapeHtml(account.reason || "N/A")}</td>
+        <td>₦${(account.balance_at_close || 0).toLocaleString()}</td>
+        <td>${new Date(account.closed_at).toLocaleString()}</td>
+        <td>
+          <button class="action-btn delete" onclick="deleteClosedAccount('${account.id}')" title="Delete Record">
+            <i class="fas fa-trash"></i>
+          </button>
+        </td>
+      </tr>
+    `,
+      )
+      .join("");
+  } catch (error) {
+    console.error("Load closed accounts error:", error);
+    tbody.innerHTML =
+      '<tr><td colspan="6" style="text-align: center; color: #ef4444;">Failed to load closed accounts</td></tr>';
+  }
+}
+
+async function deleteClosedAccount(accountId) {
+  if (!confirm("Are you sure you want to delete this closed account record?"))
+    return;
+
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/admin/closed-accounts/${accountId}`,
+      {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
+
+    if (response.ok) {
+      showNotification("Record deleted successfully", "success");
+      await loadClosedAccounts();
+    } else {
+      showNotification("Failed to delete record", "error");
+    }
+  } catch (error) {
+    console.error("Delete error:", error);
+    showNotification("Error deleting record", "error");
+  }
+}
+
+async function deleteAllClosedAccounts() {
+  if (
+    !confirm(
+      "⚠️ WARNING: This will delete ALL closed account records permanently. This action cannot be undone. Are you sure?",
+    )
+  )
+    return;
+
+  if (!confirm("Type 'DELETE ALL' to confirm:")) return;
+
+  const confirmation = prompt('Type "DELETE ALL" to confirm:');
+  if (confirmation !== "DELETE ALL") {
+    showNotification(
+      "Confirmation failed. No records were deleted.",
+      "warning",
+    );
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/closed-accounts/all`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (response.ok) {
+      showNotification("All closed account records deleted", "success");
+      await loadClosedAccounts();
+    } else {
+      showNotification("Failed to delete records", "error");
+    }
+  } catch (error) {
+    console.error("Delete all error:", error);
+    showNotification("Error deleting records", "error");
+  }
+}
+
+// Make functions globally available
+window.loadClosedAccounts = loadClosedAccounts;
+window.deleteClosedAccount = deleteClosedAccount;
+window.deleteAllClosedAccounts = deleteAllClosedAccounts;

@@ -713,6 +713,11 @@
     transition: all 0.3s;
 }
 
+.bent{
+
+    transform: translateY(-2px);
+}
+
 .btn-warning:hover {
     background: #e07d0e;
     transform: translateY(-2px);
@@ -2491,4 +2496,1341 @@ html, body {
     .card-number-text {
         font-size: 12px;
     }
+}
+
+/* Currency symbol styling */
+.amount-value {
+    font-weight: 600;
+}
+
+.debit {
+    color: #ef4444;
+}
+
+.credit {
+    color: #10b981;
+}
+
+/* Make sure NGN symbol displays properly */
+.amount::before {
+    content: "₦";
+    margin-right: 2px;
+}
+
+/* Harvest Plans Management Styles */
+.harvest-tabs {
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.harvest-tab-btn {
+    background: none;
+    border: none;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.3s;
+    border-radius: 8px 8px 0 0;
+}
+
+.harvest-tab-btn:hover {
+    color: var(--primary-color);
+    background: #f1f5f9;
+}
+
+.harvest-tab-btn.active {
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.stat-card-mini {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    color: white;
+}
+
+.stat-card-mini .stat-number {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.stat-card-mini .stat-label {
+    font-size: 12px;
+    opacity: 0.9;
+}
+
+.progress-cell {
+    min-width: 100px;
+}
+
+.progress-bar-small {
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 5px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981, #34d399);
+    border-radius: 3px;
+    transition: width 0.3s;
+}
+
+.status-badge.completed {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-badge.cancelled {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.status-badge.active {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.auto-save-on {
+    color: #10b981;
+}
+
+.auto-save-off {
+    color: #ef4444;
+}
+
+.action-buttons-harvest {
+    display: flex;
+    gap: 5px;
+}
+
+.action-buttons-harvest button {
+    padding: 5px 8px;
+    font-size: 12px;
+}
+
+.info-box {
+    background: #f0fdf4;
+    border-left: 3px solid #10b981;
+}
+
+
+/* ==================== COMPLETE ADMIN RESPONSIVE FIXES ==================== */
+/* Fix for all screen sizes - prevents content from being cut off */
+
+/* Global admin container fixes 
+.admin-dashboard {
+    display: flex;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    position: relative;
+}
+
+.admin-main {
+    flex: 1;
+    min-height: 100vh;
+    width: calc(100% - 280px);
+    margin-left: 280px;
+    transition: margin-left 0.3s ease, width 0.3s ease;
+    overflow-x: auto;
+    overflow-y: visible;
+    position: relative;
+}*/
+
+.admin-pages {
+    padding: 20px;
+    width: 100%;
+    overflow-x: visible;
+}
+
+.admin-page {
+    width: 100%;
+    overflow-x: visible;
+}
+
+/* Fix for all tables - make them horizontally scrollable on small screens */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 20px;
+}
+
+.data-table {
+    width: 100%;
+    min-width: 800px;
+    border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+    white-space: nowrap;
+}
+
+/* Allow text wrapping in certain columns */
+.data-table td:first-child,
+.data-table td:nth-child(2) {
+    white-space: normal;
+    min-width: 150px;
+}
+
+/* Stats grid responsive */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+/* Charts row responsive */
+.charts-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+/* Filters bar responsive */
+.filters-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+    align-items: center;
+}
+
+.filters-bar .search-box {
+    flex: 1;
+    min-width: 200px;
+}
+
+.filters-bar .filter-select,
+.filters-bar .filter-input {
+    min-width: 150px;
+}
+
+/* Settings grid responsive 
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 20px;
+    width: 100%;
+}*/
+
+.settings-card {
+    background: white;
+    padding: 24px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    overflow-x: auto;
+}
+
+/* Harvest Plans specific fixes */
+.harvest-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.harvest-tab-btn {
+    background: none;
+    border: none;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.3s;
+    border-radius: 8px 8px 0 0;
+    white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+    .harvest-tab-btn {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+}
+
+/* Stats row for harvest page */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.stat-card-mini {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    color: white;
+}
+
+.stat-card-mini .stat-number {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 5px;
+    word-break: break-word;
+}
+
+.stat-card-mini .stat-label {
+    font-size: 12px;
+    opacity: 0.9;
+}
+
+@media (max-width: 640px) {
+    .stat-card-mini .stat-number {
+        font-size: 20px;
+    }
+    .stat-card-mini {
+        padding: 12px;
+    }
+}
+
+/* Action buttons container */
+.action-buttons-harvest {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.action-buttons-harvest button {
+    padding: 6px 10px;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+/* Progress cell fix */
+.progress-cell {
+    min-width: 100px;
+}
+
+.progress-text {
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+
+.progress-bar-small {
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981, #34d399);
+    border-radius: 3px;
+    transition: width 0.3s;
+}
+
+/* User cell styling */
+.user-cell {
+    min-width: 150px;
+}
+
+.user-cell strong {
+    display: block;
+    margin-bottom: 2px;
+}
+
+.user-cell small {
+    font-size: 11px;
+    color: #64748b;
+    word-break: break-all;
+}
+
+/* Notify card responsive */
+.notify-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    margin: 0 auto;
+    width: 100%;
+    max-width: 600px;
+}
+
+@media (max-width: 640px) {
+    .notify-card {
+        padding: 16px;
+    }
+}
+
+/* Modal responsive fixes */
+.modal-content {
+    max-width: 90%;
+    width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    margin: 20px auto;
+}
+
+.modal-lg {
+    max-width: 800px;
+    width: 90%;
+}
+
+@media (max-width: 640px) {
+    .modal-content {
+        width: 95%;
+        margin: 10px auto;
+    }
+    
+    .modal-header h3 {
+        font-size: 18px;
+    }
+    
+    .modal-body {
+        padding: 16px;
+    }
+}
+
+/* Form row responsive */
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+@media (max-width: 640px) {
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+}
+
+/* Settings actions buttons */
+.settings-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+    flex-wrap: wrap;
+}
+
+.settings-actions .btn {
+    flex: 1;
+    min-width: 150px;
+}
+
+/* Exchange rates container */
+.exchange-rates {
+    margin-bottom: 20px;
+}
+
+.exchange-rate-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #e2e8f0;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.exchange-rate-item span:first-child {
+    font-weight: 500;
+}
+
+/* Setting items */
+.setting-item {
+    margin-bottom: 20px;
+}
+
+.setting-item label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.setting-item .switch {
+    display: inline-block;
+}
+
+/* Button block responsive */
+.btn-block {
+    width: 100%;
+}
+
+/* ==================== MOBILE SPECIFIC FIXES ==================== */
+
+/* Tablet and below (768px - 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .admin-main {
+        width: 100%;
+        margin-left: 0;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .charts-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .settings-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .data-table {
+        min-width: 700px;
+    }
+}
+
+/* Mobile (below 768px) */
+@media (max-width: 767px) {
+    .admin-main {
+        width: 100%;
+        margin-left: 0;
+    }
+    
+    .admin-pages {
+        padding: 12px;
+    }
+    
+    /* Stats grid - 1 column on mobile */
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .stats-grid .stat-card {
+        padding: 16px;
+    }
+    
+    /* Charts - 1 column */
+    .charts-row {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .chart-card {
+        padding: 16px;
+    }
+    
+    /* Settings - 1 column */
+    .settings-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .settings-card {
+        padding: 16px;
+    }
+    
+    /* Filters bar - vertical on mobile */
+    .filters-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filters-bar .search-box {
+        width: 100%;
+    }
+    
+    .filters-bar .filter-select,
+    .filters-bar .filter-input {
+        width: 100%;
+    }
+    
+    /* Tables - ensure scrolling works */
+    .table-responsive {
+        margin: 0 -12px;
+        padding: 0 12px;
+        width: calc(100% + 24px);
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 8px;
+        font-size: 12px;
+    }
+    
+    /* Top bar fixes *
+    .admin-topbar {
+        padding: 12px 16px;
+        flex-direction: column;
+        align-items: stretch;
+        height: auto;
+        gap: 10px;
+    }
+    
+    .topbar-left {
+        justify-content: space-between;
+    }
+    
+    .topbar-right {
+        justify-content: space-between;
+        flex-wrap: wrap;
+    }
+    
+    .admin-search {
+        flex: 1;
+    }
+    
+    .admin-search input {
+        width: 100%;
+    }*/
+    
+    /* OTP mode bar 
+    .otp-mode-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        padding: 12px;
+    }*/
+    
+    /* Account controls */
+    .account-controls {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .user-selector {
+        width: 100%;
+    }
+    
+    .account-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    .account-actions .btn {
+        flex: 1;
+        min-width: calc(50% - 4px);
+        text-align: center;
+        justify-content: center;
+    }
+    
+    /* Transfer form */
+    .transfer-form-container {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    /* Support container */
+    .support-container {
+        grid-template-columns: 1fr;
+        height: auto;
+        gap: 16px;
+    }
+    
+    .support-sidebar {
+        height: 300px;
+        overflow-y: auto;
+    }
+    
+    /* Tickets container */
+    .tickets-container {
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    .tickets-sidebar {
+        width: 100%;
+    }
+    
+    .ticket-chat {
+        width: 100%;
+        height: 400px;
+    }
+}
+
+/* Very small screens (below 480px) */
+@media (max-width: 480px) {
+    .admin-pages {
+        padding: 8px;
+    }
+    
+   /* .page-header {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+    }
+    
+    .page-header h2 {
+        font-size: 20px;
+    }*/
+    
+    .stat-card-mini .stat-number {
+        font-size: 18px;
+    }
+    
+    .stat-card-mini .stat-label {
+        font-size: 11px;
+    }
+    
+    .action-buttons-harvest {
+        flex-direction: column;
+    }
+    
+    .action-buttons-harvest button {
+        width: 100%;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 6px;
+        font-size: 11px;
+    }
+    
+    .user-cell strong {
+        font-size: 12px;
+    }
+    
+    .user-cell small {
+        font-size: 10px;
+    }
+    
+    .modal-content {
+        width: 98%;
+        margin: 10px auto;
+    }
+    
+    .modal-header {
+        padding: 12px;
+    }
+    
+    .modal-body {
+        padding: 12px;
+    }
+    
+    .modal-footer {
+        padding: 12px;
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .modal-footer .btn {
+        width: 100%;
+    }
+    
+    .btn {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+}
+
+/* Extra small screens (below 360px) */
+@media (max-width: 360px) {
+    .admin-pages {
+        padding: 6px;
+    }
+    
+    .stats-grid .stat-card {
+        padding: 12px;
+    }
+    
+    .stat-card .stat-value {
+        font-size: 20px;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 4px;
+        font-size: 10px;
+    }
+    
+    .action-btn {
+        padding: 4px 6px;
+    }
+    
+    .action-btn i {
+        font-size: 12px;
+    }
+}
+
+/* Fix for hidden content on right side - ensure no overflow */
+body {
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
+}
+
+/* Ensure all containers respect viewport width */
+.admin-page,
+.ledger-container,
+.settings-grid,
+.tickets-container,
+.charts-row,
+.harvest-tab-content {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: visible;
+}
+
+/* Fix for absolute positioned elements */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    overflow-y: auto;
+}
+
+.modal.show {
+    display: flex;
+}
+
+/* Sidebar toggle button fix */
+.sidebar-toggle {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Mobile menu button visibility */
+.mobile-menu-btn {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: var(--admin-dark);
+}
+
+@media (max-width: 1024px) {
+    .mobile-menu-btn {
+        display: block;
+    }
+}
+
+/* ==================== MODERN SETTINGS PAGE STYLES ==================== */
+
+.settings-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    gap: 24px;
+    margin-bottom: 30px;
+}
+
+/* Modern Settings Card */
+.settings-card-modern {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.settings-card-modern:hover {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.settings-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.settings-card-header i {
+    font-size: 28px;
+}
+
+.settings-card-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.settings-card-body {
+    padding: 24px;
+}
+
+/* Modern Form Controls */
+.form-control-modern {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 14px;
+    transition: all 0.3s;
+    background: white;
+}
+
+.form-control-modern:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(107, 33, 168, 0.1);
+}
+
+.form-control-modern-small {
+    width: 120px;
+    padding: 8px 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 14px;
+    text-align: center;
+}
+
+/* Input Group */
+.input-group-modern {
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+
+.input-group-modern .input-prefix,
+.input-group-modern .input-suffix {
+    background: #f1f5f9;
+    padding: 12px 14px;
+    border: 2px solid #e2e8f0;
+    font-weight: 600;
+    color: #475569;
+}
+
+.input-group-modern .input-prefix {
+    border-radius: 12px 0 0 12px;
+    border-right: none;
+}
+
+.input-group-modern .input-suffix {
+    border-radius: 0 12px 12px 0;
+    border-left: none;
+}
+
+.input-group-modern .form-control-modern {
+    border-radius: 0;
+    text-align: center;
+}
+
+.input-group-modern .form-control-modern:focus {
+    z-index: 1;
+}
+
+/* Setting Item */
+.setting-item-modern {
+    margin-bottom: 24px;
+}
+
+.setting-item-modern:last-child {
+    margin-bottom: 0;
+}
+
+.setting-item-modern label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 14px;
+}
+
+.setting-item-modern small {
+    display: block;
+    margin-top: 6px;
+    font-size: 12px;
+    color: #64748b;
+}
+
+/* Toggle Switch */
+.toggle-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.toggle-info {
+    flex: 1;
+}
+
+.toggle-info label {
+    margin-bottom: 4px;
+}
+
+.toggle-info small {
+    margin-top: 0;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 52px;
+    height: 28px;
+    flex-shrink: 0;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #cbd5e1;
+    transition: 0.3s;
+    border-radius: 34px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 22px;
+    width: 22px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+    background-color: var(--primary-color);
+}
+
+input:checked + .toggle-slider:before {
+    transform: translateX(24px);
+}
+
+/* Exchange Rates Modern */
+.exchange-rates-modern {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.exchange-rate-item-modern {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 12px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.rate-pair {
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 14px;
+}
+
+.rate-input {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.rate-input span {
+    font-weight: 600;
+    color: #475569;
+}
+
+/* Modern Buttons */
+.btn-modern {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: none;
+}
+
+.btn-primary-modern {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-primary-modern:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(107, 33, 168, 0.3);
+}
+
+.btn-outline-modern {
+    background: transparent;
+    border: 2px solid #e2e8f0;
+    color: #475569;
+}
+
+.btn-outline-modern:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background: rgba(107, 33, 168, 0.05);
+}
+
+.btn-block-modern {
+    width: 100%;
+}
+
+/* Settings Actions */
+.settings-actions-modern {
+    display: flex;
+    gap: 16px;
+    justify-content: flex-end;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.settings-actions-modern .btn-modern {
+    min-width: 160px;
+}
+
+/* Text muted */
+.text-muted {
+    color: #64748b;
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+/* Responsive Settings */
+@media (max-width: 1024px) {
+    .settings-container {
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .settings-container {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .settings-card-header {
+        padding: 16px 20px;
+    }
+    
+    .settings-card-body {
+        padding: 20px;
+    }
+    
+    .toggle-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .exchange-rate-item-modern {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .settings-actions-modern {
+        flex-direction: column;
+    }
+    
+    .settings-actions-modern .btn-modern {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .settings-card-body {
+        padding: 16px;
+    }
+    
+    .form-control-modern {
+        padding: 10px 14px;
+        font-size: 13px;
+    }
+    
+    .setting-item-modern label {
+        font-size: 13px;
+    }
+    
+    .rate-input {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .rate-input input {
+        flex: 1;
+    }
+}
+/* Admin Logs Styles */
+.action-log {
+  font-weight: 500;
+}
+
+.action-log.warning {
+  color: #f59e0b;
+}
+
+.action-log.danger {
+  color: #ef4444;
+}
+
+.action-log.success {
+  color: #10b981;
+}
+
+.action-log.info {
+  color: #3b82f6;
+}
+
+.action-type-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.action-type-badge.freeze_user,
+.action-type-badge.unfreeze_user {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.action-type-badge.create_user,
+.action-type-badge.verify_kyc,
+.action-type-badge.approve_transaction {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.action-type-badge.delete_user,
+.action-type-badge.reject_transaction {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.action-type-badge.update_user,
+.action-type-badge.update_balance {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.action-type-badge.impersonate {
+  background: #f3e8ff;
+  color: #7e22ce;
+}
+
+.detail-item {
+  font-size: 12px;
+  background: #f8fafc;
+  padding: 3px 6px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-right: 5px;
+  margin-bottom: 3px;
+}
+
+.log-row {
+  transition: background 0.2s;
+}
+
+.log-row:hover {
+  background: #f8fafc;
+}
+
+/* Ticket chat improvements */
+.ticket-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.message {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.message.user {
+  flex-direction: row;
+}
+
+.message.admin {
+  flex-direction: row-reverse;
+}
+
+.message .message-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.message.user .message-avatar {
+  background: #3b82f6;
+  color: white;
+}
+
+.message.admin .message-avatar {
+  background: #8b5cf6;
+  color: white;
+}
+
+.message .message-content {
+  background: #f1f5f9;
+  padding: 12px 16px;
+  border-radius: 12px;
+  position: relative;
+}
+
+.message.user .message-content {
+  background: #3b82f6;
+  color: white;
+}
+
+.message.admin .message-content {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.message .message-time {
+  font-size: 10px;
+  color: #94a3b8;
+  margin-top: 5px;
+  text-align: right;
+}
+
+.ticket-closed-banner {
+  text-align: center;
+  padding: 12px;
+  background: #f1f5f9;
+  color: #64748b;
+  border-top: 1px solid #e2e8f0;
 }

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Admin Dashboard - Paystora</title>
+    <title>Admin Dashboard - FEECENT</title>
     <link rel="stylesheet" href="./CSS/admin.css" />
     <link rel="stylesheet" href="./CSS/main.css" />
     <link rel="stylesheet" href="./CSS/dashboard.css" />
@@ -18,13 +18,53 @@
     />
   </head>
   <body>
+    <!-- ==================== PROFESSIONAL LOADING OVERLAY ==================== -->
+    <div
+      id="globalLoadingOverlay"
+      class="global-loading-overlay"
+      style="display: none"
+    >
+      <div class="loading-container">
+        <div class="loading-card">
+          <div class="loading-animation">
+            <div class="bank-loader">
+              <div class="loader-shield">
+                <i class="fas fa-shield-alt"></i>
+              </div>
+              <div class="loader-circle"></div>
+              <div class="loader-circle-delayed"></div>
+            </div>
+          </div>
+          <div class="loading-text">
+            <span class="loading-title">Processing</span>
+            <div class="loading-dots">
+              <span>.</span><span>.</span><span>.</span>
+            </div>
+          </div>
+          <div class="loading-subtitle" id="loadingMessage">
+            Please wait while we complete your request
+          </div>
+          <div class="loading-progress-bar">
+            <div class="loading-progress-fill"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lock Screen Overlay (for preventing clicks during operations) -->
+    <div
+      id="lockScreenOverlay"
+      class="lock-screen-overlay"
+      style="display: none"
+    ></div>
+
     <div class="admin-dashboard">
       <!-- Admin Sidebar -->
       <aside class="admin-sidebar" id="adminSidebar">
         <div class="sidebar-header">
           <div class="logo">
             <i class="fas fa-shield-alt"></i>
-            <span>Paystora Admin </span>
+            <span>FEECENT Admin </span>
           </div>
           <button class="sidebar-toggle" id="sidebarToggle">
             <i class="fas fa-chevron-left"></i>
@@ -48,6 +88,13 @@
             <i class="fas fa-users"></i>
             <span>User Management</span>
           </a>
+
+          <li>
+            <a href="admin-ledger.html" id="bankLedger" class="nav-item">
+              <i class="fas fa-book"></i>
+              <span>Bank Ledger</span>
+            </a>
+          </li>
           <a href="#" class="nav-item" data-page="transactions">
             <i class="fas fa-exchange-alt"></i>
             <span>Transactions</span>
@@ -55,6 +102,10 @@
           <a href="#" class="nav-item" data-page="accounts">
             <i class="fas fa-wallet"></i>
             <span>Account Oversight</span>
+          </a>
+          <a href="#" class="nav-item" data-page="closed-accounts">
+            <i class="fas fa-trash-alt"></i>
+            <span>Closed Accounts</span>
           </a>
           <a href="#" class="nav-item" data-page="otp">
             <i class="fas fa-key"></i>
@@ -96,6 +147,10 @@
           <a href="#" class="nav-item" data-page="support">
             <i class="fas fa-headset"></i>
             <span>Support Tickets</span>
+          </a>
+          <a href="#" class="nav-item" data-page="harvest-plans">
+            <i class="fas fa-seedling"></i>
+            <span>Harvest Plans</span>
           </a>
           <a href="#" class="nav-item" data-page="settings">
             <i class="fas fa-cog"></i>
@@ -162,6 +217,15 @@
           <span class="otp-mode-status" id="otpModeStatus">Disabled</span>
         </div>
 
+        <!-- Add this button in the admin-topbar or near the page title -->
+        <button
+          id="testApiBtn"
+          class="btn btn-outline"
+          style="margin-left: 15px"
+        >
+          <i class="fas fa-vial"></i> Test API Connection
+        </button>
+
         <!-- Dynamic Admin Pages -->
         <div class="admin-pages">
           <!-- Dashboard Page -->
@@ -218,7 +282,7 @@
                 </div>
                 <div class="stat-details">
                   <span class="stat-label">Today's Volume</span>
-                  <span class="stat-value" id="todayVolume">$0</span>
+                  <span class="stat-value" id="todayVolume">₦0</span>
                 </div>
               </div>
             </div>
@@ -382,9 +446,6 @@
                 >
                   <i class="fas fa-lock-open"></i> Unfreeze
                 </button>
-                <!--<button class="btn btn-success" id="unfreezeAccountBtn">
-                  <i class="fas fa-check"></i> Unfreeze Account
-                </button>-->
                 <button class="btn btn-primary" id="updateBalanceBtn">
                   <i class="fas fa-dollar-sign"></i> Update Balance
                 </button>
@@ -411,6 +472,48 @@
                 </thead>
                 <tbody id="accountsTableBody">
                   <!-- Filled by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Closed Accounts Page -->
+          <div class="admin-page" id="page-closed-accounts">
+            <div class="page-header">
+              <h2><i class="fas fa-trash-alt"></i> Closed Accounts</h2>
+              <p class="text-muted">
+                Users who have permanently closed their accounts
+              </p>
+            </div>
+
+            <div class="bulk-actions">
+              <button
+                class="btn btn-danger"
+                onclick="deleteAllClosedAccounts()"
+              >
+                <i class="fas fa-trash-alt"></i> Delete All Records
+              </button>
+              <button class="btn btn-outline" onclick="loadClosedAccounts()">
+                <i class="fas fa-sync-alt"></i> Refresh
+              </button>
+            </div>
+
+            <div class="table-responsive">
+              <table class="data-table closed-accounts-table">
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>Email</th>
+                    <th>Reason</th>
+                    <th>Balance at Close</th>
+                    <th>Closed Date</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="closedAccountsTableBody">
+                  <tr>
+                    <td colspan="6" style="text-align: center">Loading...</td>
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -724,7 +827,540 @@
             </div>
           </div>
 
-          <!-- System Settings Page -->
+          <!-- Harvest Plan Management Page -->
+          <div class="admin-page" id="page-harvest-plans">
+            <div
+              class="page-header"
+              style="
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 30px;
+              "
+            >
+              <div>
+                <h2>Harvest Plans Management</h2>
+                <p class="text-muted">
+                  Manage harvest plans and monitor user enrollments
+                </p>
+              </div>
+              <div style="display: flex; gap: 10px; margin-top: 15px">
+                <button class="btn btn-outline" id="refreshHarvestPlansBtn">
+                  <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+                <button
+                  class="btn btn-primary"
+                  onclick="showHarvestPlanModal()"
+                >
+                  <i class="fas fa-plus"></i> Create Harvest Plan
+                </button>
+                <button
+                  class="btn bent btn-warning"
+                  id="viewWithdrawalRequestsBtn"
+                >
+                  <i class="fas fa-clock"></i> Withdrawal Requests
+                  <span
+                    id="withdrawalRequestBadge"
+                    class="badge"
+                    style="background: #ef4444; margin-left: 5px; display: none"
+                    >0</span
+                  >
+                </button>
+              </div>
+            </div>
+
+            <!-- Tabs for Plans vs Enrollments -->
+            <div
+              class="harvest-tabs"
+              style="
+                display: flex;
+                gap: 10px;
+                margin-bottom: 20px;
+                border-bottom: 2px solid #e2e8f0;
+              "
+            >
+              <button class="harvest-tab-btn active" data-tab="plans">
+                <i class="fas fa-seedling"></i> Harvest Plans
+              </button>
+              <button class="harvest-tab-btn" data-tab="enrollments">
+                <i class="fas fa-users"></i> User Enrollments
+              </button>
+              <button class="harvest-tab-btn" data-tab="notify">
+                <i class="fas fa-bell"></i> Send Notifications
+              </button>
+            </div>
+
+            <!-- Tab 1: Harvest Plans List -->
+            <div id="harvestPlansTab" class="harvest-tab-content active">
+              <div class="filters-bar" style="margin-bottom: 15px">
+                <div class="search-box">
+                  <i class="fas fa-search"></i>
+                  <input
+                    type="text"
+                    id="harvestPlanSearch"
+                    placeholder="Search plans by name..."
+                  />
+                </div>
+                <select id="harvestPlanStatusFilter" class="filter-select">
+                  <option value="all">All Plans</option>
+                  <option value="active">Active Only</option>
+                  <option value="inactive">Inactive Only</option>
+                </select>
+              </div>
+
+              <div class="table-responsive">
+                <table class="data-table" id="harvestPlansTable">
+                  <thead>
+                    <tr>
+                      <th>Plan Name</th>
+                      <th>Daily Amount</th>
+                      <th>Duration</th>
+                      <th>Total Amount</th>
+                      <th>Enrolled Users</th>
+                      <th>Reward Items</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="harvestPlansTableBody">
+                    <tr>
+                      <td colspan="8" style="text-align: center">
+                        Loading harvest plans...
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="pagination" id="harvestPagination"></div>
+            </div>
+
+            <!-- Tab 2: User Enrollments -->
+            <div
+              id="harvestEnrollmentsTab"
+              class="harvest-tab-content"
+              style="display: none"
+            >
+              <div
+                class="stats-row"
+                style="
+                  display: grid;
+                  grid-template-columns: repeat(4, 1fr);
+                  gap: 15px;
+                  margin-bottom: 20px;
+                "
+              >
+                <div
+                  class="stat-card-mini"
+                  style="background: linear-gradient(135deg, #667eea, #764ba2)"
+                >
+                  <div class="stat-number" id="totalEnrolledUsers">0</div>
+                  <div class="stat-label">Total Enrolled</div>
+                </div>
+                <div
+                  class="stat-card-mini"
+                  style="background: linear-gradient(135deg, #11998e, #38ef7d)"
+                >
+                  <div class="stat-number" id="totalSavedHarvest">₦0</div>
+                  <div class="stat-label">Total Saved</div>
+                </div>
+                <div
+                  class="stat-card-mini"
+                  style="background: linear-gradient(135deg, #f093fb, #f5576c)"
+                >
+                  <div class="stat-number" id="avgCompletionRate">0%</div>
+                  <div class="stat-label">Avg Completion</div>
+                </div>
+                <div
+                  class="stat-card-mini"
+                  style="background: linear-gradient(135deg, #4facfe, #00f2fe)"
+                >
+                  <div class="stat-number" id="autoSaveOnCount">0</div>
+                  <div class="stat-label">Auto-Save ON</div>
+                </div>
+              </div>
+
+              <div class="filters-bar" style="margin-bottom: 15px">
+                <div class="search-box">
+                  <i class="fas fa-search"></i>
+                  <input
+                    type="text"
+                    id="enrollmentSearch"
+                    placeholder="Search by user name or email..."
+                  />
+                </div>
+                <select id="enrollmentStatusFilter" class="filter-select">
+                  <option value="all">All Status</option>
+                  <option value="active">Active</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+                <select id="autoSaveFilter" class="filter-select">
+                  <option value="all">Auto-Save: All</option>
+                  <option value="true">Auto-Save ON</option>
+                  <option value="false">Auto-Save OFF</option>
+                </select>
+                <select id="planFilter" class="filter-select">
+                  <option value="all">All Plans</option>
+                </select>
+              </div>
+
+              <div class="table-responsive">
+                <table class="data-table" id="harvestEnrollmentsTable">
+                  <thead>
+                    <tr>
+                      <th>User</th>
+                      <th>Plan Name</th>
+                      <th>Daily Amount</th>
+                      <th>Total Saved</th>
+                      <th>Progress</th>
+                      <th>Days</th>
+                      <th>Auto-Save</th>
+                      <th>Status</th>
+                      <th>Last Deduction</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="harvestEnrollmentsTableBody">
+                    <tr>
+                      <td colspan="10" style="text-align: center">
+                        Loading enrollments...
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="pagination" id="enrollmentsPagination"></div>
+            </div>
+
+            <!-- Tab 3: Send Notifications -->
+            <div
+              id="harvestNotifyTab"
+              class="harvest-tab-content"
+              style="display: none"
+            >
+              <div
+                class="notify-card"
+                style="
+                  background: white;
+                  border-radius: 16px;
+                  padding: 24px;
+                  max-width: 600px;
+                  margin: 0 auto;
+                "
+              >
+                <h3 style="margin-bottom: 20px">
+                  <i class="fas fa-bell"></i> Send Notification to Harvest Plan
+                  Users
+                </h3>
+
+                <div class="form-group">
+                  <label>Select Users</label>
+                  <select id="notifyUserFilter" class="form-control">
+                    <option value="all">All Enrolled Users</option>
+                    <option value="behind">
+                      Users Behind Schedule (Low Completion)
+                    </option>
+                    <option value="auto_off">Users with Auto-Save OFF</option>
+                    <option value="specific">Select Specific Users</option>
+                  </select>
+                </div>
+
+                <div id="specificUsersGroup" style="display: none">
+                  <div class="form-group">
+                    <label>Select Specific Users</label>
+                    <select
+                      id="specificUsersSelect"
+                      class="form-control"
+                      multiple
+                      size="5"
+                    >
+                      <!-- Populated by JS -->
+                    </select>
+                    <small>Hold Ctrl/Cmd to select multiple users</small>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label>Notification Type</label>
+                  <select id="notificationType" class="form-control">
+                    <option value="info">Information</option>
+                    <option value="warning">Warning/Low Balance</option>
+                    <option value="success">Progress Update</option>
+                    <option value="reminder">Payment Reminder</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label>Subject</label>
+                  <input
+                    type="text"
+                    id="notificationSubject"
+                    class="form-control"
+                    placeholder="e.g., Your Harvest Plan Update"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label>Message</label>
+                  <textarea
+                    id="notificationMessage"
+                    class="form-control"
+                    rows="5"
+                    placeholder="Write your message here...&#10;&#10;Example:&#10;Dear {{user_name}},&#10;&#10;Your harvest plan savings are behind schedule. Please ensure sufficient funds in your account for daily deductions.&#10;&#10;Current progress: {{days_completed}}/{{total_days}} days ({{progress_percent}}%)&#10;Total saved: ₦{{total_saved}}&#10;&#10;Thank you for saving with us!"
+                  ></textarea>
+                </div>
+
+                <div
+                  class="info-box"
+                  style="
+                    background: #f0fdf4;
+                    padding: 12px;
+                    border-radius: 8px;
+                    margin: 15px 0;
+                  "
+                >
+                  <i class="fas fa-info-circle" style="color: #10b981"></i>
+                  <small
+                    >Available placeholders: {{user_name}}, {{days_completed}},
+                    {{total_days}}, {{progress_percent}}, {{total_saved}},
+                    {{plan_name}}, {{daily_amount}}</small
+                  >
+                </div>
+
+                <div class="form-group">
+                  <label>Send as Email?</label>
+                  <label
+                    class="checkbox"
+                    style="display: flex; align-items: center; gap: 8px"
+                  >
+                    <input type="checkbox" id="sendEmailCheckbox" checked />
+                    <span>Send email notification as well</span>
+                  </label>
+                </div>
+
+                <button
+                  class="btn btn-primary btn-block"
+                  id="sendHarvestNotificationBtn"
+                >
+                  <i class="fas fa-paper-plane"></i> Send Notification
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Harvest Plan Modal (Add/Edit) -->
+          <div class="modal" id="harvestPlanModal">
+            <div class="modal-content" style="max-width: 600px">
+              <div class="modal-header">
+                <h3 id="harvestModalTitle">Add Harvest Plan</h3>
+                <button
+                  class="close-modal"
+                  onclick="closeModal('harvestPlanModal')"
+                >
+                  &times;
+                </button>
+              </div>
+              <div class="modal-body">
+                <form id="harvestPlanForm">
+                  <input type="hidden" id="harvestPlanId" />
+                  <div class="form-group">
+                    <label>Plan Name *</label>
+                    <input
+                      type="text"
+                      id="harvestName"
+                      class="form-control"
+                      required
+                      placeholder="e.g., Basic Harvest Plan"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label>Description</label>
+                    <textarea
+                      id="harvestDescription"
+                      class="form-control"
+                      rows="2"
+                      placeholder="Describe the plan benefits..."
+                    ></textarea>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label>Daily Amount (₦) *</label>
+                      <input
+                        type="number"
+                        id="harvestDailyAmount"
+                        class="form-control"
+                        step="0.01"
+                        min="1"
+                        required
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label>Duration (days) *</label>
+                      <input
+                        type="number"
+                        id="harvestDuration"
+                        class="form-control"
+                        min="1"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label>Total Amount (Auto-calculated)</label>
+                    <input
+                      type="text"
+                      id="harvestTotalAmount"
+                      class="form-control"
+                      readonly
+                      style="background: #f1f5f9"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label>Reward Items (one per line)</label>
+                    <textarea
+                      id="harvestRewardItems"
+                      class="form-control"
+                      rows="4"
+                      placeholder="Rice (5kg)&#10;Beans (2kg)&#10;Vegetable Oil (1L)&#10;Garri (2kg)"
+                    ></textarea>
+                    <small
+                      >List of food items the user will receive upon
+                      completion</small
+                    >
+                  </div>
+                  <div class="form-group">
+                    <label>Status</label>
+                    <select id="harvestPlanStatus" class="form-control">
+                      <option value="true">Active</option>
+                      <option value="false">Inactive</option>
+                    </select>
+                  </div>
+                </form>
+              </div>
+              <div class="modal-footer">
+                <button
+                  class="btn btn-outline"
+                  onclick="closeModal('harvestPlanModal')"
+                >
+                  Cancel
+                </button>
+                <button class="btn btn-primary" id="saveHarvestPlanBtn">
+                  Save Plan
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- View Enrollment Details Modal -->
+          <div class="modal" id="viewEnrollmentModal">
+            <div class="modal-content" style="max-width: 700px">
+              <div class="modal-header">
+                <h3>Enrollment Details</h3>
+                <button
+                  class="close-modal"
+                  onclick="closeModal('viewEnrollmentModal')"
+                >
+                  &times;
+                </button>
+              </div>
+              <div class="modal-body" id="viewEnrollmentContent">
+                <!-- Filled by JS -->
+              </div>
+              <div class="modal-footer">
+                <button
+                  class="btn btn-outline"
+                  onclick="closeModal('viewEnrollmentModal')"
+                >
+                  Close
+                </button>
+                <button
+                  class="btn btn-primary"
+                  id="sendUserNotificationBtn"
+                  style="display: none"
+                >
+                  Send Notification
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Harvest Plan Modal 
+          <div class="modal" id="harvestPlanModal">
+            <div class="modal-content" style="max-width: 600px">
+              <div class="modal-header">
+                <h3 id="harvestModalTitle">Add Harvest Plan</h3>
+                <button class="close-modal">&times;</button>
+              </div>
+              <div class="modal-body">
+                <form id="harvestPlanForm">
+                  <input type="hidden" id="harvestPlanId" />
+                  <div class="form-group">
+                    <label>Plan Name</label>
+                    <input
+                      type="text"
+                      id="harvestName"
+                      class="form-control"
+                      required
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label>Description</label>
+                    <textarea
+                      id="harvestDescription"
+                      class="form-control"
+                      rows="2"
+                    ></textarea>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label>Daily Amount (₦)</label>
+                      <input
+                        type="number"
+                        id="harvestDailyAmount"
+                        class="form-control"
+                        step="0.01"
+                        min="1"
+                        required
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label>Duration (days)</label>
+                      <input
+                        type="number"
+                        id="harvestDuration"
+                        class="form-control"
+                        min="1"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label>Reward Items (one per line)</label>
+                    <textarea
+                      id="harvestRewardItems"
+                      class="form-control"
+                      rows="4"
+                      placeholder="Rice&#10;Beans&#10;Garri&#10;Oil"
+                    ></textarea>
+                    <small>List of food items the user will receive</small>
+                  </div>
+                </form>
+              </div>
+              <div class="modal-footer">
+                <button
+                  class="btn btn-outline"
+                  onclick="closeModal('harvestPlanModal')"
+                >
+                  Cancel
+                </button>
+                <button class="btn btn-primary" onclick="saveHarvestPlan()">
+                  Save Plan
+                </button>
+              </div>
+            </div>
+          </div>-->
+
+          <!-- System Settings Page -
           <div class="admin-page" id="page-settings">
             <div class="page-header">
               <h2>System Settings</h2>
@@ -794,8 +1430,9 @@
 
               <div class="settings-card">
                 <h3>Exchange Rates</h3>
-                <div class="exchange-rates" id="exchangeRates">
-                  <!-- Exchange rates will be loaded here -->
+                <div class="exchange-rates" id="exchangeRates"> -->
+
+          <!-- Exchange rates will be loaded here 
                 </div>
                 <button class="btn btn-outline btn-block" id="updateRatesBtn">
                   Update Rates
@@ -838,32 +1475,412 @@
                 Reset to Default
               </button>
             </div>
+          </div>-->
+
+          <!-- System Settings Page - IMPROVED VERSION -->
+          <div class="admin-page" id="page-settings">
+            <div class="page-header">
+              <h2>System Settings</h2>
+              <p class="text-muted">
+                Configure your banking system preferences
+              </p>
+            </div>
+
+            <div class="settings-container">
+              <!-- Banking Settings Card -->
+              <div class="settings-card-modern">
+                <div class="settings-card-header">
+                  <i class="fas fa-university"></i>
+                  <h3>Banking Settings</h3>
+                </div>
+                <div class="settings-card-body">
+                  <div class="setting-item-modern">
+                    <label>Default Currency</label>
+                    <select id="defaultCurrency" class="form-control-modern">
+                      <option value="NGN">₦ Nigerian Naira (NGN)</option>
+                      <option value="USD">$ US Dollar (USD)</option>
+                      <option value="EUR">€ Euro (EUR)</option>
+                      <option value="GBP">£ British Pound (GBP)</option>
+                    </select>
+                    <small>Default currency for new accounts</small>
+                  </div>
+
+                  <div class="setting-item-modern">
+                    <label>Transaction Fee (%)</label>
+                    <div class="input-group-modern">
+                      <input
+                        type="number"
+                        id="transactionFee"
+                        class="form-control-modern"
+                        step="0.1"
+                        min="0"
+                        max="10"
+                      />
+                      <span class="input-suffix">%</span>
+                    </div>
+                    <small
+                      >Percentage fee charged per transaction (0-10%)</small
+                    >
+                  </div>
+
+                  <div class="setting-item-modern">
+                    <label>Daily Transfer Limit (₦)</label>
+                    <div class="input-group-modern">
+                      <span class="input-prefix">₦</span>
+                      <input
+                        type="number"
+                        id="dailyLimit"
+                        class="form-control-modern"
+                        step="1000"
+                        min="0"
+                      />
+                    </div>
+                    <small>Maximum amount a user can transfer per day</small>
+                  </div>
+
+                  <div class="setting-item-modern">
+                    <label>Card Purchase Method</label>
+                    <select id="cardPurchaseMethod" class="form-control-modern">
+                      <option value="crypto">Cryptocurrency Only</option>
+                      <option value="bank">Bank Transfer Only</option>
+                      <option value="both">Both Methods</option>
+                    </select>
+                    <small>Available payment methods for card purchase</small>
+                  </div>
+
+                  <div class="setting-item-modern">
+                    <label>Minimum Withdrawal Amount (₦)</label>
+                    <div class="input-group-modern">
+                      <span class="input-prefix">₦</span>
+                      <input
+                        type="number"
+                        id="minWithdrawal"
+                        class="form-control-modern"
+                        step="100"
+                        min="0"
+                      />
+                    </div>
+                    <small>Minimum amount users can withdraw</small>
+                  </div>
+
+                  <div class="setting-item-modern">
+                    <label>Maximum Withdrawal Amount (₦)</label>
+                    <div class="input-group-modern">
+                      <span class="input-prefix">₦</span>
+                      <input
+                        type="number"
+                        id="maxWithdrawal"
+                        class="form-control-modern"
+                        step="1000"
+                        min="0"
+                      />
+                    </div>
+                    <small
+                      >Maximum amount users can withdraw per transaction</small
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <!-- Security Settings Card -->
+              <div class="settings-card-modern">
+                <div class="settings-card-header">
+                  <i class="fas fa-shield-alt"></i>
+                  <h3>Security Settings</h3>
+                </div>
+                <div class="settings-card-body">
+                  <div class="setting-item-modern toggle-item">
+                    <div class="toggle-info">
+                      <label>2FA Required for Admins</label>
+                      <small
+                        >Two-factor authentication for admin accounts</small
+                      >
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="admin2FA" />
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+
+                  <div class="setting-item-modern">
+                    <label>Session Timeout (minutes)</label>
+                    <div class="input-group-modern">
+                      <input
+                        type="number"
+                        id="sessionTimeout"
+                        class="form-control-modern"
+                        step="5"
+                        min="5"
+                        max="120"
+                      />
+                      <span class="input-suffix">mins</span>
+                    </div>
+                    <small>Auto logout after inactivity (5-120 minutes)</small>
+                  </div>
+
+                  <div class="setting-item-modern">
+                    <label>Max Login Attempts</label>
+                    <div class="input-group-modern">
+                      <input
+                        type="number"
+                        id="maxLoginAttempts"
+                        class="form-control-modern"
+                        step="1"
+                        min="3"
+                        max="10"
+                      />
+                      <span class="input-suffix">attempts</span>
+                    </div>
+                    <small
+                      >Failed attempts before account temporary lockout</small
+                    >
+                  </div>
+
+                  <div class="setting-item-modern toggle-item">
+                    <div class="toggle-info">
+                      <label>OTP Mode (Global)</label>
+                      <small>Require OTP for all user transactions</small>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="globalOtpMode" />
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+
+                  <div class="setting-item-modern">
+                    <label>Lockout Duration (minutes)</label>
+                    <div class="input-group-modern">
+                      <input
+                        type="number"
+                        id="lockoutDuration"
+                        class="form-control-modern"
+                        step="5"
+                        min="15"
+                        max="120"
+                      />
+                      <span class="input-suffix">mins</span>
+                    </div>
+                    <small
+                      >How long account stays locked after max attempts</small
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <!-- Exchange Rates Card -->
+              <div class="settings-card-modern">
+                <div class="settings-card-header">
+                  <i class="fas fa-chart-line"></i>
+                  <h3>Exchange Rates</h3>
+                </div>
+                <div class="settings-card-body">
+                  <div class="exchange-rates-modern" id="exchangeRates">
+                    <div class="exchange-rate-item-modern">
+                      <div class="rate-pair">USD → NGN</div>
+                      <div class="rate-input">
+                        <input
+                          type="number"
+                          id="rateUSDNGN"
+                          class="form-control-modern-small"
+                          step="1"
+                          min="0"
+                        />
+                        <span>₦</span>
+                      </div>
+                    </div>
+                    <div class="exchange-rate-item-modern">
+                      <div class="rate-pair">EUR → NGN</div>
+                      <div class="rate-input">
+                        <input
+                          type="number"
+                          id="rateEURNGN"
+                          class="form-control-modern-small"
+                          step="1"
+                          min="0"
+                        />
+                        <span>₦</span>
+                      </div>
+                    </div>
+                    <div class="exchange-rate-item-modern">
+                      <div class="rate-pair">GBP → NGN</div>
+                      <div class="rate-input">
+                        <input
+                          type="number"
+                          id="rateGBPNGN"
+                          class="form-control-modern-small"
+                          step="1"
+                          min="0"
+                        />
+                        <span>₦</span>
+                      </div>
+                    </div>
+                    <div class="exchange-rate-item-modern">
+                      <div class="rate-pair">NGN → USD</div>
+                      <div class="rate-input">
+                        <span>$</span>
+                        <input
+                          type="number"
+                          id="rateNGNUSD"
+                          class="form-control-modern-small"
+                          step="0.0001"
+                          min="0"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    class="btn-modern btn-outline-modern btn-block-modern"
+                    id="updateRatesBtn"
+                  >
+                    <i class="fas fa-sync-alt"></i> Update Exchange Rates
+                  </button>
+                </div>
+              </div>
+
+              <!-- Risk Management Card -->
+              <div class="settings-card-modern">
+                <div class="settings-card-header">
+                  <i class="fas fa-exclamation-triangle"></i>
+                  <h3>Risk Management</h3>
+                </div>
+                <div class="settings-card-body">
+                  <div class="setting-item-modern toggle-item">
+                    <div class="toggle-info">
+                      <label>Enable Geo-blocking</label>
+                      <small>Restrict access from high-risk countries</small>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="geoBlocking" />
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+
+                  <div class="setting-item-modern">
+                    <label>Blocked Countries</label>
+                    <textarea
+                      id="blockedCountries"
+                      class="form-control-modern"
+                      rows="4"
+                      placeholder="Enter country codes (one per line)&#10;Example:&#10;XX&#10;YY&#10;ZZ"
+                    ></textarea>
+                    <small>ISO country codes, one per line</small>
+                  </div>
+
+                  <div class="setting-item-modern">
+                    <label>Suspicious Amount Threshold (₦)</label>
+                    <div class="input-group-modern">
+                      <span class="input-prefix">₦</span>
+                      <input
+                        type="number"
+                        id="suspiciousThreshold"
+                        class="form-control-modern"
+                        step="10000"
+                        min="0"
+                      />
+                    </div>
+                    <small>Transactions above this amount trigger review</small>
+                  </div>
+
+                  <div class="setting-item-modern">
+                    <label>Daily Transaction Limit (Users)</label>
+                    <div class="input-group-modern">
+                      <input
+                        type="number"
+                        id="dailyTxLimit"
+                        class="form-control-modern"
+                        step="1"
+                        min="1"
+                        max="100"
+                      />
+                      <span class="input-suffix">tx/day</span>
+                    </div>
+                    <small
+                      >Maximum number of transactions per user per day</small
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <!-- Maintenance Card -->
+              <div class="settings-card-modern">
+                <div class="settings-card-header">
+                  <i class="fas fa-tools"></i>
+                  <h3>Maintenance</h3>
+                </div>
+                <div class="settings-card-body">
+                  <div class="setting-item-modern toggle-item">
+                    <div class="toggle-info">
+                      <label>Maintenance Mode</label>
+                      <small>Put the system in maintenance mode</small>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="maintenanceMode" />
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+
+                  <div
+                    class="setting-item-modern"
+                    id="maintenanceMessageGroup"
+                    style="display: none"
+                  >
+                    <label>Maintenance Message</label>
+                    <textarea
+                      id="maintenanceMessage"
+                      class="form-control-modern"
+                      rows="3"
+                      placeholder="Display this message to users during maintenance"
+                    ></textarea>
+                  </div>
+
+                  <div class="setting-item-modern">
+                    <label>Backup Schedule</label>
+                    <select id="backupSchedule" class="form-control-modern">
+                      <option value="daily">Daily</option>
+                      <option value="weekly">Weekly</option>
+                      <option value="monthly">Monthly</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-actions-modern">
+              <button class="btn-modern btn-primary-modern" id="saveSettings">
+                <i class="fas fa-save"></i> Save All Settings
+              </button>
+              <button class="btn-modern btn-outline-modern" id="resetSettings">
+                <i class="fas fa-undo-alt"></i> Reset to Default
+              </button>
+            </div>
           </div>
 
           <!-- Admin Logs Page -->
           <div class="admin-page" id="page-logs">
             <div class="page-header">
               <h2>Admin Action Logs</h2>
+              <p class="text-muted">
+                Track all administrative actions for security and audit purposes
+              </p>
             </div>
 
             <div class="filters-bar">
-              <input
-                type="text"
-                id="logSearch"
-                placeholder="Search logs..."
-                class="filter-input"
-              />
+              <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input
+                  type="text"
+                  id="logSearch"
+                  placeholder="Search by action or details..."
+                />
+              </div>
               <input type="date" id="logDateFrom" class="filter-input" />
               <input type="date" id="logDateTo" class="filter-input" />
               <select id="logActionFilter" class="filter-select">
                 <option value="">All Actions</option>
-                <option value="create_user">Create User</option>
-                <option value="update_user">Update User</option>
-                <option value="freeze_user">Freeze User</option>
-                <option value="update_balance">Update Balance</option>
-                <option value="impersonate">Impersonate</option>
-                <option value="generate_otp">Generate OTP</option>
               </select>
+              <button class="btn btn-outline" id="refreshLogsBtn">
+                <i class="fas fa-sync-alt"></i> Refresh
+              </button>
             </div>
 
             <div class="table-responsive">
@@ -879,16 +1896,61 @@
                   </tr>
                 </thead>
                 <tbody id="logsTableBody">
-                  <!-- Logs will be loaded here -->
+                  <tr>
+                    <td colspan="6" style="text-align: center">
+                      Loading logs...
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </div>
+            <div class="pagination" id="logsPagination"></div>
           </div>
         </div>
       </main>
     </div>
 
     <!-- Modals -->
+
+    <!-- Harvest Withdrawal Requests Modal -->
+    <div class="modal" id="harvestWithdrawalModal">
+      <div class="modal-content" style="max-width: 800px">
+        <div class="modal-header">
+          <h3><i class="fas fa-clock"></i> Harvest Plan Withdrawal Requests</h3>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="table-responsive">
+            <table class="data-table" id="harvestWithdrawalTable">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Plan</th>
+                  <th>Amount</th>
+                  <th>Progress</th>
+                  <th>Reason</th>
+                  <th>Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="harvestWithdrawalBody">
+                <tr>
+                  <td colspan="7" style="text-align: center">Loading...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            class="btn btn-outline"
+            onclick="closeModal('harvestWithdrawalModal')"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
 
     <div class="modal" id="createUserModal">
       <div class="modal-content">
@@ -1388,5 +2450,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="./JAVASCRIPT/admin.js"></script>
+    <script src="./JAVASCRIPT/pull-to-refresh.js"></script>
+    <script src="./JAVASCRIPT/constants.js"></script>
   </body>
 </html>

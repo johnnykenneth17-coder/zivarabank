@@ -1,13 +1,12 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Paystora - Professional Online Banking</title>
+    <title>FEECENT - Professional Online Banking</title>
     <link rel="stylesheet" href="./CSS/main.css" />
     <link rel="stylesheet" href="./CSS/mobile.css" />
     <link rel="stylesheet" href="./CSS/dashboard.css" />
-  
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
@@ -19,292 +18,727 @@
     <link rel="manifest" href="/manifest.json" />
   </head>
   <body>
-    <!-- Navigation -->
-    <nav class="navbar">
-      <div class="nav-container">
-        <div class="logo">
-          <i class="fas fa-shield-alt"></i>
-          <span>Paystora</span>
+    <!-- Dashboard Layout -->
+    <div class="dashboard">
+      <!-- Sidebar -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <div class="logo">
+            <i class="fas fa-shield-alt"></i>
+            <span>FEECENT</span>
+          </div>
+          <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-chevron-left"></i>
+          </button>
         </div>
-        <div class="nav-links">
-          <a href="#features">Features</a>
-          <a href="#security">Security</a>
-          <a href="#about">About</a>
-          <a href="#contact">Contact</a>
-          <a href="login.html" class="btn btn-primary">Login</a>
-          <a href="register.html" class="btn btn-outline">Register</a>
+        <div class="sidebar-user" id="sidebarUser" style="display: none">
+          <div class="user-avatar" id="userAvatar">
+            <span id="userInitials">JD</span>
+          </div>
+          <div class="user-info">
+            <h4 id="userName"></h4>
+            <p id="userEmail"></p>
+          </div>
         </div>
-        <div class="mobile-menu">
-          <i class="fas fa-bars"></i>
+        <div class="sidebar-user-guest" id="sidebarGuest" style="display: flex">
+          <div class="user-avatar" style="background: #64748b">
+            <i class="fas fa-user" style="color: white"></i>
+          </div>
+          <div class="user-info">
+            <h4>Guest User</h4>
+            <p>Please login to continue</p>
+          </div>
         </div>
-      </div>
-    </nav>
+        <nav class="sidebar-nav">
+          <a href="#" class="nav-item active" data-page="overview">
+            <i class="fas fa-home"></i>
+            <span>Overview</span>
+          </a>
+          <a href="#" class="nav-item" data-page="finance">
+            <i class="fas fa-chart-line"></i>
+            <span>Finance</span>
+          </a>
+          <a href="#" class="nav-item" data-page="accounts">
+            <i class="fas fa-wallet"></i>
+            <span>Accounts</span>
+          </a>
+          <a href="#" class="nav-item" data-page="transfers">
+            <i class="fas fa-exchange-alt"></i>
+            <span>Transfers</span>
+          </a>
+          <a href="#" class="nav-item" data-page="transactions">
+            <i class="fas fa-history"></i>
+            <span>Transactions</span>
+          </a>
+          <a href="#" class="nav-item" data-page="cards">
+            <i class="fas fa-credit-card"></i>
+            <span>Cards</span>
+          </a>
+          <a href="#" class="nav-item" data-page="beneficiaries">
+            <i class="fas fa-users"></i>
+            <span>Beneficiaries</span>
+          </a>
+          <a href="#" class="nav-item" data-page="support">
+            <i class="fas fa-headset"></i>
+            <span>Support</span>
+          </a>
+          <a href="#" class="nav-item" data-page="settings">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
+          </a>
+        </nav>
+        <div class="sidebar-footer">
+          <a href="#" id="logoutBtn" class="nav-item" style="display: none">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+          </a>
+          <a href="login.html" id="loginNavBtn" class="nav-item">
+            <i class="fas fa-sign-in-alt"></i>
+            <span>Login</span>
+          </a>
+          <a href="register.html" id="registerNavBtn" class="nav-item">
+            <i class="fas fa-user-plus"></i>
+            <span>Register</span>
+          </a>
+        </div>
+      </aside>
 
-    <!-- Hero Section -->
-    <section class="hero">
-      <!-- PWA Install Banner -->
-<div id="pwaInstallBanner" class="pwa-install-banner" style="display: none;">
-  <div class="banner-content">
-    <i class="fas fa-mobile-alt"></i>
-    <span>Install Paystora on your device for quick access!</span>
-    <button id="pwaInstallBtn" class="banner-btn">Install App</button>
-    <button id="pwaDismissBtn" class="banner-close">&times;</button>
-  </div>
-</div>
+      <!-- Main Content -->
+      <main class="main-content" id="mainContent">
+        <!-- Top Bar -->
+        <header class="top-bar">
+          <div class="top-bar-left">
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+              <i class="fas fa-bars"></i>
+            </button>
+            <div class="logo" style="margin-left: -20px !important">
+              <i class="fas fa-shield-alt"></i>
+              <span>FEECENT</span>
+            </div>
+          </div>
+          <div class="top-bar-right">
+            <div class="search-box">
+              <i class="fas fa-search"></i>
+              <input type="text" placeholder="Search..." />
+            </div>
+            <div class="notifications" id="notifications" style="display: none">
+              <i class="fas fa-bell"></i>
+              <span class="badge" id="notificationBadge">0</span>
+              <div class="notifications-dropdown" id="notificationsDropdown">
+                <div class="notifications-header">
+                  <h4>Notifications</h4>
+                  <button id="markAllRead">Mark all as read</button>
+                </div>
+                <div class="notifications-list" id="notificationsList">
+                  <!-- Notifications will be loaded here -->
+                </div>
+              </div>
+            </div>
+            <div class="user-menu" id="userMenu" style="display: none">
+              <!--<img
+                src="https://via.placeholder.com/40"
+                alt="User"
+                id="userMenuAvatar"
+              />-->
+              <i class="fas fa-chevron-down"></i>
+              <div class="user-dropdown" id="userDropdown">
+                <a href="#"><i class="fas fa-user"></i> Profile</a>
+                <a href="#"><i class="fas fa-cog"></i> Settings</a>
+                <a href="#" id="logoutDropdown"
+                  ><i class="fas fa-sign-out-alt"></i> Logout</a
+                >
+              </div>
+            </div>
+            <div class="auth-buttons" id="authButtons" style="gap: 15px">
+              <a
+                href="login.html"
+                class="btn btn-primary"
+                style="padding: 8px 20px"
+                >Login</a
+              >
+              <a
+                href="register.html"
+                class="btn btn-outline"
+                style="padding: 8px 20px"
+                >Register</a
+              >
+            </div>
+          </div>
+        </header>
 
-<!-- iOS PWA Instructions Modal -->
-
-<div id="pwaInstructionsModal" class="modal" style="display: none;">
-  <div class="modal-content" style="max-width: 400px;">
-    <div class="modal-header">
-      <h3>Install Paystora on iOS</h3>
-      <button class="close-modal" id="closeInstructionsModal">&times;</button>
-    </div>
-    <div class="modal-body">
-      <p>Follow these steps to add Paystora to your home screen:</p>
-      <ol style="margin: 20px 0; padding-left: 20px;">
-        <li>Tap the <strong>Share</strong> button <i class="fas fa-share-alt"></i> (square with arrow).</li>
-        <li>Scroll down and tap <strong>Add to Home Screen</strong>.</li>
-        <li>Tap <strong>Add</strong> in the top‑right corner.</li>
-      </ol>
-      <div style="background: #f0f9ff; padding: 12px; border-radius: 12px; margin-top: 16px;">
-        <i class="fas fa-info-circle" style="color: #2563eb;"></i>
-        <span style="font-size: 13px;">You'll then see the Paystora icon on your home screen.</span>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-primary" id="gotItBtn">Got it</button>
-    </div>
-  </div>
-</div>
-      <!-- Inside <body>, after the opening <div class="dashboard"> or <div class="hero"> 
-      <div
-        id="appDownloadBanner"
-        style="
-          display: none;
-          background: #f0f9ff;
-          color: #1e40af;
-          padding: 12px 20px;
-          text-align: center;
-          border-bottom: 1px solid #b9d3f0;
-        "
-      >
-        <span>📱 Get the best experience with our mobile app! </span>
-        <a
-          href="#"
-          id="downloadAppBtn"
-          style="
-            background: #2563eb;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            text-decoration: none;
-            margin-left: 12px;
-          "
-          >Download App</a
+        <!-- PWA Install Banner -->
+        <div
+          id="pwaInstallBanner"
+          class="pwa-install-banner"
+          style="display: none"
         >
-        <button
-          id="dismissBannerBtn"
-          style="
-            background: none;
-            border: none;
-            margin-left: 12px;
-            cursor: pointer;
-            font-size: 18px;
-          "
-        >
-          &times;
-        </button>
-      </div>-->
-      <!-- Hero section-->
-      <div class="hero-container">
-        <div class="hero-content">
-          <h1>
-            Make International Transactions
-            <span class="gradient-text">Without Limits</span>
-          </h1>
-          <p>
-            Secure, fast, and intelligent banking solutions for the modern
-            world. Join thousands of satisfied customers.
-          </p>
-          <div class="hero-buttons">
-            <a href="register.html" class="btn btn-primary btn-large"
-              >Open Account</a
-            >
-            <a href="#demo" class="btn btn-outline btn-large">Watch Demo</a>
-          </div>
-          <div class="hero-stats">
-            <div class="stat">
-              <span class="stat-number">500K+</span>
-              <span class="stat-label">Active Users</span>
-            </div>
-            <div class="stat">
-              <span class="stat-number">$2B+</span>
-              <span class="stat-label">Transactions</span>
-            </div>
-            <div class="stat">
-              <span class="stat-number">99.9%</span>
-              <span class="stat-label">Uptime</span>
-            </div>
+          <div class="banner-content">
+            <i class="fas fa-mobile-alt"></i>
+            <span>Install FEECENT on your device for quick access!</span>
+            <button id="pwaInstallBtn" class="banner-btn">Install App</button>
+            <button id="pwaDismissBtn" class="banner-close">&times;</button>
           </div>
         </div>
-        <div class="hero-image">
-          <img
-            src="https://images.unsplash.com/photo-1563013544-824ae1b704d3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80"
-            alt="Banking App"
-          />
-          <div class="floating-card">
-            <i class="fas fa-check-circle"></i>
-            <div>
-              <strong>Secure Transaction</strong>
-              <span>End-to-end encrypted</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
 
-    <!-- Features Section -->
-    <section id="features" class="features">
-      <div class="container">
-        <div class="section-header">
-          <h2>Banking Features You'll Love</h2>
-          <p>Everything you need for modern banking in one place</p>
-        </div>
-        <div class="features-grid">
-          <div class="feature-card">
-            <div class="feature-icon">
-              <i class="fas fa-bolt"></i>
-            </div>
-            <h3>Instant Transfers</h3>
-            <p>
-              Send money instantly to any account with real-time notifications
+        <!-- Freeze Notification -->
+        <div
+          class="freeze-notification"
+          id="freezeNotification"
+          style="display: none"
+        >
+          <i class="fas fa-exclamation-triangle"></i>
+          <div class="freeze-content">
+            <strong>Account Frozen</strong>
+            <p id="freezeReason">
+              Your account has been frozen. Please contact support.
             </p>
           </div>
-          <div class="feature-card">
-            <div class="feature-icon">
-              <i class="fas fa-shield-alt"></i>
-            </div>
-            <h3>Bank-Grade Security</h3>
-            <p>Multi-factor authentication and advanced encryption</p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">
-              <i class="fas fa-chart-line"></i>
-            </div>
-            <h3>Smart Analytics</h3>
-            <p>Track spending patterns and set budgeting goals</p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">
-              <i class="fas fa-credit-card"></i>
-            </div>
-            <h3>Virtual Cards</h3>
-            <p>Create virtual cards for secure online shopping</p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">
-              <i class="fas fa-globe"></i>
-            </div>
-            <h3>Multi-Currency</h3>
-            <p>Hold and exchange multiple currencies</p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">
-              <i class="fas fa-headset"></i>
-            </div>
-            <h3>24/7 Support</h3>
-            <p>Round-the-clock customer support via chat</p>
-          </div>
+          <button class="btn btn-warning" id="requestUnfreezeBtn">
+            Request Unfreeze OTP
+          </button>
         </div>
-      </div>
-    </section>
 
-    <!-- Security Section -->
-    <section id="security" class="security">
-      <div class="container">
-        <div class="security-content">
-          <h2>Your Security Is Our Priority</h2>
-          <p>
-            We use advanced security measures to protect your money and data
-          </p>
-          <div class="security-features">
-            <div class="security-item">
-              <i class="fas fa-fingerprint"></i>
-              <div>
-                <h4>Biometric Authentication</h4>
-                <p>Face ID and fingerprint login supported</p>
-              </div>
+        <!-- Login Required Overlay (for guest users trying to access features) -->
+        <div id="loginRequiredOverlay" class="modal" style="display: none">
+          <div class="modal-content" style="max-width: 400px">
+            <div class="modal-header">
+              <h3>Login Required</h3>
+              <button
+                class="close-modal"
+                onclick="closeLoginRequiredModalFunc()"
+              >
+                &times;
+              </button>
             </div>
-            <div class="security-item">
-              <i class="fas fa-lock"></i>
-              <div>
-                <h4>End-to-End Encryption</h4>
-                <p>All data encrypted with AES-256</p>
-              </div>
-            </div>
-            <div class="security-item">
-              <i class="fas fa-shield-virus"></i>
-              <div>
-                <h4>Fraud Protection</h4>
-                <p>Real-time transaction monitoring</p>
+            <div class="modal-body" style="text-align: center; padding: 30px">
+              <i
+                class="fas fa-lock"
+                style="font-size: 48px; color: #f59e0b; margin-bottom: 20px"
+              ></i>
+              <p style="margin-bottom: 20px">
+                Please login to your account to access this feature.
+              </p>
+              <div style="display: flex; gap: 10px; justify-content: center">
+                <a href="login.html" class="btn btn-primary">Login</a>
+                <a href="register.html" class="btn btn-outline">Register</a>
               </div>
             </div>
           </div>
         </div>
-        <div class="security-image">
-          <img
-            src="https://images.unsplash.com/photo-1563986768609-322da13575f3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80"
-            alt="Security"
-          />
-        </div>
-      </div>
-    </section>
 
-    <!-- Footer -->
-    <footer class="footer">
-      <div class="container">
-        <div class="footer-grid">
-          <div class="footer-col">
-            <div class="footer-logo">
-              <i class="fas fa-shield-alt"></i>
-              <span>Paystora</span>
+        <!-- Bottom Navigation Bar (Mobile) -->
+        <div class="bottom-nav" id="bottomNav">
+          <button class="bottom-nav-item active" data-page="overview">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+          </button>
+          <button class="bottom-nav-item" data-page="finance">
+            <i class="fas fa-chart-line"></i>
+            <span>Finance</span>
+          </button>
+          <button class="bottom-nav-item" data-page="cards">
+            <i class="fas fa-credit-card"></i>
+            <span>Cards</span>
+          </button>
+          <button class="bottom-nav-item" data-page="settings">
+            <i class="fas fa-user"></i>
+            <span>Me</span>
+          </button>
+        </div>
+
+        <!-- Dynamic Content Pages -->
+        <div class="content-pages">
+          <!-- Overview Page -->
+          <div class="page active" id="page-overview">
+            <div class="welcome-card">
+              <div>
+                <h2>Welcome to FEECENT <span id="welcomeName"></span>👋</h2>
+                <p>Your secure payment wallet</p>
+              </div>
+              <div class="date-time">
+                <i class="far fa-calendar"></i>
+                <span id="currentDate"></span>
+              </div>
             </div>
-            <p>The future of banking, today.</p>
+
+            <div class="balance-cards">
+              <div class="balance-card">
+                <div class="balance-label">
+                  <span>Demo Balance</span>
+                </div>
+                <div class="balance-amount" id="demoBalance">₦0.00</div>
+                <div class="account-number">Demo Account</div>
+                <div class="balance-change positive">
+                  <i class="fas fa-arrow-up"></i>
+                  <span>Login to access your real balance</span>
+                </div>
+              </div>
+
+              <!-- Quick Actions -->
+              <div class="balance-card">
+                <div class="balance-label">
+                  <span>Quick Actions</span>
+                </div>
+                <div class="bills-grid">
+                  <button
+                    class="btnn btn-primaryy btn-sm require-login"
+                    onclick="requireLoginAndRedirectFunc('add-money')"
+                  >
+                    <i class="fas fa-plus"></i> Fund
+                  </button>
+                  <button
+                    class="btnn btn-primaryy btn-sm require-login"
+                    onclick="requireLoginAndRedirectFunc('transfers')"
+                  >
+                    <i class="fas fa-paper-plane"></i> Send
+                  </button>
+                  <button
+                    class="btnn btn-primaryy btn-sm require-login"
+                    onclick="requireLoginAndRedirectRecieveFunc()"
+                  >
+                    <i class="fas fa-download"></i> Receive
+                  </button>
+                </div>
+              </div>
+
+              <!-- Bills Grid -->
+              <div class="bills-grid-section">
+                <div class="section-heade">
+                  <h3>Payments</h3>
+                </div>
+                <div class="bills-grid" id="billsGrid">
+                  <div
+                    class="bill-item require-login"
+                    onclick="requireLoginAndShowPaymentFunc('airtime')"
+                  >
+                    <div class="bill-icon"><i class="fas fa-signal"></i></div>
+                    <span>Airtime</span>
+                  </div>
+                  <div
+                    class="bill-item require-login"
+                    onclick="requireLoginAndShowPaymentFunc('data')"
+                  >
+                    <div class="bill-icon"><i class="fas fa-wifi"></i></div>
+                    <span>Data</span>
+                  </div>
+                  <div
+                    class="bill-item require-login"
+                    onclick="requireLoginAndShowPaymentFunc('betting')"
+                  >
+                    <div class="bill-icon"><i class="fas fa-dice"></i></div>
+                    <span>Betting</span>
+                  </div>
+                  <div
+                    class="bill-item require-login"
+                    onclick="requireLoginAndShowPaymentFunc('tv')"
+                  >
+                    <div class="bill-icon"><i class="fas fa-tv"></i></div>
+                    <span>TV</span>
+                  </div>
+                  <div
+                    class="bill-item require-login"
+                    onclick="requireLoginAndShowPaymentFunc('electricity')"
+                  >
+                    <div class="bill-icon"><i class="fas fa-bolt"></i></div>
+                    <span>Electricity</span>
+                  </div>
+                  <div class="bill-item require-login" id="moreServicesBtn">
+                    <div class="bill-icon">
+                      <i class="fas fa-ellipsis-h"></i>
+                    </div>
+                    <span>More</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="recent-transactions">
+              <div class="section-header">
+                <h3>Features</h3>
+              </div>
+              <div class="transactions-list">
+                <div class="transaction-item">
+                  <div class="transaction-icon">
+                    <i class="fas fa-shield-alt"></i>
+                  </div>
+                  <div class="transaction-details">
+                    <div class="transaction-name">Secure Banking</div>
+                    <div class="transaction-date">Bank-grade encryption</div>
+                  </div>
+                </div>
+                <div class="transaction-item">
+                  <div class="transaction-icon">
+                    <i class="fas fa-bolt"></i>
+                  </div>
+                  <div class="transaction-details">
+                    <div class="transaction-name">Fast Transfers</div>
+                    <div class="transaction-date">Instant money transfers</div>
+                  </div>
+                </div>
+                <div class="transaction-item">
+                  <div class="transaction-icon">
+                    <i class="fas fa-headset"></i>
+                  </div>
+                  <div class="transaction-details">
+                    <div class="transaction-name">24/7 Support</div>
+                    <div class="transaction-date">
+                      Round-the-clock assistance
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="footer-col">
-            <h4>Product</h4>
-            <ul>
-              <li><a href="#">Features</a></li>
-              <li><a href="#">Pricing</a></li>
-              <li><a href="#">Security</a></li>
-              <li><a href="#">FAQ</a></li>
-            </ul>
+
+          <!-- Finance Page -->
+          <div class="page" id="page-finance">
+            <div class="page-header">
+              <h2>Finance</h2>
+              <button
+                class="btn btn-outline"
+                onclick="switchToPageFunc('overview')"
+              >
+                ← Back
+              </button>
+            </div>
+
+            <div class="finance-cards">
+              <div
+                class="finance-card require-login"
+                onclick="requireLoginAndShowSavingsFunc('harvest')"
+              >
+                <div class="finance-icon"><i class="fas fa-seedling"></i></div>
+                <h3>Harvest Plan</h3>
+                <p>Save daily, get food items</p>
+                <span class="badge">Admin Managed</span>
+              </div>
+              <div
+                class="finance-card require-login"
+                onclick="requireLoginAndShowSavingsFunc('fixed')"
+              >
+                <div class="finance-icon"><i class="fas fa-lock"></i></div>
+                <h3>Fixed Savings</h3>
+                <p>Lock for 1 month, earn interest</p>
+              </div>
+              <div
+                class="finance-card require-login"
+                onclick="requireLoginAndShowSavingsFunc('savebox')"
+              >
+                <div class="finance-icon"><i class="fas fa-box"></i></div>
+                <h3>SaveBox</h3>
+                <p>Flexible with small fee</p>
+              </div>
+              <div
+                class="finance-card require-login"
+                onclick="requireLoginAndShowSavingsFunc('target')"
+              >
+                <div class="finance-icon"><i class="fas fa-bullseye"></i></div>
+                <h3>Target Savings</h3>
+                <p>Save daily towards goal</p>
+              </div>
+            </div>
+
+            <div class="my-savings">
+              <h3>My Savings</h3>
+              <div id="mySavingsList" class="savings-list">
+                <div
+                  class="empty-state"
+                  style="text-align: center; padding: 40px; color: #64748b"
+                >
+                  Login to view your savings
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="footer-col">
-            <h4>Company</h4>
-            <ul>
-              <li><a href="#">About</a></li>
-              <li><a href="#">Careers</a></li>
-              <li><a href="#">Contact</a></li>
-              <li><a href="#">Blog</a></li>
-            </ul>
+
+          <!-- Accounts Page -->
+          <div class="page" id="page-accounts">
+            <div class="page-header">
+              <h2>Your Accounts</h2>
+              <button
+                class="btn btn-outline"
+                onclick="switchToPageFunc('overview')"
+              >
+                ← Back
+              </button>
+            </div>
+            <div class="accounts-grid" id="accountsList">
+              <div
+                class="balance-card"
+                style="text-align: center; padding: 40px"
+              >
+                <i
+                  class="fas fa-lock"
+                  style="font-size: 48px; color: #94a3b8; margin-bottom: 15px"
+                ></i>
+                <p>Please login to view your accounts</p>
+                <a
+                  href="login.html"
+                  class="btn btn-primary"
+                  style="margin-top: 15px"
+                  >Login</a
+                >
+              </div>
+            </div>
           </div>
-          <div class="footer-col">
-            <h4>Legal</h4>
-            <ul>
-              <li><a href="#">Privacy</a></li>
-              <li><a href="#">Terms</a></li>
-              <li><a href="#">Licenses</a></li>
-            </ul>
+
+          <!-- Transfers Page -->
+          <div class="page" id="page-transfers">
+            <div class="page-header">
+              <h2>Money Transfers</h2>
+              <button
+                class="btn btn-outline"
+                onclick="switchToPageFunc('overview')"
+              >
+                ← Back
+              </button>
+            </div>
+            <div
+              class="transfer-container"
+              style="text-align: center; padding: 60px 20px"
+            >
+              <i
+                class="fas fa-lock"
+                style="font-size: 64px; color: #94a3b8; margin-bottom: 20px"
+              ></i>
+              <h3>Login Required</h3>
+              <p style="margin-bottom: 20px">Please login to make transfers</p>
+              <a href="login.html" class="btn btn-primary">Login</a>
+              <a
+                href="register.html"
+                class="btn btn-outline"
+                style="margin-left: 10px"
+                >Register</a
+              >
+            </div>
+          </div>
+
+          <!-- Transactions Page -->
+          <div class="page" id="page-transactions">
+            <div class="page-header">
+              <h2>Transactions</h2>
+              <button
+                class="btn btn-outline"
+                onclick="switchToPageFunc('overview')"
+              >
+                ← Back
+              </button>
+            </div>
+            <div style="text-align: center; padding: 60px 20px">
+              <i
+                class="fas fa-lock"
+                style="font-size: 64px; color: #94a3b8; margin-bottom: 20px"
+              ></i>
+              <h3>Login Required</h3>
+              <p style="margin-bottom: 20px">
+                Please login to view your transactions
+              </p>
+              <a href="login.html" class="btn btn-primary">Login</a>
+              <a
+                href="register.html"
+                class="btn btn-outline"
+                style="margin-left: 10px"
+                >Register</a
+              >
+            </div>
+          </div>
+
+          <!-- Cards Page -->
+          <div class="page" id="page-cards">
+            <div class="page-header">
+              <h2>Your Cards</h2>
+              <button
+                class="btn btn-outline"
+                onclick="switchToPageFunc('overview')"
+              >
+                ← Back
+              </button>
+            </div>
+            <div style="text-align: center; padding: 60px 20px">
+              <i
+                class="fas fa-lock"
+                style="font-size: 64px; color: #94a3b8; margin-bottom: 20px"
+              ></i>
+              <h3>Login Required</h3>
+              <p style="margin-bottom: 20px">
+                Please login to manage your cards
+              </p>
+              <a href="login.html" class="btn btn-primary">Login</a>
+              <a
+                href="register.html"
+                class="btn btn-outline"
+                style="margin-left: 10px"
+                >Register</a
+              >
+            </div>
+          </div>
+
+          <!-- Beneficiaries Page -->
+          <div class="page" id="page-beneficiaries">
+            <div class="page-header">
+              <h2>Beneficiaries</h2>
+              <button
+                class="btn btn-outline"
+                onclick="switchToPageFunc('overview')"
+              >
+                ← Back
+              </button>
+            </div>
+            <div style="text-align: center; padding: 60px 20px">
+              <i
+                class="fas fa-lock"
+                style="font-size: 64px; color: #94a3b8; margin-bottom: 20px"
+              ></i>
+              <h3>Login Required</h3>
+              <p style="margin-bottom: 20px">
+                Please login to manage beneficiaries
+              </p>
+              <a href="login.html" class="btn btn-primary">Login</a>
+              <a
+                href="register.html"
+                class="btn btn-outline"
+                style="margin-left: 10px"
+                >Register</a
+              >
+            </div>
+          </div>
+
+          <!-- Support Page -->
+          <div class="page" id="page-support">
+            <div class="page-header">
+              <h2>Support</h2>
+              <button
+                class="btn btn-outline"
+                onclick="switchToPageFunc('overview')"
+              >
+                ← Back
+              </button>
+            </div>
+            <div style="text-align: center; padding: 60px 20px">
+              <i
+                class="fas fa-headset"
+                style="font-size: 64px; color: #3b82f6; margin-bottom: 20px"
+              ></i>
+              <h3>Contact Support</h3>
+              <p>Email: support@feecent.com</p>
+              <p>Phone: +1 (800) 123-4567</p>
+              <p style="margin-top: 20px">
+                For account-specific support, please
+                <a href="login.html">login</a> first
+              </p>
+            </div>
+          </div>
+
+          <!-- Settings Page -->
+          <div class="page" id="page-settings">
+            <div class="page-header">
+              <h2>Settings</h2>
+              <button
+                class="btn btn-outline"
+                onclick="switchToPageFunc('overview')"
+              >
+                ← Back
+              </button>
+            </div>
+            <div style="text-align: center; padding: 60px 20px">
+              <i
+                class="fas fa-lock"
+                style="font-size: 64px; color: #94a3b8; margin-bottom: 20px"
+              ></i>
+              <h3>Login Required</h3>
+              <p style="margin-bottom: 20px">Please login to access settings</p>
+              <a href="login.html" class="btn btn-primary">Login</a>
+              <a
+                href="register.html"
+                class="btn btn-outline"
+                style="margin-left: 10px"
+                >Register</a
+              >
+            </div>
           </div>
         </div>
-        <div class="footer-bottom">
-          <p>&copy; 2024 Paystora. All rights reserved.</p>
+      </main>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal" id="moreServicesModal">
+      <div class="modal-content" style="max-width: 90%; max-height: 80vh">
+        <div class="modal-header">
+          <h3>All Services</h3>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="services-tabs">
+            <button class="services-tab-btn active" data-category="ecommerce">
+              E-commerce
+            </button>
+            <button class="services-tab-btn" data-category="bills">
+              Bill Payments
+            </button>
+            <button class="services-tab-btn" data-category="finance">
+              Finance
+            </button>
+            <button class="services-tab-btn" data-category="others">
+              Others
+            </button>
+          </div>
+          <div id="servicesContent" class="services-content">
+            <!-- Services loaded dynamically -->
+          </div>
         </div>
       </div>
-    </footer>
+    </div>
 
+    <div class="modal" id="savingsModal">
+      <div class="modal-content" style="max-width: 500px">
+        <div class="modal-header">
+          <h3 id="savingsModalTitle">Start Savings</h3>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div style="text-align: center; padding: 30px">
+            <i
+              class="fas fa-lock"
+              style="font-size: 48px; color: #f59e0b; margin-bottom: 20px"
+            ></i>
+            <p>Please login to start saving</p>
+            <a
+              href="login.html"
+              class="btn btn-primary"
+              style="margin-top: 15px"
+              >Login</a
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="paymentServiceModal">
+      <div class="modal-content" style="max-width: 500px">
+        <div class="modal-header">
+          <h3 id="paymentServiceTitle">Make Payment</h3>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div style="text-align: center; padding: 30px">
+            <i
+              class="fas fa-lock"
+              style="font-size: 48px; color: #f59e0b; margin-bottom: 20px"
+            ></i>
+            <p>Please login to make payments</p>
+            <a
+              href="login.html"
+              class="btn btn-primary"
+              style="margin-top: 15px"
+              >Login</a
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="./JAVASCRIPT/main.js"></script>
+    <script src="./JAVASCRIPT/index.js"></script>
   </body>
 </html>

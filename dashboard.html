@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard - Paystora</title>
+    <title>Dashboard - FEECENT</title>
     <link rel="stylesheet" href="./CSS/dashboard.css" />
     <link rel="stylesheet" href="./CSS/admin.css" />
     <link rel="stylesheet" href="./CSS/main.css" />
@@ -19,13 +19,53 @@
     />
   </head>
   <body>
+    <!-- ==================== PROFESSIONAL LOADING OVERLAY ==================== -->
+    <div
+      id="globalLoadingOverlay"
+      class="global-loading-overlay"
+      style="display: none"
+    >
+      <div class="loading-container">
+        <div class="loading-card">
+          <div class="loading-animation">
+            <div class="bank-loader">
+              <div class="loader-shield">
+                <i class="fas fa-shield-alt"></i>
+              </div>
+              <div class="loader-circle"></div>
+              <div class="loader-circle-delayed"></div>
+            </div>
+          </div>
+          <div class="loading-text">
+            <span class="loading-title">Processing</span>
+            <div class="loading-dots">
+              <span>.</span><span>.</span><span>.</span>
+            </div>
+          </div>
+          <div class="loading-subtitle" id="loadingMessage">
+            Please wait while we complete your request
+          </div>
+          <div class="loading-progress-bar">
+            <div class="loading-progress-fill"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lock Screen Overlay (for preventing clicks during operations) -->
+    <div
+      id="lockScreenOverlay"
+      class="lock-screen-overlay"
+      style="display: none"
+    ></div>
+
     <div class="dashboard">
       <!-- Sidebar -->
       <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
           <div class="logo">
             <i class="fas fa-shield-alt"></i>
-            <span>Paystora</span>
+            <span>FEECENT</span>
           </div>
           <button class="sidebar-toggle" id="sidebarToggle">
             <i class="fas fa-chevron-left"></i>
@@ -44,6 +84,10 @@
           <a href="#" class="nav-item active" data-page="overview">
             <i class="fas fa-home"></i>
             <span>Overview</span>
+          </a>
+          <a href="#" class="nav-item" data-page="finance">
+            <i class="fas fa-chart-line"></i>
+            <span>Finance</span>
           </a>
           <a href="#" class="nav-item" data-page="accounts">
             <i class="fas fa-wallet"></i>
@@ -66,20 +110,25 @@
             <i class="fas fa-history"></i>
             <span>Transactions</span>
           </a>
-          <a href="#" class="nav-item" data-page="cards">
+          <a
+            href="#"
+            class="nav-item"
+            data-page="cards"
+            style="display: none !important"
+          >
             <i class="fas fa-credit-card"></i>
             <span>Cards</span>
+          </a>
+          <a href="#" class="nav-item" data-page="bills">
+            <i class="fas fa-file-invoice"></i>
+            <span>Bill Payments</span>
           </a>
           <a
             href="#"
             class="nav-item"
-            data-page="bills"
+            data-page="beneficiaries"
             style="display: none !important"
           >
-            <i class="fas fa-file-invoice"></i>
-            <span>Bill Payments</span>
-          </a>
-          <a href="#" class="nav-item" data-page="beneficiaries">
             <i class="fas fa-users"></i>
             <span>Beneficiaries</span>
           </a>
@@ -119,50 +168,6 @@
         </div>
       </aside>
 
-      <!-- App Download Banner 
-      <div
-        id="appDownloadBanner"
-        style="
-          display: none;
-          background: linear-gradient(135deg, #3b82f6, #1e40af);
-          color: white;
-          padding: 12px 20px;
-          text-align: center;
-          position: relative;
-          z-index: 1000;
-        "
-      >
-        <span>📱 Get the best experience with our mobile app! </span>
-        <a
-          href="#"
-          id="downloadAppBtn"
-          style="
-            background: white;
-            color: #1e40af;
-            padding: 6px 16px;
-            border-radius: 30px;
-            text-decoration: none;
-            margin-left: 12px;
-            font-weight: 500;
-          "
-          >Download App</a
-        >
-        <button
-          id="dismissBannerBtn"
-          style="
-            background: none;
-            border: none;
-            color: white;
-            margin-left: 12px;
-            cursor: pointer;
-            font-size: 20px;
-            vertical-align: middle;
-          "
-        >
-          &times;
-        </button>
-      </div>-->
-
       <!-- Main Content -->
       <main class="main-content" id="mainContent">
         <!-- Top Bar -->
@@ -171,7 +176,13 @@
             <button class="mobile-menu-btn" id="mobileMenuBtn">
               <i class="fas fa-bars"></i>
             </button>
-            <h1 id="pageTitle">Overview</h1>
+            <div style="display: none !important">
+              <h1 id="pageTitle">Overview</h1>
+            </div>
+            <div class="logo" style="margin-left: -20px !important">
+              <i class="fas fa-shield-alt"></i>
+              <span>FEECENT</span>
+            </div>
           </div>
           <div class="top-bar-right">
             <div class="search-box">
@@ -180,7 +191,7 @@
             </div>
             <div class="notifications" id="notifications">
               <i class="fas fa-bell"></i>
-              <span class="badge" id="notificationBadge">3</span>
+              <span class="badge" id="notificationBadge">0</span>
               <div class="notifications-dropdown" id="notificationsDropdown">
                 <div class="notifications-header">
                   <h4>Notifications</h4>
@@ -199,8 +210,8 @@
               />
               <i class="fas fa-chevron-down"></i>
               <div class="user-dropdown" id="userDropdown">
-                <a href="#"><i class="fas fa-user"></i> Profile</a>
-                <a href="#"><i class="fas fa-cog"></i> Settings</a>
+                <a href="#" onclick="showUserProfileModal()"><i class="fas fa-user"></i> Profile</a>
+                <a href="#" onclick="switchToPage('settings')"><i class="fas fa-cog"></i> Settings</a>
                 <a href="#" id="logoutDropdown"
                   ><i class="fas fa-sign-out-alt"></i> Logout</a
                 >
@@ -217,7 +228,7 @@
         >
           <div class="banner-content">
             <i class="fas fa-mobile-alt"></i>
-            <span>Install Paystora on your device for quick access!</span>
+            <span>Install feecent on your device for quick access!</span>
             <button id="pwaInstallBtn" class="banner-btn">Install App</button>
             <button id="pwaDismissBtn" class="banner-close">&times;</button>
           </div>
@@ -241,14 +252,34 @@
           </button>
         </div>
 
+        <!-- Bottom Navigation Bar (Mobile) -->
+        <div class="bottom-nav" id="bottomNav">
+          <button class="bottom-nav-item active" data-page="overview">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+          </button>
+          <button class="bottom-nav-item" data-page="finance">
+            <i class="fas fa-chart-line"></i>
+            <span>Finance</span>
+          </button>
+          <button class="bottom-nav-item" data-page="bills">
+            <i class="fas fa-file-invoice"></i>
+            <span>Bills</span>
+          </button>
+          <button class="bottom-nav-item" data-page="settings">
+            <i class="fas fa-user"></i>
+            <span>Me</span>
+          </button>
+        </div>
+
         <!-- Dynamic Content Pages -->
         <div class="content-pages">
           <!-- Overview Page -->
           <div class="page active" id="page-overview">
             <div class="welcome-card">
               <div>
-                <h2>Welcome back, <span id="welcomeName"> </span>! 👋</h2>
-                <p>Here's your financial summary</p>
+                <h2>Welcome back, <span id="welcomeName"> </span> 👋</h2>
+                <p>Let's make transactionss</p>
               </div>
               <div class="date-time">
                 <i class="far fa-calendar"></i>
@@ -262,7 +293,7 @@
                   <span>Total Balance</span>
                   <i class="fas fa-eye" id="toggleBalance"></i>
                 </div>
-                <div class="balance-amount" id="totalBalance">$0.00</div>
+                <div class="balance-amount" id="totalBalance">₦0.00</div>
 
                 <div class="account-number" id="primaryAccountNumber">
                   <!-- populated by JS -->
@@ -272,33 +303,64 @@
                   <span>+2.5% from last month</span>
                 </div>
               </div>
+
               <!-- Quick Actions -->
-              <div
-                class="quick-actions"
-                style="
-                  width: auto;
-                  margin-top: 20px;
-                  display: flex;
-                  flex-wrap: wrap;
-                  align-items: center;
-                  justify-content: space-between;
-                "
-              >
-                <button class="btnn btn-primaryy btn-sm" id="addMoneyBtn">
-                  <i class="fas fa-plus"></i> Fund
-                </button>
-                <button
-                  class="btnn btn-primaryy btn-sm"
-                  onclick="switchToPage('transfers')"
-                >
-                  <i class="fas fa-paper-plane"></i> Send
-                </button>
-                <button class="btnn btn-primaryy btn-sm" id="receiveMoneyBtn">
-                  <i class="fas fa-download"></i> Receive
-                </button>
+              <div class="balance-card">
+                <div class="bills-grid">
+                  <button class="btnn btn-primaryy btn-sm" id="addMoneyBtn">
+                    <i class="fas fa-plus"></i> Fund
+                  </button>
+                  <button
+                    class="btnn btn-primaryy btn-sm"
+                    onclick="switchToPage('transfers')"
+                  >
+                    <i class="fas fa-paper-plane"></i> Send
+                  </button>
+                  <button class="btnn btn-primaryy btn-sm" id="receiveMoneyBtn">
+                    <i class="fas fa-download"></i> Receive
+                  </button>
+                </div>
               </div>
 
-              <div class="balance-card">
+              <!-- Bills Grid - Like OPay Overview-->
+              <div class="bills-grid-section">
+                <div class="section-heade">
+                  <h3>Payments</h3>
+                  <!--<button class="view-all" id="viewAllServicesBtn">
+                    View All <i class="fas fa-arrow-right"></i>
+                  </button>-->
+                </div>
+                <div class="bills-grid" id="billsGrid">
+                  <div class="bill-item" data-service="airtime">
+                    <div class="bill-icon"><i class="fas fa-signal"></i></div>
+                    <span>Airtime</span>
+                  </div>
+                  <div class="bill-item" data-service="data">
+                    <div class="bill-icon"><i class="fas fa-wifi"></i></div>
+                    <span>Data</span>
+                  </div>
+                  <div class="bill-item" data-service="betting">
+                    <div class="bill-icon"><i class="fas fa-dice"></i></div>
+                    <span>Betting</span>
+                  </div>
+                  <div class="bill-item" data-service="tv">
+                    <div class="bill-icon"><i class="fas fa-tv"></i></div>
+                    <span>TV</span>
+                  </div>
+                  <div class="bill-item" data-service="electricity">
+                    <div class="bill-icon"><i class="fas fa-bolt"></i></div>
+                    <span>Electricity</span>
+                  </div>
+                  <div class="bill-item" id="moreServicesBtn">
+                    <div class="bill-icon">
+                      <i class="fas fa-ellipsis-h"></i>
+                    </div>
+                    <span>More</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="balance-card" style="display: none !important">
                 <div class="balance-label">
                   <span>Monthly Spending</span>
                 </div>
@@ -308,7 +370,8 @@
                 </div>
                 <div class="progress-label">68% of budget</div>
               </div>
-              <div class="balance-card">
+
+              <div class="balance-card" style="display: none !important">
                 <div class="balance-label">
                   <span>Savings Goals</span>
                 </div>
@@ -320,7 +383,7 @@
               </div>
             </div>
 
-            <div class="charts-grid">
+            <div class="charts-grid" style="display: none !important">
               <div class="chart-card">
                 <h3>Spending by Category</h3>
                 <canvas id="spendingChart"></canvas>
@@ -340,6 +403,67 @@
               </div>
               <div class="transactions-list" id="recentTransactions">
                 <!-- Transactions will be loaded here -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Finance Page -->
+          <div class="page" id="page-finance">
+            <div
+              class="page-header"
+              style="
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 30px;
+              "
+            >
+              <h2>Finance</h2>
+              <button
+                class="btn btn-outline"
+                onclick="switchToPage('overview')"
+              >
+                ← Back
+              </button>
+            </div>
+
+            <div class="finance-cards">
+              <div class="finance-card" onclick="showSavingsModal('harvest')">
+                <div class="finance-icon"><i class="fas fa-seedling"></i></div>
+                <h3>Harvest Plan</h3>
+                <p>Save daily, get food items</p>
+                <span class="badge">Admin Managed</span>
+              </div>
+              <div class="finance-card" onclick="showSavingsModal('fixed')">
+                <div class="finance-icon"><i class="fas fa-lock"></i></div>
+                <h3>Fixed Savings</h3>
+                <p>Lock for 1 month, earn interest</p>
+              </div>
+              <div class="finance-card" onclick="showSavingsModal('savebox')">
+                <div class="finance-icon"><i class="fas fa-box"></i></div>
+                <h3>SaveBox</h3>
+                <p>Flexible with small fee</p>
+              </div>
+              <div class="finance-card" onclick="showSavingsModal('target')">
+                <div class="finance-icon"><i class="fas fa-bullseye"></i></div>
+                <h3>Target Savings</h3>
+                <p>Save daily towards goal</p>
+              </div>
+              <!-- ADD SPARE CHANGE CARD -->
+              <div
+                class="finance-card"
+                onclick="showSavingsModal('spare_change')"
+              >
+                <div class="finance-icon"><i class="fas fa-coins"></i></div>
+                <h3>Spare Change</h3>
+                <p>Save 3% of every transfer</p>
+                <span class="badge">No Fees!</span>
+              </div>
+            </div>
+
+            <div class="my-savings">
+              <h3>My Savings</h3>
+              <div id="mySavingsList" class="savings-list">
+                <!-- User's active savings will appear here -->
               </div>
             </div>
           </div>
@@ -365,7 +489,14 @@
 
           <!-- Transfers Page -->
           <div class="page" id="page-transfers">
-            <div class="page-header">
+            <div
+              class="page-header"
+              style="
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 30px;
+              "
+            >
               <h2>Money Transfers</h2>
               <button
                 class="btn btn-outline"
@@ -415,7 +546,7 @@
                   <div class="form-group">
                     <label>Amount</label>
                     <div class="currency-input">
-                      <span>$</span>
+                      <span>₦</span>
                       <input
                         type="number"
                         id="amount"
@@ -525,7 +656,14 @@
 
           <!-- Add Money Page -->
           <div class="page" id="page-add-money">
-            <div class="page-header">
+            <div
+              class="page-header"
+              style="
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 30px;
+              "
+            >
               <h2>Add Money</h2>
               <button
                 class="btn btn-outline"
@@ -599,7 +737,7 @@
                   <div class="form-group" style="margin-bottom: 10px">
                     <label>Amount to Add ($)</label>
                     <div class="currency-input">
-                      <span>$</span>
+                      <span>₦</span>
                       <input
                         type="number"
                         id="addAmount"
@@ -636,7 +774,14 @@
 
           <!-- Full Transaction History Page -->
           <div class="page" id="page-transactions">
-            <div class="page-header">
+            <div
+              class="page-header"
+              style="
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 30px;
+              "
+            >
               <h2>All Transactions</h2>
               <button
                 class="btn btn-outline"
@@ -719,12 +864,27 @@
 
           <!-- Bills Page -->
           <div class="page" id="page-bills">
-            <div class="page-header">
+            <div
+              class="page-head"
+              style="
+                display: flex !important;
+                flex-wrap: wrap !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+              "
+            >
               <h2>Bill Payments</h2>
-              <button class="btn btn-outline" id="addBillBtn">
-                <i class="fas fa-plus"></i> Add Bill
+              <button
+                class="btn btn-outline"
+                onclick="switchToPage('overview')"
+              >
+                ← Back
               </button>
             </div>
+
+            <button class="btn btn-outline" id="addBillBtn">
+              <i class="fas fa-plus"></i> Add Bill
+            </button>
             <div class="bills-list" id="billsList">
               <!-- Bills will be loaded here -->
             </div>
@@ -858,71 +1018,206 @@
 
           <!-- Settings Page -->
           <div class="page" id="page-settings">
-            <h2>Settings</h2>
+            <div
+              class="page-header"
+              style="
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 30px;
+              "
+            >
+              <h2>Security Center</h2>
+              <button
+                class="btn btn-outline"
+                onclick="switchToPage('overview')"
+              >
+                ← Back
+              </button>
+            </div>
+
             <div class="settings-grid">
-              <div class="settings-card">
-                <h3>Profile Information</h3>
-                <form id="profileForm">
-                  <div class="form-group">
-                    <label>First Name</label>
-                    <input
-                      type="text"
-                      id="profileFirstName"
-                      class="form-control"
-                    />
-                  </div>
-                  <div class="form-group">
-                    <label>Last Name</label>
-                    <input
-                      type="text"
-                      id="profileLastName"
-                      class="form-control"
-                    />
-                  </div>
-                  <div class="form-group">
-                    <label>Phone</label>
-                    <input type="tel" id="profilePhone" class="form-control" />
-                  </div>
-                  <div class="form-group">
-                    <label>Address</label>
-                    <input
-                      type="text"
-                      id="profileAddress"
-                      class="form-control"
-                    />
-                  </div>
-                  <button type="submit" class="btn btn-primary">
-                    Update Profile
-                  </button>
-                </form>
+              <!-- Transaction History Card -->
+              <div class="settings-card" onclick="viewFullTransactionHistory()">
+                <div class="settings-icon">
+                  <i class="fas fa-history"></i>
+                </div>
+                <div class="settings-info">
+                  <h3>Transaction History</h3>
+                  <p>View all your transactions, filter by date and type</p>
+                </div>
+                <i class="fas fa-chevron-right"></i>
               </div>
-              <div class="settings-card">
-                <h3>Security Settings</h3>
-                <div class="security-option">
-                  <div>
-                    <strong>Two-Factor Authentication</strong>
-                    <p>Add an extra layer of security</p>
-                  </div>
-                  <label class="switch">
-                    <input type="checkbox" id="enable2FA" />
-                    <span class="slider"></span>
-                  </label>
+
+              <!-- Account Limits Card -->
+              <div class="settings-card" onclick="showAccountLimits()">
+                <div class="settings-icon">
+                  <i class="fas fa-chart-line"></i>
                 </div>
-                <div class="security-option">
-                  <div>
-                    <strong>Change Password</strong>
-                    <p>Update your password regularly</p>
-                  </div>
-                  <button class="btn btn-outline" id="changePasswordBtn">
-                    Change
-                  </button>
+                <div class="settings-info">
+                  <h3>Account Limits</h3>
+                  <p>View your daily, weekly and monthly transaction limits</p>
                 </div>
-                <div class="security-option">
-                  <div>
-                    <strong>Login History</strong>
-                    <p>Review recent account activity</p>
+                <i class="fas fa-chevron-right"></i>
+              </div>
+
+              <!-- Bank Cards Card -->
+              <div
+                class="settings-card"
+                onclick="viewBankCards()"
+                style="display: none !important"
+              >
+                <div class="settings-icon">
+                  <i class="fas fa-credit-card"></i>
+                </div>
+                <div class="settings-info">
+                  <h3>Bank Cards</h3>
+                  <p>Manage your linked cards, freeze or report lost/stolen</p>
+                </div>
+                <i class="fas fa-chevron-right"></i>
+              </div>
+
+              <!-- Bank Bills -->
+              <div class="settings-card" onclick="viewBills()">
+                <div class="settings-icon">
+                  <i class="fas fa-file-invoice"></i>
+                </div>
+                <div class="settings-info">
+                  <h3>Bills</h3>
+                  <p>Pay, schedule, and manage your bills effortlessly.</p>
+                </div>
+                <i class="fas fa-chevron-right"></i>
+              </div>
+
+              <!-- Security Center Card -->
+              <div class="settings-card" onclick="showSecurityCenter()">
+                <div class="settings-icon">
+                  <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="settings-info">
+                  <h3>Security Center</h3>
+                  <p>
+                    Learn about online safety, scams, and how to protect
+                    yourself
+                  </p>
+                </div>
+                <i class="fas fa-chevron-right"></i>
+              </div>
+
+              <!-- Change Password Card -->
+              <div class="settings-card" onclick="showChangePasswordModal()">
+                <div class="settings-icon">
+                  <i class="fas fa-key"></i>
+                </div>
+                <div class="settings-info">
+                  <h3>Change Password</h3>
+                  <p>Update your login password for better security</p>
+                </div>
+                <i class="fas fa-chevron-right"></i>
+              </div>
+
+              <!-- Transfer PIN Card -->
+              <div class="settings-card" onclick="showTransferPinModal()">
+                <div class="settings-icon">
+                  <i class="fas fa-lock"></i>
+                </div>
+                <div class="settings-info">
+                  <h3>Transfer PIN</h3>
+                  <p>Set or change your 4-digit transaction PIN</p>
+                </div>
+                <i class="fas fa-chevron-right"></i>
+              </div>
+              <!-- Account Security Card -->
+              <div class="settings-card" onclick="showAccountSecurityModal()">
+                <div class="settings-icon">
+                  <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="settings-info">
+                  <h3>Account Security</h3>
+                  <p>Manage your profile, security, and account settings</p>
+                </div>
+                <i class="fas fa-chevron-right"></i>
+              </div>
+
+              <!-- Push Notification Settings Card -->
+              <div class="settings-card-modern">
+                <div class="settings-card-header">
+                  <i class="fas fa-bell"></i>
+                  <h3>Notifications</h3>
+                </div>
+                <div class="settings-card-body">
+                  <div class="setting-item-modern toggle-item">
+                    <div class="toggle-info">
+                      <label>Enable Notifications</label>
+                      <small>Get real-time alerts on your device</small>
+                    </div>
+                    <label class="toggle-switch">
+                      <input
+                        type="checkbox"
+                        id="enablePushNotifications"
+                        onchange="enablePushNotifications()"
+                      />
+                      <span class="toggle-slider"></span>
+                    </label>
                   </div>
-                  <button class="btn btn-outline">View</button>
+
+                  <div id="pushSettingsGroup" style="display: none">
+                    <div class="setting-item-modern toggle-item">
+                      <div class="toggle-info">
+                        <label>Transfer Alerts</label>
+                        <small
+                          >Get notified when you send or receive money</small
+                        >
+                      </div>
+                      <label class="toggle-switch">
+                        <input type="checkbox" id="pushTransfers" checked />
+                        <span class="toggle-slider"></span>
+                      </label>
+                    </div>
+
+                    <div class="setting-item-modern toggle-item">
+                      <div class="toggle-info">
+                        <label>Savings Alerts</label>
+                        <small>Updates about your savings plans</small>
+                      </div>
+                      <label class="toggle-switch">
+                        <input type="checkbox" id="pushSavings" checked />
+                        <span class="toggle-slider"></span>
+                      </label>
+                    </div>
+
+                    <div class="setting-item-modern toggle-item">
+                      <div class="toggle-info">
+                        <label>Security Alerts</label>
+                        <small>Login attempts and security events</small>
+                      </div>
+                      <label class="toggle-switch">
+                        <input type="checkbox" id="pushSecurity" checked />
+                        <span class="toggle-slider"></span>
+                      </label>
+                    </div>
+
+                    <div class="setting-item-modern toggle-item">
+                      <div class="toggle-info">
+                        <label>Bill Payment Reminders</label>
+                        <small>Reminders for upcoming bills</small>
+                      </div>
+                      <label class="toggle-switch">
+                        <input type="checkbox" id="pushBills" checked />
+                        <span class="toggle-slider"></span>
+                      </label>
+                    </div>
+
+                    <div class="setting-item-modern toggle-item">
+                      <div class="toggle-info">
+                        <label>Promotions & Offers</label>
+                        <small>Exclusive deals and offers</small>
+                      </div>
+                      <label class="toggle-switch">
+                        <input type="checkbox" id="pushPromotions" />
+                        <span class="toggle-slider"></span>
+                      </label>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -932,6 +1227,702 @@
     </div>
 
     <!-- Modals -->
+
+    <!-- Transaction History Modal -->
+    <div class="modal" id="transactionHistoryModal">
+      <div class="modal-content modal-lg">
+        <div class="modal-header">
+          <h3>Transaction History</h3>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div
+            class="history-total"
+            style="
+              margin-bottom: 15px;
+              padding: 10px;
+              background: #f8fafc;
+              border-radius: 8px;
+            "
+          >
+            <span style="font-weight: 600">Total Balance Change: </span>
+            <span
+              id="historyTotal"
+              style="font-weight: 700; color: var(--primary-color)"
+              >₦0.00</span
+            >
+          </div>
+          <div class="history-filters">
+            <input type="date" id="historyStartDate" class="form-control" />
+            <input type="date" id="historyEndDate" class="form-control" />
+            <select id="historyTypeFilter" class="form-control">
+              <option value="">All Types</option>
+              <option value="transfer">Transfers</option>
+              <option value="deposit">Deposits</option>
+              <option value="withdrawal">Withdrawals</option>
+              <option value="bill_payment">Bill Payments</option>
+            </select>
+            <button
+              class="btn btn-primary"
+              onclick="filterTransactionHistory()"
+            >
+              Filter
+            </button>
+            <button
+              class="btn btn-outline"
+              onclick="exportTransactionHistory()"
+            >
+              Export CSV
+            </button>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table" id="transactionHistoryTable">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Description</th>
+                  <th>Type</th>
+                  <th>Amount (₦)</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="transactionHistoryBody"></tbody>
+            </table>
+          </div>
+          <div class="pagination" id="historyPagination"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Account Limits Modal -->
+    <div class="modal" id="accountLimitsModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Account Limits</h3>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="limits-container">
+            <div class="limit-card">
+              <div class="limit-icon"><i class="fas fa-sun"></i></div>
+              <div class="limit-info">
+                <h4>Daily Transfer Limit</h4>
+                <p class="limit-value" id="dailyLimitDisplay">₦0</p>
+                <p class="limit-used">
+                  Used today: <span id="dailyUsed">₦0</span>
+                </p>
+              </div>
+            </div>
+            <div class="limit-card">
+              <div class="limit-icon"><i class="fas fa-calendar-week"></i></div>
+              <div class="limit-info">
+                <h4>Weekly Transfer Limit</h4>
+                <p class="limit-value" id="weeklyLimitDisplay">₦0</p>
+                <p class="limit-used">
+                  Used this week: <span id="weeklyUsed">₦0</span>
+                </p>
+              </div>
+            </div>
+            <div class="limit-card">
+              <div class="limit-icon"><i class="fas fa-calendar-alt"></i></div>
+              <div class="limit-info">
+                <h4>Monthly Transfer Limit</h4>
+                <p class="limit-value" id="monthlyLimitDisplay">₦0</p>
+                <p class="limit-used">
+                  Used this month: <span id="monthlyUsed">₦0</span>
+                </p>
+              </div>
+            </div>
+            <div class="limit-card">
+              <div class="limit-icon">
+                <i class="fas fa-money-bill-wave"></i>
+              </div>
+              <div class="limit-info">
+                <h4>Single Transaction Limit</h4>
+                <p class="limit-value" id="singleTxLimitDisplay">₦0</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Security Center Modal -->
+    <div class="modal" id="securityCenterModal">
+      <div class="modal-content modal-lg">
+        <div class="modal-header">
+          <h3><i class="fas fa-shield-alt"></i> Security Center</h3>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body security-content">
+          <div class="security-tabs">
+            <button class="sec-tab active" data-tab="scams">
+              Common Scams
+            </button>
+            <button class="sec-tab" data-tab="password">
+              Password Security
+            </button>
+            <button class="sec-tab" data-tab="love">
+              Love & Romance Scams
+            </button>
+            <button class="sec-tab" data-tab="family">
+              Family & Relative Scams
+            </button>
+          </div>
+
+          <div id="scamsTab" class="security-tab active">
+            <h4>⚠️ Common Banking Scams</h4>
+            <div class="scam-card">
+              <h5><i class="fas fa-envelope"></i> Phishing Emails</h5>
+              <p>
+                Scammers send fake emails pretending to be from feecent asking
+                for your login details.
+                <strong>Never click links in suspicious emails.</strong>
+              </p>
+            </div>
+            <div class="scam-card">
+              <h5><i class="fas fa-phone-alt"></i> Vishing Calls</h5>
+              <p>
+                Criminals call pretending to be bank officials. They claim
+                there's a problem with your account and ask for your PIN or OTP.
+                <strong>feecent will NEVER ask for your PIN.</strong>
+              </p>
+            </div>
+            <div class="scam-card">
+              <h5><i class="fas fa-link"></i> Smishing (SMS Scams)</h5>
+              <p>
+                Fake text messages with links to fraudulent websites.
+                <strong
+                  >Always type feecent.com directly into your browser.</strong
+                >
+              </p>
+            </div>
+            <div class="scam-card">
+              <h5><i class="fas fa-database"></i> Data Breaches</h5>
+              <p>
+                Use unique passwords for different accounts. If one site is
+                breached, criminals will try your password elsewhere.
+              </p>
+            </div>
+          </div>
+
+          <div id="passwordTab" class="security-tab" style="display: none">
+            <h4>🔐 Password Security Best Practices</h4>
+            <div class="password-tips">
+              <div class="tip-item">
+                <i class="fas fa-check-circle"></i>
+                <div>
+                  <strong>Use a Strong Password</strong><br />Minimum 8
+                  characters, mix of uppercase, lowercase, numbers, and symbols
+                </div>
+              </div>
+              <div class="tip-item">
+                <i class="fas fa-check-circle"></i>
+                <div>
+                  <strong>Don't Reuse Passwords</strong><br />Each account
+                  should have a unique password
+                </div>
+              </div>
+              <div class="tip-item">
+                <i class="fas fa-check-circle"></i>
+                <div>
+                  <strong>Use a Password Manager</strong><br />Tools like
+                  Bitwarden or LastPass can generate and store strong passwords
+                </div>
+              </div>
+              <div class="tip-item">
+                <i class="fas fa-check-circle"></i>
+                <div>
+                  <strong>Enable Two-Factor Authentication (2FA)</strong
+                  ><br />Adds an extra layer of security to your account
+                </div>
+              </div>
+              <div class="tip-item">
+                <i class="fas fa-check-circle"></i>
+                <div>
+                  <strong>Regularly Update Your Password</strong><br />Change
+                  your password every 3-6 months
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="loveScamsTab" class="security-tab" style="display: none">
+            <h4>💔 Romance & Love Scams - WARNING</h4>
+            <div class="alert-card warning">
+              <i class="fas fa-exclamation-triangle"></i>
+              <p>
+                Scammers create fake profiles on dating sites to build emotional
+                connections before asking for money.
+              </p>
+            </div>
+            <div class="scam-warning">
+              <h5>Red Flags to Watch For:</h5>
+              <ul>
+                <li>They profess love quickly without meeting in person</li>
+                <li>
+                  They claim to be living or working overseas (military, oil
+                  rig, doctor)
+                </li>
+                <li>
+                  They have an urgent need for money (medical emergency, travel
+                  issues, business problem)
+                </li>
+                <li>
+                  They ask for gift cards, cryptocurrency, or wire transfers
+                </li>
+                <li>You've never video called with them</li>
+              </ul>
+            </div>
+            <div class="scam-warning">
+              <h5>What To Do:</h5>
+              <ul>
+                <li>Never send money to someone you haven't met in person</li>
+                <li>Do a reverse image search of their profile pictures</li>
+                <li>Talk to friends or family about the relationship</li>
+                <li>Report suspicious profiles to the dating platform</li>
+              </ul>
+            </div>
+          </div>
+
+          <div id="familyScamsTab" class="security-tab" style="display: none">
+            <h4>👨‍👩‍👧 Family & Relative Scams</h4>
+            <div class="alert-card warning">
+              <i class="fas fa-phone-slash"></i>
+              <p>
+                Criminals impersonate family members in distress to request
+                emergency funds.
+              </p>
+            </div>
+            <div class="scam-warning">
+              <h5>Common Tactics:</h5>
+              <ul>
+                <li>
+                  "Grandparent Scam" - Caller claims to be grandchild needing
+                  bail money
+                </li>
+                <li>
+                  "Relative in Hospital" - Urgent request for medical bills
+                </li>
+                <li>
+                  "Stranded Traveler" - Contact from "family member" stuck
+                  abroad needing flight money
+                </li>
+                <li>
+                  WhatsApp/Facebook account takeover - Scammer hacks account and
+                  messages contacts for money
+                </li>
+              </ul>
+            </div>
+            <div class="scam-warning">
+              <h5>Protection Tips:</h5>
+              <ul>
+                <li>
+                  Always verify by calling the family member directly on their
+                  known number
+                </li>
+                <li>Ask a question only they would know the answer to</li>
+                <li>
+                  Never send money to unknown accounts, even if the message
+                  seems urgent
+                </li>
+                <li>
+                  Enable two-factor authentication on social media accounts
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div class="modal" id="changePasswordModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Change Password</h3>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form id="changePasswordForm">
+            <div class="form-group">
+              <label>Current Password</label>
+              <input
+                type="password"
+                id="currentPassword"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label>New Password</label>
+              <input
+                type="password"
+                id="newPassword"
+                class="form-control"
+                required
+              />
+              <div class="password-strength-meter">
+                <div class="strength-bar"></div>
+                <small class="strength-text"></small>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Confirm New Password</label>
+              <input
+                type="password"
+                id="confirmNewPassword"
+                class="form-control"
+                required
+              />
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button
+            class="btn btn-outline"
+            onclick="closeModal('changePasswordModal')"
+          >
+            Cancel
+          </button>
+          <button class="btn btn-primary" id="confirmChangePassword">
+            Update Password
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transfer PIN Management Modal -->
+    <div class="modal" id="transferPinModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="pinModalTitle">Set Transfer PIN</h3>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p id="pinModalMessage" class="pin-message">
+            Set a 4-digit PIN for transaction verification.
+          </p>
+          <form id="transferPinForm">
+            <div class="form-group">
+              <label>New 4-Digit PIN</label>
+              <input
+                type="password"
+                id="newPin"
+                class="form-control"
+                maxlength="4"
+                pattern="[0-9]{4}"
+                inputmode="numeric"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label>Confirm PIN</label>
+              <input
+                type="password"
+                id="confirmPin"
+                class="form-control"
+                maxlength="4"
+                pattern="[0-9]{4}"
+                inputmode="numeric"
+                required
+              />
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button
+            class="btn btn-outline"
+            onclick="closeModal('transferPinModal')"
+          >
+            Cancel
+          </button>
+          <button class="btn btn-primary" id="confirmTransferPin">
+            Save PIN
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PIN Verification Modal (for transfer confirmation) -->
+    <div class="modal" id="pinVerificationModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Verify Transaction PIN</h3>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p>Enter your 4-digit PIN to authorize this transaction.</p>
+          <div class="form-group">
+            <label>Transaction PIN</label>
+            <input
+              type="password"
+              id="verificationPin"
+              class="form-control"
+              maxlength="4"
+              pattern="[0-9]{4}"
+              inputmode="numeric"
+              autofocus
+            />
+          </div>
+          <div id="pinAttemptsDisplay" class="pin-attempts"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" id="cancelPinVerification">
+            Cancel
+          </button>
+          <button class="btn btn-primary" id="confirmPinVerification">
+            Verify & Continue
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PIN Create Modal (for first-time transfer) -->
+    <div class="modal" id="pinCreateModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Create Transaction PIN</h3>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p>
+            To complete this transaction, you need to create a 4-digit
+            transaction PIN first.
+          </p>
+          <form id="pinCreateForm">
+            <div class="form-group">
+              <label>Create 4-Digit PIN</label>
+              <input
+                type="password"
+                id="createPin"
+                class="form-control"
+                maxlength="4"
+                pattern="[0-9]{4}"
+                inputmode="numeric"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label>Confirm PIN</label>
+              <input
+                type="password"
+                id="confirmCreatePin"
+                class="form-control"
+                maxlength="4"
+                pattern="[0-9]{4}"
+                inputmode="numeric"
+                required
+              />
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" id="cancelPinCreate">
+            Cancel Transfer
+          </button>
+          <button class="btn btn-primary" id="confirmPinCreate">
+            Create PIN & Continue
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Incorrect PIN Alert Modal -->
+    <div class="modal" id="incorrectPinModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3><i class="fas fa-exclamation-triangle"></i> Incorrect PIN</h3>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p id="incorrectPinMessage"></p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-warning" id="retryPinBtn">Retry</button>
+          <button class="btn btn-primary" id="changePinFromAttemptBtn">
+            Change PIN
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- More Services Modal -->
+    <div class="modal" id="moreServicesModal">
+      <div class="modal-content" style="max-width: 90%; max-height: 80vh">
+        <div class="modal-header">
+          <h3>All Services</h3>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="services-tabs">
+            <button class="services-tab-btn active" data-category="ecommerce">
+              E-commerce
+            </button>
+            <button class="services-tab-btn" data-category="bills">
+              Bill Payments
+            </button>
+            <button class="services-tab-btn" data-category="finance">
+              Finance
+            </button>
+            <button class="services-tab-btn" data-category="others">
+              Others
+            </button>
+          </div>
+          <div id="servicesContent" class="services-content">
+            <!-- Services loaded dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Savings Modal - Update with auto-save toggle -->
+    <div class="modal" id="savingsModal">
+      <div class="modal-content" style="max-width: 500px">
+        <div class="modal-header">
+          <h3 id="savingsModalTitle">Start Savings</h3>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form id="savingsForm">
+            <input type="hidden" id="savingsType" />
+            <div id="harvestPlansList" style="display: none">
+              <div class="form-group">
+                <label>Select Harvest Plan</label>
+                <select id="harvestPlanSelect" class="form-control" required>
+                  <option value="">Choose a plan</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group" id="amountGroup">
+              <label>Amount (₦)</label>
+              <input
+                type="number"
+                id="savingsAmount"
+                class="form-control"
+                step="0.01"
+                min="10"
+                required
+              />
+            </div>
+            <div
+              class="form-group"
+              id="targetWithdrawalDateGroup"
+              style="display: none"
+            >
+              <label>Withdrawal Date</label>
+              <input
+                type="date"
+                id="targetWithdrawalDate"
+                class="form-control"
+                required
+              />
+            </div>
+            <!-- ADD THIS AUTO-SAVE TOGGLE -->
+            <div class="form-group" id="autoSaveGroup" style="display: none">
+              <label
+                class="checkbox"
+                style="display: flex; align-items: center; gap: 10px"
+              >
+                <input type="checkbox" id="autoSaveCheckbox" checked />
+                <span>Enable auto-save (automatic daily deductions)</span>
+              </label>
+              <small style="color: #64748b"
+                >When enabled, money will be deducted automatically every day.
+                You can turn this off anytime.</small
+              >
+            </div>
+            <div class="info-text" id="savingsInfo"></div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" onclick="closeModal('savingsModal')">
+            Cancel
+          </button>
+          <button class="btn btn-primary" id="confirmSavingsBtn">
+            Start Saving
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment Service Modal -->
+    <div class="modal" id="paymentServiceModal">
+      <div class="modal-content" style="max-width: 500px">
+        <div class="modal-header">
+          <h3 id="paymentServiceTitle">Make Payment</h3>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form id="paymentServiceForm">
+            <input type="hidden" id="serviceType" />
+            <div class="form-group">
+              <label>Select Account</label>
+              <select id="paymentFromAccount" class="form-control" required>
+                <option value="">Select account</option>
+              </select>
+            </div>
+            <div class="form-group" id="phoneNumberGroup" style="display: none">
+              <label>Phone Number</label>
+              <input
+                type="tel"
+                id="phoneNumber"
+                class="form-control"
+                placeholder="Enter phone number"
+              />
+            </div>
+            <div class="form-group" id="meterNumberGroup" style="display: none">
+              <label>Meter Number</label>
+              <input
+                type="text"
+                id="meterNumber"
+                class="form-control"
+                placeholder="Enter meter number"
+              />
+            </div>
+            <div class="form-group" id="smartCardGroup" style="display: none">
+              <label>Smart Card Number</label>
+              <input
+                type="text"
+                id="smartCardNumber"
+                class="form-control"
+                placeholder="Enter smart card number"
+              />
+            </div>
+            <div
+              class="form-group"
+              id="serviceProviderGroup"
+              style="display: none"
+            >
+              <label>Service Provider</label>
+              <select id="serviceProvider" class="form-control"></select>
+            </div>
+            <div class="form-group">
+              <label>Amount ($)</label>
+              <input
+                type="number"
+                id="paymentAmount"
+                class="form-control"
+                step="0.01"
+                min="1"
+                required
+              />
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button
+            class="btn btn-outline"
+            onclick="closeModal('paymentServiceModal')"
+          >
+            Cancel
+          </button>
+          <button class="btn btn-primary" id="confirmPaymentBtn">
+            Pay Now
+          </button>
+        </div>
+      </div>
+    </div>
 
     <!-- Receive Money Modal -->
     <div class="modal" id="receiveMoneyModal">
@@ -1065,7 +2056,7 @@
                   max="10000"
                   required
                 />
-                <small>Minimum: $10 | Maximum: $10,000</small>
+                <small>Minimum: ₦100 | Maximum: ₦15,000,000</small>
               </div>
 
               <div class="form-group">
@@ -1091,7 +2082,7 @@
                 <strong style="color: #92400e">Important:</strong>
                 <span style="color: #78350f"
                   >External transfers take 2-3 business days to process. Funds
-                  will be deducted immediately and released after Paystora
+                  will be deducted immediately and released after feecent
                   approval.</span
                 >
               </div>
@@ -1203,7 +2194,7 @@
             </div>
             <div class="card-price">
               <span>Card Price:</span>
-              <strong>$10.00</strong>
+              <strong>₦3,000</strong>
             </div>
           </form>
         </div>
@@ -1277,8 +2268,1331 @@
       </div>
     </div>
 
+    <!-- Transaction Receipt Modal -->
+    <div class="modal" id="transactionReceiptModal">
+      <div
+        class="modal-content"
+        style="
+          max-width: 550px;
+          border-radius: 20px;
+          max-height: 90vh;
+          overflow-y: auto;
+        "
+      >
+        <div
+          class="modal-header"
+          style="
+            border-bottom: none;
+            padding-bottom: 0;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
+          "
+        >
+          <div
+            id="receiptStatusIcon"
+            style="text-align: center; margin: -4px 0 10px 0"
+          >
+            <i
+              class="fas fa-check-circle"
+              style="font-size: 45px; color: #10b981"
+            ></i>
+          </div>
+          <h3
+            id="receiptStatusText"
+            style="text-align: center; margin: 0; margin-right: 110px"
+          >
+            Transfer Successful
+          </h3>
+          <button
+            class="close-modal"
+            style="position: absolute; right: 20px; top: 20px"
+          >
+            &times;
+          </button>
+        </div>
+        <div class="modal-body" style="padding: 0 24px 24px 24px">
+          <!-- Receipt Content - This will be captured for image download -->
+          <div
+            id="receiptCaptureArea"
+            style="background: white; border-radius: 16px"
+          >
+            <!-- Bank Header -->
+            <div
+              style="
+                text-align: center;
+                padding: 20px 0 10px 0;
+                border-bottom: 2px dashed #e2e8f0;
+              "
+            >
+              <i
+                class="fas fa-shield-alt"
+                style="font-size: 32px; color: #6b21a8"
+              ></i>
+              <h2 style="margin: 5px 0 0 0; color: #1e293b">FEECENT</h2>
+              <p style="font-size: 11px; color: #64748b; margin: 2px 0 0 0">
+                Secure Payment Platform
+              </p>
+            </div>
+
+            <!-- Transaction Reference -->
+            <div
+              style="
+                background: #f8fafc;
+                border-radius: 12px;
+                padding: 12px;
+                text-align: center;
+                margin: 16px 0;
+              "
+            >
+              <span style="font-size: 11px; color: #64748b"
+                >Transaction Reference</span
+              >
+              <p
+                id="receiptTransactionId"
+                style="
+                  font-weight: 600;
+                  font-family: monospace;
+                  margin: 4px 0 0 0;
+                  font-size: 13px;
+                  word-break: break-all;
+                "
+              >
+                TXN123456789
+              </p>
+            </div>
+
+            <!-- Amount Section -->
+            <div style="text-align: center; margin-bottom: 20px">
+              <span style="font-size: 12px; color: #64748b">Amount</span>
+              <p
+                id="receiptAmount"
+                style="
+                  font-size: 32px;
+                  font-weight: 700;
+                  margin: 5px 0;
+                  color: #1e293b;
+                "
+              >
+                ₦0.00
+              </p>
+              <div style="display: flex; justify-content: center; gap: 20px">
+                <span id="receiptFee" style="font-size: 11px; color: #64748b"
+                  >Fee: ₦0.00</span
+                >
+                <span
+                  id="receiptTotal"
+                  style="font-size: 11px; font-weight: 600; color: #1e293b"
+                  >Total: ₦0.00</span
+                >
+              </div>
+            </div>
+
+            <!-- Transaction Details Grid - Horizontal Layout -->
+            <div
+              style="
+                background: #f8fafc;
+                border-radius: 12px;
+                padding: 16px;
+                margin-bottom: 16px;
+              "
+            >
+              <div
+                style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px"
+              >
+                <div>
+                  <span style="color: #64748b; font-size: 10px">STATUS</span>
+                  <div
+                    id="receiptStatus"
+                    style="
+                      font-weight: 600;
+                      padding: 4px 8px;
+                      border-radius: 20px;
+                      font-size: 11px;
+                      background: #d1fae5;
+                      color: #065f46;
+                      display: inline-block;
+                      margin-top: 4px;
+                    "
+                  >
+                    COMPLETED
+                  </div>
+                </div>
+                <div>
+                  <span style="color: #64748b; font-size: 10px"
+                    >DATE & TIME</span
+                  >
+                  <p
+                    id="receiptDateTime"
+                    style="font-weight: 500; font-size: 11px; margin: 4px 0 0 0"
+                  >
+                    -
+                  </p>
+                </div>
+                <div>
+                  <span style="color: #64748b; font-size: 10px"
+                    >TRANSACTION TYPE</span
+                  >
+                  <p
+                    id="receiptType"
+                    style="font-weight: 500; font-size: 11px; margin: 4px 0 0 0"
+                  >
+                    Transfer
+                  </p>
+                </div>
+                <div>
+                  <span style="color: #64748b; font-size: 10px"
+                    >DESCRIPTION</span
+                  >
+                  <p
+                    id="receiptDescription"
+                    style="
+                      font-weight: 500;
+                      font-size: 11px;
+                      margin: 4px 0 0 0;
+                      word-break: break-word;
+                    "
+                  >
+                    -
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sender & Receiver Side by Side -->
+            <div
+              style="
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 16px;
+                margin-bottom: 16px;
+              "
+            >
+              <!-- Sender Information -->
+              <div
+                style="background: #f8fafc; border-radius: 12px; padding: 12px"
+              >
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    margin-bottom: 10px;
+                  "
+                >
+                  <i
+                    class="fas fa-arrow-up"
+                    style="color: #ef4444; font-size: 12px"
+                  ></i>
+                  <span style="font-weight: 600; font-size: 11px"
+                    >SENT FROM</span
+                  >
+                </div>
+                <div style="margin-bottom: 8px">
+                  <div style="color: #64748b; font-size: 9px">Account Name</div>
+                  <div
+                    id="receiptFromName"
+                    style="
+                      font-weight: 500;
+                      font-size: 12px;
+                      word-break: break-word;
+                    "
+                  >
+                    -
+                  </div>
+                </div>
+                <div>
+                  <div style="color: #64748b; font-size: 9px">
+                    Account Number
+                  </div>
+                  <div
+                    id="receiptFromAccount"
+                    style="
+                      font-weight: 500;
+                      font-family: monospace;
+                      font-size: 11px;
+                      word-break: break-word;
+                    "
+                  >
+                    -
+                  </div>
+                </div>
+              </div>
+
+              <!-- Receiver Information -->
+              <div
+                style="background: #f8fafc; border-radius: 12px; padding: 12px"
+              >
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    margin-bottom: 10px;
+                  "
+                >
+                  <i
+                    class="fas fa-arrow-down"
+                    style="color: #10b981; font-size: 12px"
+                  ></i>
+                  <span style="font-weight: 600; font-size: 11px">SENT TO</span>
+                </div>
+                <div style="margin-bottom: 8px">
+                  <div style="color: #64748b; font-size: 9px">Account Name</div>
+                  <div
+                    id="receiptToName"
+                    style="
+                      font-weight: 500;
+                      font-size: 12px;
+                      word-break: break-word;
+                    "
+                  >
+                    -
+                  </div>
+                </div>
+                <div>
+                  <div style="color: #64748b; font-size: 9px">
+                    Account Number
+                  </div>
+                  <div
+                    id="receiptToAccount"
+                    style="
+                      font-weight: 500;
+                      font-family: monospace;
+                      font-size: 11px;
+                      word-break: break-word;
+                    "
+                  >
+                    -
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div
+              style="
+                border-top: 2px dashed #e2e8f0;
+                padding: 16px 0 8px 0;
+                text-align: center;
+              "
+            >
+              <!-- <img
+                src="https://chart.googleapis.com/chart?chs=100x100&cht=qr&chl=PPAYES%20Receipt%20-%20Powered%20by%20PPAYES"
+                alt="QR Code"
+                style="width: 60px; height: 60px; margin-bottom: 8px"
+                onerror="this.style.display = 'none'"
+              />-->
+              <p style="font-size: 9px; color: #94a3b8; margin: 0">
+                This is an electronically generated receipt.<br />
+                No signature required. Valid as proof of transaction.
+              </p>
+              <p style="font-size: 8px; color: #cbd5e1; margin: 8px 0 0 0">
+                Generated on: <span id="receiptGeneratedDate"></span>
+              </p>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div
+            style="
+              display: flex;
+              gap: 12px;
+              margin-top: 20px;
+              position: sticky;
+              bottom: 0;
+              background: white;
+              padding: 12px 0;
+            "
+          >
+            <button
+              id="receiptShareBtn"
+              class="btn btn-outline"
+              style="
+                flex: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+              "
+            >
+              <i class="fas fa-share-alt"></i> Share
+            </button>
+            <button
+              id="receiptDownloadBtn"
+              class="btn btn-primary"
+              style="
+                flex: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+              "
+            >
+              <i class="fas fa-camera"></i> Save Receipt
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Failed Transaction Modal -->
+    <div class="modal" id="transactionFailedModal">
+      <div class="modal-content" style="max-width: 450px; border-radius: 20px">
+        <div
+          class="modal-header"
+          style="border-bottom: none; padding-bottom: 0; text-align: center"
+        >
+          <div style="text-align: center; margin: 10px 0">
+            <i
+              class="fas fa-times-circle"
+              style="font-size: 60px; color: #ef4444"
+            ></i>
+          </div>
+          <h3 style="text-align: center; margin: 0">Transaction Failed</h3>
+          <button
+            class="close-modal"
+            style="position: absolute; right: 20px; top: 20px"
+          >
+            &times;
+          </button>
+        </div>
+        <div class="modal-body" style="padding: 0 24px 24px 24px">
+          <div
+            style="
+              background: #fef2f2;
+              border-radius: 12px;
+              padding: 16px;
+              margin-bottom: 20px;
+            "
+          >
+            <p
+              id="failedMessage"
+              style="margin: 0; color: #991b1b; text-align: center"
+            >
+              Your transaction could not be completed.
+            </p>
+            <p
+              id="failedReason"
+              style="
+                margin: 8px 0 0 0;
+                color: #7f1d1d;
+                font-size: 13px;
+                text-align: center;
+              "
+            >
+              Please check your balance and try again.
+            </p>
+          </div>
+          <div style="display: flex; gap: 12px">
+            <button
+              class="btn btn-outline"
+              onclick="closeModal('transactionFailedModal')"
+              style="flex: 1"
+            >
+              Close
+            </button>
+            <button
+              class="btn btn-primary"
+              onclick="
+                closeModal('transactionFailedModal');
+                document.getElementById('transferForm').reset();
+              "
+              style="flex: 1"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Insufficient Balance Modal -->
+    <div class="modal" id="insufficientBalanceModal">
+      <div class="modal-content" style="max-width: 450px; border-radius: 20px">
+        <div
+          class="modal-header"
+          style="border-bottom: none; padding-bottom: 0; text-align: center"
+        >
+          <div style="text-align: center; margin: 10px 0">
+            <i
+              class="fas fa-exclamation-triangle"
+              style="font-size: 60px; color: #f59e0b"
+            ></i>
+          </div>
+          <h3 style="text-align: center; margin: 0">Insufficient Balance</h3>
+          <button
+            class="close-modal"
+            style="position: absolute; right: 20px; top: 20px"
+          >
+            &times;
+          </button>
+        </div>
+        <div class="modal-body" style="padding: 0 24px 24px 24px">
+          <div
+            style="
+              background: #fef3c7;
+              border-radius: 12px;
+              padding: 16px;
+              margin-bottom: 20px;
+            "
+          >
+            <p id="insufficientMsg" style="margin: 0; color: #92400e">
+              Your account balance is insufficient for this transfer.
+            </p>
+            <p
+              id="insufficientDetails"
+              style="margin: 8px 0 0 0; color: #78350f; font-size: 13px"
+            >
+              Available balance: ₦0.00 | Required: ₦0.00
+            </p>
+          </div>
+          <button
+            class="btn btn-primary btn-block"
+            onclick="
+              closeModal('insufficientBalanceModal');
+              document.getElementById('addMoneyBtn').click();
+            "
+            style="margin-bottom: 10px"
+          >
+            <i class="fas fa-plus"></i> Add Money
+          </button>
+          <button
+            class="btn btn-outline btn-block"
+            onclick="closeModal('insufficientBalanceModal')"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Account Security Modal -->
+    <div class="modal" id="accountSecurityModal">
+      <div class="modal-content" style="max-width: 900px">
+        <div class="modal-header">
+          <h3><i class="fas fa-shield-alt"></i> Account Security Center</h3>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body" style="padding: 20px">
+          <div
+            class="security-options-grid"
+            style="
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+              gap: 15px;
+            "
+          >
+            <button
+              class="security-option-btn"
+              onclick="showUserProfileModal()"
+            >
+              <i class="fas fa-user-circle"></i>
+              <span>My Profile</span>
+              <small>View and manage your personal info</small>
+            </button>
+            <button
+              class="security-option-btn"
+              onclick="showLockAccountModal()"
+            >
+              <i class="fas fa-lock"></i>
+              <span>Freeze/Lock Account</span>
+              <small>Temporarily lock your account</small>
+            </button>
+            <button
+              class="security-option-btn"
+              onclick="showChangePhoneModal()"
+            >
+              <i class="fas fa-phone-alt"></i>
+              <span>Change Phone Number</span>
+              <small>Update your mobile number</small>
+            </button>
+            <button
+              class="security-option-btn"
+              onclick="showCloseAccountModal()"
+            >
+              <i class="fas fa-trash-alt"></i>
+              <span>Close Account</span>
+              <small>Permanently close your account</small>
+            </button>
+            <button
+              class="security-option-btn"
+              onclick="showLogoutSettingsModal()"
+            >
+              <i class="fas fa-sign-out-alt"></i>
+              <span>Logout Settings</span>
+              <small>Manage auto-logout preferences</small>
+            </button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            class="btn btn-outline"
+            onclick="closeModal('accountSecurityModal')"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Profile Modal -->
+    <div class="modal" id="userProfileModal">
+      <div class="modal-content" style="max-width: 700px">
+        <div class="modal-header">
+          <h3><i class="fas fa-user-circle"></i> My Profile</h3>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body" id="userProfileContent">
+          <!-- Profile content loaded dynamically -->
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" onclick="editUserProfile()">
+            Edit Profile
+          </button>
+          <button
+            class="btn btn-outline"
+            onclick="closeModal('userProfileModal')"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Address Details Modal -->
+    <div class="modal" id="addressDetailsModal">
+      <div class="modal-content" style="max-width: 500px">
+        <div class="modal-header">
+          <h3><i class="fas fa-map-marker-alt"></i> Full Address Details</h3>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body" id="addressDetailsContent">
+          <!-- Address details loaded dynamically -->
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" onclick="editAddress()">
+            Edit Address
+          </button>
+          <button
+            class="btn btn-outline"
+            onclick="closeModal('addressDetailsModal')"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lock Account Modal -->
+    <div class="modal" id="lockAccountModal">
+      <div class="modal-content" style="max-width: 550px">
+        <div class="modal-header">
+          <h3><i class="fas fa-lock"></i> Freeze Your Account</h3>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p style="margin-bottom: 20px">
+            Select the reason for freezing your account:
+          </p>
+          <div
+            class="lock-reasons-list"
+            style="
+              display: flex;
+              flex-direction: column;
+              gap: 12px;
+              max-height: 400px;
+              overflow-y: auto;
+            "
+          >
+            <label
+              class="lock-reason-option"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                padding: 12px;
+                border: 1px solid #e2e8f0;
+                border-radius: 10px;
+                cursor: pointer;
+              "
+            >
+              <input
+                type="radio"
+                name="lockReason"
+                value="Suspicious activity detected on my account"
+              />
+              <div>
+                <strong>🚨 Suspicious activity detected</strong>
+                <small style="display: block; color: #64748b"
+                  >I noticed unauthorized access or suspicious behavior</small
+                >
+              </div>
+            </label>
+            <label
+              class="lock-reason-option"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                padding: 12px;
+                border: 1px solid #e2e8f0;
+                border-radius: 10px;
+                cursor: pointer;
+              "
+            >
+              <input
+                type="radio"
+                name="lockReason"
+                value="Lost or stolen phone/device"
+              />
+              <div>
+                <strong>📱 Lost or stolen device</strong>
+                <small style="display: block; color: #64748b"
+                  >My phone or device was lost or stolen</small
+                >
+              </div>
+            </label>
+            <label
+              class="lock-reason-option"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                padding: 12px;
+                border: 1px solid #e2e8f0;
+                border-radius: 10px;
+                cursor: pointer;
+              "
+            >
+              <input
+                type="radio"
+                name="lockReason"
+                value="Someone knows my login credentials"
+              />
+              <div>
+                <strong>🔐 Compromised credentials</strong>
+                <small style="display: block; color: #64748b"
+                  >Someone else may know my password</small
+                >
+              </div>
+            </label>
+            <label
+              class="lock-reason-option"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                padding: 12px;
+                border: 1px solid #e2e8f0;
+                border-radius: 10px;
+                cursor: pointer;
+              "
+            >
+              <input
+                type="radio"
+                name="lockReason"
+                value="Temporary hold for personal security"
+              />
+              <div>
+                <strong>🛡️ Personal security concern</strong>
+                <small style="display: block; color: #64748b"
+                  >I want to temporarily secure my account</small
+                >
+              </div>
+            </label>
+            <label
+              class="lock-reason-option"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                padding: 12px;
+                border: 1px solid #e2e8f0;
+                border-radius: 10px;
+                cursor: pointer;
+              "
+            >
+              <input
+                type="radio"
+                name="lockReason"
+                value="Identity theft suspected"
+              />
+              <div>
+                <strong>🆔 Identity theft concern</strong>
+                <small style="display: block; color: #64748b"
+                  >I suspect someone is using my identity</small
+                >
+              </div>
+            </label>
+            <label
+              class="lock-reason-option"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                padding: 12px;
+                border: 1px solid #e2e8f0;
+                border-radius: 10px;
+                cursor: pointer;
+              "
+            >
+              <input
+                type="radio"
+                name="lockReason"
+                value="Other security concerns"
+              />
+              <div>
+                <strong>⚠️ Other security concerns</strong>
+                <small style="display: block; color: #64748b"
+                  >Other reasons not listed above</small
+                >
+              </div>
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            class="btn btn-outline"
+            onclick="closeModal('lockAccountModal')"
+          >
+            Cancel
+          </button>
+          <button class="btn btn-danger" onclick="confirmLockAccount()">
+            Freeze Account
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Change Phone Modal -->
+    <div class="modal" id="changePhoneModal">
+      <div class="modal-content" style="max-width: 450px">
+        <div class="modal-header">
+          <h3><i class="fas fa-phone-alt"></i> Change Phone Number</h3>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Current Phone Number</label>
+            <input
+              type="text"
+              id="currentPhoneDisplay"
+              class="form-control"
+              readonly
+              style="background: #f1f5f9"
+            />
+          </div>
+          <div class="form-group">
+            <label>New Phone Number</label>
+            <input
+              type="tel"
+              id="newPhoneNumber"
+              class="form-control"
+              placeholder="+1 234 567 8900"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label>Confirm New Phone Number</label>
+            <input
+              type="tel"
+              id="confirmNewPhone"
+              class="form-control"
+              placeholder="Confirm new phone number"
+              required
+            />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            class="btn btn-outline"
+            onclick="closeModal('changePhoneModal')"
+          >
+            Cancel
+          </button>
+          <button class="btn btn-primary" onclick="updatePhoneNumber()">
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Close Account Modal - Step 1 Warning -->
+    <div class="modal" id="closeAccountWarningModal">
+      <div class="modal-content" style="max-width: 500px">
+        <div class="modal-header">
+          <h3>
+            <i class="fas fa-exclamation-triangle"></i> Close Account - Warning
+          </h3>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div style="text-align: center; padding: 20px">
+            <i
+              class="fas fa-trash-alt"
+              style="font-size: 48px; color: #ef4444; margin-bottom: 20px"
+            ></i>
+            <h4 style="color: #991b1b">⚠️ Permanent Action</h4>
+            <p style="margin: 15px 0">By closing your account:</p>
+            <ul style="text-align: left; margin: 15px 0; padding-left: 20px">
+              <li>You will permanently lose access to your account</li>
+              <li>All your transaction history will be cleared</li>
+              <li>Your profile information will be deleted</li>
+              <li>You cannot reopen this account or recover any data</li>
+              <li>Any remaining balance must be withdrawn first</li>
+            </ul>
+            <p style="margin-top: 15px; color: #dc2626">
+              <strong>This action cannot be undone!</strong>
+            </p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            class="btn btn-outline"
+            onclick="closeModal('closeAccountWarningModal')"
+          >
+            Cancel
+          </button>
+          <button
+            class="btn btn-danger"
+            onclick="proceedToCloseAccountReason()"
+          >
+            Continue to Close Account
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Close Account Modal - Step 2 Reason -->
+    <div class="modal" id="closeAccountReasonModal">
+      <div class="modal-content" style="max-width: 550px">
+        <div class="modal-header">
+          <h3>
+            <i class="fas fa-question-circle"></i> Why are you closing your
+            account?
+          </h3>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p>Please help us improve by selecting a reason:</p>
+          <div
+            class="close-reasons-list"
+            style="
+              display: flex;
+              flex-direction: column;
+              gap: 10px;
+              max-height: 350px;
+              overflow-y: auto;
+              margin-top: 15px;
+            "
+          >
+            <label
+              class="close-reason-option"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                cursor: pointer;
+              "
+            >
+              <input
+                type="radio"
+                name="closeReason"
+                value="I have another FEECENT account"
+              />
+              <span>I have another FEECENT account</span>
+            </label>
+            <label
+              class="close-reason-option"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                cursor: pointer;
+              "
+            >
+              <input
+                type="radio"
+                name="closeReason"
+                value="I no longer need a FEECENT account"
+              />
+              <span>I no longer need a FEECENT account</span>
+            </label>
+            <label
+              class="close-reason-option"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                cursor: pointer;
+              "
+            >
+              <input
+                type="radio"
+                name="closeReason"
+                value="Poor customer service experience"
+              />
+              <span>Poor customer service experience</span>
+            </label>
+            <label
+              class="close-reason-option"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                cursor: pointer;
+              "
+            >
+              <input
+                type="radio"
+                name="closeReason"
+                value="Switching to another banking app"
+              />
+              <span>Switching to another banking app</span>
+            </label>
+            <label
+              class="close-reason-option"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                cursor: pointer;
+              "
+            >
+              <input
+                type="radio"
+                name="closeReason"
+                value="Worried about account security"
+              />
+              <span>Worried about account security</span>
+            </label>
+            <label
+              class="close-reason-option"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                cursor: pointer;
+              "
+            >
+              <input
+                type="radio"
+                name="closeReason"
+                value="Too many fees or charges"
+              />
+              <span>Too many fees or charges</span>
+            </label>
+            <label
+              class="close-reason-option"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                cursor: pointer;
+              "
+            >
+              <input
+                type="radio"
+                name="closeReason"
+                value="Technical issues with the app"
+              />
+              <span>Technical issues with the app</span>
+            </label>
+            <label
+              class="close-reason-option"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                cursor: pointer;
+              "
+            >
+              <input type="radio" name="closeReason" value="Other" />
+              <span>Other</span>
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" onclick="goBackToWarningModal()">
+            Back
+          </button>
+          <button class="btn btn-danger" onclick="finalizeCloseAccount()">
+            Final Close Account
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Close Account Eligibility Modal (Shows why cannot close) -->
+    <div class="modal" id="closeAccountEligibilityModal">
+      <div class="modal-content" style="max-width: 550px">
+        <div class="modal-header">
+          <h3><i class="fas fa-ban"></i> Cannot Close Account</h3>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body" id="eligibilityContent">
+          <!-- Eligibility issues will be displayed here -->
+        </div>
+        <div class="modal-footer">
+          <button
+            class="btn btn-primary"
+            onclick="closeModal('closeAccountEligibilityModal')"
+          >
+            OK, I Understand
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Logout Settings Modal -->
+    <div class="modal" id="logoutSettingsModal">
+      <div class="modal-content" style="max-width: 550px">
+        <div class="modal-header">
+          <h3><i class="fas fa-sign-out-alt"></i> Logout Settings</h3>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div
+            class="logout-options"
+            style="display: flex; flex-direction: column; gap: 15px"
+          >
+            <label
+              class="logout-option"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                padding: 15px;
+                border: 2px solid #e2e8f0;
+                border-radius: 12px;
+                cursor: pointer;
+              "
+            >
+              <input type="radio" name="logoutSetting" value="free" />
+              <div>
+                <strong><i class="fas fa-unlock-alt"></i> Free Login</strong>
+                <small style="display: block; color: #64748b"
+                  >Stay logged in indefinitely until you manually logout</small
+                >
+              </div>
+            </label>
+            <label
+              class="logout-option"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                padding: 15px;
+                border: 2px solid #e2e8f0;
+                border-radius: 12px;
+                cursor: pointer;
+              "
+            >
+              <input type="radio" name="logoutSetting" value="60min" />
+              <div>
+                <strong
+                  ><i class="fas fa-clock"></i> Require Password Every 60
+                  Minutes</strong
+                >
+                <small style="display: block; color: #64748b"
+                  >Auto-logout after 60 minutes of inactivity</small
+                >
+              </div>
+            </label>
+            <label
+              class="logout-option"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                padding: 15px;
+                border: 2px solid #e2e8f0;
+                border-radius: 12px;
+                cursor: pointer;
+              "
+            >
+              <input type="radio" name="logoutSetting" value="always" />
+              <div>
+                <strong
+                  ><i class="fas fa-lock"></i> Always Require Password</strong
+                >
+                <small style="display: block; color: #64748b"
+                  >Logout immediately when app is closed or minimized</small
+                >
+              </div>
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            class="btn btn-outline"
+            onclick="closeModal('logoutSettingsModal')"
+          >
+            Cancel
+          </button>
+          <button class="btn btn-primary" onclick="saveLogoutSettings()">
+            Save Settings
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Universal Confirmation Modal -
+    <div class="modal" id="confirmationModal">
+      <div
+        class="modal-content confirmation-modal-content"
+        style="max-width: 400px; text-align: center"
+      >
+        <div
+          class="modal-header"
+          style="border-bottom: none; padding-bottom: 0"
+        >
+          <button
+            class="close-modal"
+            style="position: absolute; right: 15px; top: 15px"
+          >
+            &times;
+          </button>
+        </div>
+        <div class="modal-body" style="padding: 30px 24px">
+          <div
+            id="confirmationIcon"
+            style="font-size: 48px; margin-bottom: 15px"
+          >
+            ⚠️
+          </div>
+          <h3 id="confirmationTitle" style="margin-bottom: 10px">
+            Confirm Action
+          </h3>
+          <p
+            id="confirmationMessage"
+            style="color: #64748b; margin-bottom: 25px"
+          >
+            Are you sure you want to proceed?
+          </p>
+          <div style="display: flex; gap: 12px; justify-content: center">
+            <button
+              id="confirmationCancelBtn"
+              class="btn btn-outline"
+              style="min-width: 100px"
+            >
+              Cancel
+            </button>
+            <button
+              id="confirmationConfirmBtn"
+              class="btn btn-primary"
+              style="min-width: 100px"
+            >
+              Confirm
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>-->
+
+    <!-- Universal Confirmation Modal - Make sure it's the LAST modal in the body -->
+    <div class="modal" id="confirmationModal" style="z-index: 10002">
+      <div
+        class="modal-content confirmation-modal-content"
+        style="
+          max-width: 400px;
+          text-align: center;
+          position: relative;
+          z-index: 10003;
+        "
+      >
+        <div
+          class="modal-header"
+          style="border-bottom: none; padding-bottom: 0"
+        >
+          <button
+            class="close-modal"
+            style="position: absolute; right: 15px; top: 15px"
+          >
+            &times;
+          </button>
+        </div>
+        <div class="modal-body" style="padding: 30px 24px">
+          <div
+            id="confirmationIcon"
+            style="font-size: 48px; margin-bottom: 15px"
+          >
+            ⚠️
+          </div>
+          <h3 id="confirmationTitle" style="margin-bottom: 10px">
+            Confirm Action
+          </h3>
+          <p
+            id="confirmationMessage"
+            style="color: #64748b; margin-bottom: 25px"
+          >
+            Are you sure you want to proceed?
+          </p>
+          <div style="display: flex; gap: 12px; justify-content: center">
+            <button
+              id="confirmationCancelBtn"
+              class="btn btn-outline"
+              style="min-width: 100px"
+            >
+              Cancel
+            </button>
+            <button
+              id="confirmationConfirmBtn"
+              class="btn btn-primary"
+              style="min-width: 100px"
+            >
+              Confirm
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification for Mobile-friendly alerts -->
+    <div
+      id="toastNotification"
+      class="toast-notification"
+      style="display: none"
+    >
+      <div class="toast-content">
+        <i class="fas fa-info-circle"></i>
+        <span id="toastMessage"></span>
+      </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="./JAVASCRIPT/virtual-scroll.js"></script>
     <script src="./JAVASCRIPT/dashboard.js"></script>
+    <script src="./JAVASCRIPT/api-service.js"></script>
+    <script src="./JAVASCRIPT/pull-to-refresh.js"></script>
+    <script src="./JAVASCRIPT/constants.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   </body>
 </html>

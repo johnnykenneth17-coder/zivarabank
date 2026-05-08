@@ -92,10 +92,6 @@ if (loginForm) {
   });
 }
 
-
-
-
-
 // Toggle password visibility
 document.querySelectorAll(".toggle-password").forEach((button) => {
   button.addEventListener("click", function () {
@@ -470,12 +466,61 @@ function validateFaceImage(imageData) {
   img.src = imageData;
 }
 
+async function compressAndUploadImage(dataUrl, maxWidth = 300, maxHeight = 300, quality = 0.7) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      // Calculate new dimensions
+      let width = img.width;
+      let height = img.height;
+      
+      if (width > maxWidth) {
+        height = (height * maxWidth) / width;
+        width = maxWidth;
+      }
+      
+      if (height > maxHeight) {
+        width = (width * maxHeight) / height;
+        height = maxHeight;
+      }
+      
+      // Create canvas and compress
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      // Convert to blob for better compression
+      canvas.toBlob((blob) => {
+        // Create file from blob
+        const file = new File([blob], 'face-image.jpg', { type: 'image/jpeg' });
+        
+        // Read as base64 only when needed (for immediate display)
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      }, 'image/jpeg', quality);
+    };
+    img.onerror = reject;
+    img.src = dataUrl;
+  });
+}
+
+
+
 // register form handler
 const registerForm = document.getElementById("registerForm");
 // Update the register form submission
 if (registerForm) {
   registerForm.addEventListener("submit", async (e) => {
     e.preventDefault();
+
+    // Compress image BEFORE sending
+    if (capturedImageData) {
+      const compressed = await compressAndUploadImage(capturedImageData, 200, 200, 0.5);
+      capturedImageData = compressed; // Replace with compressed version
+    }
 
     const passwordInput = document.getElementById("password");
     //const strengthBar = document.querySelector(".strength-bar");
@@ -609,72 +654,74 @@ if (registerForm) {
 
 // Password strength checker - Enhanced version
 function checkPasswordStrength(password) {
-    let score = 0;
-    const checks = {
-        length: password.length >= 8,
-        uppercase: /[A-Z]/.test(password),
-        lowercase: /[a-z]/.test(password),
-        numbers: /[0-9]/.test(password),
-        special: /[^A-Za-z0-9]/.test(password)
-    };
-    
-    // Calculate score
-    if (checks.length) score++;
-    if (checks.uppercase) score++;
-    if (checks.lowercase) score++;
-    if (checks.numbers) score++;
-    if (checks.special) score++;
-    
-    let strength = 'weak';
-    let message = '';
-    
-    if (score >= 4) {
-        strength = 'strong';
-        message = 'Strong password';
-    } else if (score >= 3) {
-        strength = 'medium';
-        message = 'Medium password';
-    } else {
-        strength = 'weak';
-        message = 'Weak password';
-    }
-    
-    return { 
-        score, 
-        strength, 
-        message,
-        checks 
-    };
+  let score = 0;
+  const checks = {
+    length: password.length >= 8,
+    uppercase: /[A-Z]/.test(password),
+    lowercase: /[a-z]/.test(password),
+    numbers: /[0-9]/.test(password),
+    special: /[^A-Za-z0-9]/.test(password),
+  };
+
+  // Calculate score
+  if (checks.length) score++;
+  if (checks.uppercase) score++;
+  if (checks.lowercase) score++;
+  if (checks.numbers) score++;
+  if (checks.special) score++;
+
+  let strength = "weak";
+  let message = "";
+
+  if (score >= 4) {
+    strength = "strong";
+    message = "Strong password";
+  } else if (score >= 3) {
+    strength = "medium";
+    message = "Medium password";
+  } else {
+    strength = "weak";
+    message = "Weak password";
+  }
+
+  return {
+    score,
+    strength,
+    message,
+    checks,
+  };
 }
 
 // Update password strength display
 function updatePasswordStrength(strengthData) {
-    const strengthBar = document.querySelector('.strength-bar');
-    const strengthText = document.querySelector('.strength-text');
-    
-    if (strengthBar) {
-        strengthBar.setAttribute('data-strength', strengthData.strength);
-    }
-    
-    if (strengthText) {
-        strengthText.textContent = strengthData.message;
-        strengthText.className = `strength-text ${strengthData.strength}`;
-    }
-    
-    // Update requirements list if it exists
-    updatePasswordRequirements(strengthData.checks);
+  const strengthBar = document.querySelector(".strength-bar");
+  const strengthText = document.querySelector(".strength-text");
+
+  if (strengthBar) {
+    strengthBar.setAttribute("data-strength", strengthData.strength);
+  }
+
+  if (strengthText) {
+    strengthText.textContent = strengthData.message;
+    strengthText.className = `strength-text ${strengthData.strength}`;
+  }
+
+  // Update requirements list if it exists
+  updatePasswordRequirements(strengthData.checks);
 }
 
 // Create and update password requirements list
 function updatePasswordRequirements(checks) {
-    // Check if requirements list exists, if not create it
-    let requirementsList = document.querySelector('.password-requirements');
-    const passwordGroup = document.querySelector('#password').closest('.form-group');
-    
-    if (!requirementsList && passwordGroup) {
-        requirementsList = document.createElement('div');
-        requirementsList.className = 'password-requirements';
-        requirementsList.innerHTML = `
+  // Check if requirements list exists, if not create it
+  let requirementsList = document.querySelector(".password-requirements");
+  const passwordGroup = document
+    .querySelector("#password")
+    .closest(".form-group");
+
+  if (!requirementsList && passwordGroup) {
+    requirementsList = document.createElement("div");
+    requirementsList.className = "password-requirements";
+    requirementsList.innerHTML = `
             <ul>
                 <li id="req-length"><i class="fas fa-times-circle"></i> At least 8 characters</li>
                 <li id="req-uppercase"><i class="fas fa-times-circle"></i> At least one uppercase letter</li>
@@ -683,84 +730,83 @@ function updatePasswordRequirements(checks) {
                 <li id="req-special"><i class="fas fa-times-circle"></i> At least one special character (!@#$%^&*)</li>
             </ul>
         `;
-        passwordGroup.appendChild(requirementsList);
+    passwordGroup.appendChild(requirementsList);
+  }
+
+  // Update each requirement
+  if (requirementsList) {
+    const reqLength = document.getElementById("req-length");
+    const reqUppercase = document.getElementById("req-uppercase");
+    const reqLowercase = document.getElementById("req-lowercase");
+    const reqNumbers = document.getElementById("req-numbers");
+    const reqSpecial = document.getElementById("req-special");
+
+    if (reqLength) {
+      reqLength.className = checks.length ? "valid" : "invalid";
+      reqLength.innerHTML = checks.length
+        ? '<i class="fas fa-check-circle"></i> At least 8 characters'
+        : '<i class="fas fa-times-circle"></i> At least 8 characters';
     }
-    
-    // Update each requirement
-    if (requirementsList) {
-        const reqLength = document.getElementById('req-length');
-        const reqUppercase = document.getElementById('req-uppercase');
-        const reqLowercase = document.getElementById('req-lowercase');
-        const reqNumbers = document.getElementById('req-numbers');
-        const reqSpecial = document.getElementById('req-special');
-        
-        if (reqLength) {
-            reqLength.className = checks.length ? 'valid' : 'invalid';
-            reqLength.innerHTML = checks.length ? 
-                '<i class="fas fa-check-circle"></i> At least 8 characters' : 
-                '<i class="fas fa-times-circle"></i> At least 8 characters';
-        }
-        
-        if (reqUppercase) {
-            reqUppercase.className = checks.uppercase ? 'valid' : 'invalid';
-            reqUppercase.innerHTML = checks.uppercase ? 
-                '<i class="fas fa-check-circle"></i> At least one uppercase letter' : 
-                '<i class="fas fa-times-circle"></i> At least one uppercase letter';
-        }
-        
-        if (reqLowercase) {
-            reqLowercase.className = checks.lowercase ? 'valid' : 'invalid';
-            reqLowercase.innerHTML = checks.lowercase ? 
-                '<i class="fas fa-check-circle"></i> At least one lowercase letter' : 
-                '<i class="fas fa-times-circle"></i> At least one lowercase letter';
-        }
-        
-        if (reqNumbers) {
-            reqNumbers.className = checks.numbers ? 'valid' : 'invalid';
-            reqNumbers.innerHTML = checks.numbers ? 
-                '<i class="fas fa-check-circle"></i> At least one number' : 
-                '<i class="fas fa-times-circle"></i> At least one number';
-        }
-        
-        if (reqSpecial) {
-            reqSpecial.className = checks.special ? 'valid' : 'invalid';
-            reqSpecial.innerHTML = checks.special ? 
-                '<i class="fas fa-check-circle"></i> At least one special character (!@#$%^&*)' : 
-                '<i class="fas fa-times-circle"></i> At least one special character (!@#$%^&*)';
-        }
+
+    if (reqUppercase) {
+      reqUppercase.className = checks.uppercase ? "valid" : "invalid";
+      reqUppercase.innerHTML = checks.uppercase
+        ? '<i class="fas fa-check-circle"></i> At least one uppercase letter'
+        : '<i class="fas fa-times-circle"></i> At least one uppercase letter';
     }
+
+    if (reqLowercase) {
+      reqLowercase.className = checks.lowercase ? "valid" : "invalid";
+      reqLowercase.innerHTML = checks.lowercase
+        ? '<i class="fas fa-check-circle"></i> At least one lowercase letter'
+        : '<i class="fas fa-times-circle"></i> At least one lowercase letter';
+    }
+
+    if (reqNumbers) {
+      reqNumbers.className = checks.numbers ? "valid" : "invalid";
+      reqNumbers.innerHTML = checks.numbers
+        ? '<i class="fas fa-check-circle"></i> At least one number'
+        : '<i class="fas fa-times-circle"></i> At least one number';
+    }
+
+    if (reqSpecial) {
+      reqSpecial.className = checks.special ? "valid" : "invalid";
+      reqSpecial.innerHTML = checks.special
+        ? '<i class="fas fa-check-circle"></i> At least one special character (!@#$%^&*)'
+        : '<i class="fas fa-times-circle"></i> At least one special character (!@#$%^&*)';
+    }
+  }
 }
 
 // Initialize password strength listener
 function initPasswordStrength() {
-    const passwordInput = document.getElementById('password');
-    if (passwordInput) {
-        passwordInput.addEventListener('input', () => {
-            const strength = checkPasswordStrength(passwordInput.value);
-            updatePasswordStrength(strength);
-        });
-        
-        // Initial check if password already has value
-        if (passwordInput.value) {
-            const strength = checkPasswordStrength(passwordInput.value);
-            updatePasswordStrength(strength);
-        }
+  const passwordInput = document.getElementById("password");
+  if (passwordInput) {
+    passwordInput.addEventListener("input", () => {
+      const strength = checkPasswordStrength(passwordInput.value);
+      updatePasswordStrength(strength);
+    });
+
+    // Initial check if password already has value
+    if (passwordInput.value) {
+      const strength = checkPasswordStrength(passwordInput.value);
+      updatePasswordStrength(strength);
     }
+  }
 }
 
 // Call this when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    initPasswordStrength();
+document.addEventListener("DOMContentLoaded", () => {
+  initPasswordStrength();
 
-        // Also initialize other form elements
-    const passwordInput = document.getElementById('password');
-    if (passwordInput && passwordInput.value === '') {
-        // Show initial requirements
-        const strength = checkPasswordStrength('');
-        updatePasswordStrength(strength);
-    }
+  // Also initialize other form elements
+  const passwordInput = document.getElementById("password");
+  if (passwordInput && passwordInput.value === "") {
+    // Show initial requirements
+    const strength = checkPasswordStrength("");
+    updatePasswordStrength(strength);
+  }
 });
-
 
 // Clean up camera when leaving page
 window.addEventListener("beforeunload", () => {
@@ -901,7 +947,7 @@ async function compressImage(
 });*/
 
 // Smooth scroll for anchor links
-document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+/*document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
   anchor.addEventListener("click", function (e) {
     e.preventDefault();
     const target = document.querySelector(this.getAttribute("href"));
@@ -912,242 +958,176 @@ document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
       });
     }
   });
-});
-
+});*/
 
 // PWA Installation Logic
 // ========== PWA INSTALL BANNER (iOS + Android friendly) ==========
 // ========== PWA INSTALL BANNER (Debug + iOS Modal) ==========
-(function() {
-    let deferredPrompt = null;
-    let bannerShown = false;
+(function () {
+  let deferredPrompt = null;
+  let bannerShown = false;
 
-    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    console.log('iOS detected:', isIos);
+  const isIos =
+    /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  console.log("iOS detected:", isIos);
 
-    function isPWAInstalled() {
-        const installed = window.matchMedia('(display-mode: standalone)').matches ||
-                          window.navigator.standalone === true;
-        console.log('PWA installed?', installed);
-        return installed;
+  function isPWAInstalled() {
+    const installed =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.navigator.standalone === true;
+    console.log("PWA installed?", installed);
+    return installed;
+  }
+
+  function isNativeApp() {
+    const native =
+      typeof window.Capacitor !== "undefined" &&
+      window.Capacitor.isNativePlatform();
+    console.log("Native app?", native);
+    return native;
+  }
+
+  function shouldShowBanner() {
+    if (isPWAInstalled()) return false;
+    if (isNativeApp()) return false;
+    if (localStorage.getItem("pwaBannerDismissed") === "true") {
+      console.log("Banner dismissed by user");
+      return false;
+    }
+    return true;
+  }
+
+  function showPwaBanner() {
+    const banner = document.getElementById("pwaInstallBanner");
+    if (!banner) {
+      console.error("Banner element #pwaInstallBanner not found!");
+      return;
+    }
+    if (bannerShown) return;
+    if (shouldShowBanner()) {
+      banner.style.display = "block";
+      bannerShown = true;
+      console.log("Banner shown");
+    } else {
+      console.log("Banner not shown because conditions not met");
+    }
+  }
+
+  function dismissPwaBanner(permanent = true) {
+    const banner = document.getElementById("pwaInstallBanner");
+    if (banner) banner.style.display = "none";
+    if (permanent) localStorage.setItem("pwaBannerDismissed", "true");
+    bannerShown = false;
+    console.log("Banner dismissed, permanent:", permanent);
+  }
+
+  function showIosInstructions() {
+    const modal = document.getElementById("pwaInstructionsModal");
+    if (!modal) {
+      console.error("Modal element #pwaInstructionsModal not found!");
+      alert(
+        'To install this app on iOS:\n\n1. Tap Share button\n2. Tap "Add to Home Screen"\n3. Tap Add',
+      );
+      return;
+    }
+    modal.classList.add("show");
+    console.log("iOS instructions modal opened");
+  }
+
+  async function installPwa() {
+    console.log(
+      "Install button clicked. iOS?",
+      isIos,
+      "deferredPrompt?",
+      !!deferredPrompt,
+    );
+    if (!isIos && deferredPrompt) {
+      // Android/Chrome native prompt
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log("PWA install outcome:", outcome);
+      deferredPrompt = null;
+      dismissPwaBanner(true);
+    } else {
+      // iOS or no beforeinstallprompt
+      showIosInstructions();
+    }
+  }
+
+  // Wait for DOM to be ready before attaching events
+  document.addEventListener("DOMContentLoaded", () => {
+    console.log("DOM ready – attaching PWA events");
+    const banner = document.getElementById("pwaInstallBanner");
+    const installBtn = document.getElementById("pwaInstallBtn");
+    const dismissBtn = document.getElementById("pwaDismissBtn");
+
+    if (installBtn) {
+      installBtn.addEventListener("click", installPwa);
+      console.log("Install button listener attached");
+    } else {
+      console.error("Install button #pwaInstallBtn not found!");
     }
 
-    function isNativeApp() {
-        const native = typeof window.Capacitor !== 'undefined' && window.Capacitor.isNativePlatform();
-        console.log('Native app?', native);
-        return native;
+    if (dismissBtn) {
+      dismissBtn.addEventListener("click", () => dismissPwaBanner(true));
+      console.log("Dismiss button listener attached");
+    } else {
+      console.error("Dismiss button #pwaDismissBtn not found!");
     }
 
-    function shouldShowBanner() {
-        if (isPWAInstalled()) return false;
-        if (isNativeApp()) return false;
-        if (localStorage.getItem('pwaBannerDismissed') === 'true') {
-            console.log('Banner dismissed by user');
-            return false;
-        }
-        return true;
+    // Close modal events
+    const modal = document.getElementById("pwaInstructionsModal");
+    const closeModalBtn = document.getElementById("closeInstructionsModal");
+    const gotItBtn = document.getElementById("gotItBtn");
+    const closeModal = () => {
+      if (modal) modal.classList.remove("show");
+      console.log("Modal closed");
+    };
+    if (closeModalBtn) closeModalBtn.addEventListener("click", closeModal);
+    if (gotItBtn) gotItBtn.addEventListener("click", closeModal);
+    if (modal) {
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) closeModal();
+      });
+      console.log("Modal close handlers attached");
+    } else {
+      console.error("Modal #pwaInstructionsModal not found!");
     }
 
-    function showPwaBanner() {
-        const banner = document.getElementById('pwaInstallBanner');
-        if (!banner) {
-            console.error('Banner element #pwaInstallBanner not found!');
-            return;
-        }
-        if (bannerShown) return;
-        if (shouldShowBanner()) {
-            banner.style.display = 'block';
-            bannerShown = true;
-            console.log('Banner shown');
-        } else {
-            console.log('Banner not shown because conditions not met');
-        }
+    // Show banner if conditions met
+    if (deferredPrompt && shouldShowBanner()) {
+      showPwaBanner();
+    } else if (shouldShowBanner()) {
+      // Wait 2 seconds then show banner (fallback for iOS or slow browsers)
+      setTimeout(() => {
+        if (shouldShowBanner()) showPwaBanner();
+      }, 2000);
     }
+  });
 
-    function dismissPwaBanner(permanent = true) {
-        const banner = document.getElementById('pwaInstallBanner');
-        if (banner) banner.style.display = 'none';
-        if (permanent) localStorage.setItem('pwaBannerDismissed', 'true');
-        bannerShown = false;
-        console.log('Banner dismissed, permanent:', permanent);
+  // Listen for beforeinstallprompt (Android/Chrome)
+  window.addEventListener("beforeinstallprompt", (e) => {
+    console.log("beforeinstallprompt fired");
+    e.preventDefault();
+    deferredPrompt = e;
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", () => showPwaBanner());
+    } else {
+      showPwaBanner();
     }
+  });
 
-    function showIosInstructions() {
-        const modal = document.getElementById('pwaInstructionsModal');
-        if (!modal) {
-            console.error('Modal element #pwaInstructionsModal not found!');
-            alert('To install this app on iOS:\n\n1. Tap Share button\n2. Tap "Add to Home Screen"\n3. Tap Add');
-            return;
-        }
-        modal.classList.add('show');
-        console.log('iOS instructions modal opened');
+  // Hide banner if user installs from browser menu
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && isPWAInstalled()) {
+      dismissPwaBanner(false);
+      console.log("Banner hidden because PWA now installed");
     }
-
-    async function installPwa() {
-        console.log('Install button clicked. iOS?', isIos, 'deferredPrompt?', !!deferredPrompt);
-        if (!isIos && deferredPrompt) {
-            // Android/Chrome native prompt
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            console.log('PWA install outcome:', outcome);
-            deferredPrompt = null;
-            dismissPwaBanner(true);
-        } else {
-            // iOS or no beforeinstallprompt
-            showIosInstructions();
-        }
-    }
-
-    // Wait for DOM to be ready before attaching events
-    document.addEventListener('DOMContentLoaded', () => {
-        console.log('DOM ready – attaching PWA events');
-        const banner = document.getElementById('pwaInstallBanner');
-        const installBtn = document.getElementById('pwaInstallBtn');
-        const dismissBtn = document.getElementById('pwaDismissBtn');
-
-        if (installBtn) {
-            installBtn.addEventListener('click', installPwa);
-            console.log('Install button listener attached');
-        } else {
-            console.error('Install button #pwaInstallBtn not found!');
-        }
-
-        if (dismissBtn) {
-            dismissBtn.addEventListener('click', () => dismissPwaBanner(true));
-            console.log('Dismiss button listener attached');
-        } else {
-            console.error('Dismiss button #pwaDismissBtn not found!');
-        }
-
-        // Close modal events
-        const modal = document.getElementById('pwaInstructionsModal');
-        const closeModalBtn = document.getElementById('closeInstructionsModal');
-        const gotItBtn = document.getElementById('gotItBtn');
-        const closeModal = () => {
-            if (modal) modal.classList.remove('show');
-            console.log('Modal closed');
-        };
-        if (closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
-        if (gotItBtn) gotItBtn.addEventListener('click', closeModal);
-        if (modal) {
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) closeModal();
-            });
-            console.log('Modal close handlers attached');
-        } else {
-            console.error('Modal #pwaInstructionsModal not found!');
-        }
-
-        // Show banner if conditions met
-        if (deferredPrompt && shouldShowBanner()) {
-            showPwaBanner();
-        } else if (shouldShowBanner()) {
-            // Wait 2 seconds then show banner (fallback for iOS or slow browsers)
-            setTimeout(() => {
-                if (shouldShowBanner()) showPwaBanner();
-            }, 2000);
-        }
-    });
-
-    // Listen for beforeinstallprompt (Android/Chrome)
-    window.addEventListener('beforeinstallprompt', (e) => {
-        console.log('beforeinstallprompt fired');
-        e.preventDefault();
-        deferredPrompt = e;
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => showPwaBanner());
-        } else {
-            showPwaBanner();
-        }
-    });
-
-    // Hide banner if user installs from browser menu
-    document.addEventListener('visibilitychange', () => {
-        if (!document.hidden && isPWAInstalled()) {
-            dismissPwaBanner(false);
-            console.log('Banner hidden because PWA now installed');
-        }
-    });
+  });
 })();
 
-
-
-
-
-
-
-// --- App Download Banner Logic ---
-/*let deferredPrompt;
-
-window.addEventListener('beforeinstallprompt', (e) => {
-  // Prevent Chrome 67 and earlier from automatically showing the prompt
-  e.preventDefault();
-  // Stash the event so it can be triggered later.
-  deferredPrompt = e;
+document.getElementById("locateBack")?.addEventListener("click", () => {
+  window.location.href = "index.html";
 });
 
-// Check if running inside Capacitor native app
-function isRunningInNativeApp() {
-  return typeof window.Capacitor !== 'undefined' && window.Capacitor.isNativePlatform();
-}
 
-// Show banner if not in app and user hasn't dismissed it
-function checkAndShowAppBanner() {
-  if (isRunningInNativeApp()) {
-    return; // In native app – never show banner
-  }
-
-  const bannerDismissed = localStorage.getItem('appBannerDismissed');
-  if (bannerDismissed === 'true') return;
-
-  const banner = document.getElementById('appDownloadBanner');
-  if (banner) banner.style.display = 'block';
-}
-
-// Handle download button click
-function setupAppBannerEvents() {
-  const downloadBtn = document.getElementById('downloadAppBtn');
-  const dismissBtn = document.getElementById('dismissBannerBtn');
-
-  if (downloadBtn) {
-    downloadBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      const userAgent = navigator.userAgent.toLowerCase();
-      // Replace with your actual Google Play Store link
-      if (/android/.test(userAgent)) {
-        window.location.href = 'https://play.google.com/store/apps/details?id=com.paystora.app'; // CHANGE THIS
-      } else if (/iphone|ipad|ipod/.test(userAgent)) {
-        window.location.href = 'https://apps.apple.com/app/idYOUR_APP_ID'; // CHANGE THIS
-      } else {
-        // Fallback: PWA install
-        if (deferredPrompt) {
-          deferredPrompt.prompt();
-          deferredPrompt.userChoice.then((choiceResult) => {
-            if (choiceResult.outcome === 'accepted') {
-              console.log('User accepted the install prompt');
-            } else {
-              console.log('User dismissed the install prompt');
-            }
-            deferredPrompt = null;
-          });
-        } else {
-          alert('You can install this app as a PWA from your browser menu.');
-        }
-      }
-    });
-  }
-
-  if (dismissBtn) {
-    dismissBtn.addEventListener('click', () => {
-      const banner = document.getElementById('appDownloadBanner');
-      if (banner) banner.style.display = 'none';
-      localStorage.setItem('appBannerDismissed', 'true');
-    });
-  }
-}
-
-// Call when DOM is ready (inside your existing DOMContentLoaded)
-document.addEventListener('DOMContentLoaded', () => {
-  checkAndShowAppBanner();
-  setupAppBannerEvents();
-});*/
