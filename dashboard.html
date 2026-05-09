@@ -1095,7 +1095,7 @@
                   <i class="fas fa-shield-alt"></i>
                 </div>
                 <div class="settings-info">
-                  <h3>Security Center</h3>
+                  <h3>Security Info</h3>
                   <p>
                     Learn about online safety, scams, and how to protect
                     yourself
@@ -1105,7 +1105,7 @@
               </div>
 
               <!-- Change Password Card -->
-              <div class="settings-card" onclick="showChangePasswordModal()">
+              <div class="settings-card" onclick="showChangePasswordModal()"  style="display: none !important;">
                 <div class="settings-icon">
                   <i class="fas fa-key"></i>
                 </div>
@@ -1117,7 +1117,7 @@
               </div>
 
               <!-- Transfer PIN Card -->
-              <div class="settings-card" onclick="showTransferPinModal()">
+              <div class="settings-card" onclick="showTransferPinModal()" style="display: none !important;">
                 <div class="settings-icon">
                   <i class="fas fa-lock"></i>
                 </div>
@@ -1352,7 +1352,7 @@
     <div class="modal" id="securityCenterModal">
       <div class="modal-content modal-lg">
         <div class="modal-header">
-          <h3><i class="fas fa-shield-alt"></i> Security Center</h3>
+          <h3><i class="fas fa-shield-alt"></i> Security Info</h3>
           <button class="close-modal">&times;</button>
         </div>
         <div class="modal-body security-content">
@@ -1538,7 +1538,7 @@
     </div>
 
     <!-- Change Password Modal -->
-    <div class="modal" id="changePasswordModal">
+    <div class="modal" id="changePasswordModal" style="z-index: 10001 !important;">
       <div class="modal-content">
         <div class="modal-header">
           <h3>Change Password</h3>
@@ -1594,7 +1594,7 @@
     </div>
 
     <!-- Transfer PIN Management Modal -->
-    <div class="modal" id="transferPinModal">
+    <div class="modal" id="transferPinModal" style="z-index: 10001 !important;">
       <div class="modal-content">
         <div class="modal-header">
           <h3 id="pinModalTitle">Set Transfer PIN</h3>
@@ -2300,7 +2300,7 @@
               style="font-size: 45px; color: #10b981"
             ></i>
           </div>
-          <h3
+          <h3 class="success-name"
             id="receiptStatusText"
             style="text-align: center; margin: 0; margin-right: 110px"
           >
@@ -2579,12 +2579,6 @@
                 text-align: center;
               "
             >
-              <!-- <img
-                src="https://chart.googleapis.com/chart?chs=100x100&cht=qr&chl=PPAYES%20Receipt%20-%20Powered%20by%20PPAYES"
-                alt="QR Code"
-                style="width: 60px; height: 60px; margin-bottom: 8px"
-                onerror="this.style.display = 'none'"
-              />-->
               <p style="font-size: 9px; color: #94a3b8; margin: 0">
                 This is an electronically generated receipt.<br />
                 No signature required. Valid as proof of transaction.
@@ -2811,6 +2805,22 @@
             </button>
             <button
               class="security-option-btn"
+              onclick="showChangePasswordModal()"
+            >
+              <i class="fas fa-key"></i>
+              <span>Change Password</span>
+              <small>Update your login password</small>
+            </button>
+            <button
+              class="security-option-btn"
+              onclick="showTransferPinModal()"
+            >
+              <i class="fas fa-lock"></i>
+              <span>Transfer Pin</span>
+              <small>Set or change your 4-digit transaction PIN</small>
+            </button>
+            <button
+              class="security-option-btn"
               onclick="showCloseAccountModal()"
             >
               <i class="fas fa-trash-alt"></i>
@@ -2891,7 +2901,7 @@
       <div class="modal-content" style="max-width: 550px">
         <div class="modal-header">
           <h3><i class="fas fa-lock"></i> Freeze Your Account</h3>
-          <button class="close-modal">&times;</button>
+          <button class="close-modal" onclick="showAccountSecurityModal()" >&times;</button>
         </div>
         <div class="modal-body">
           <p style="margin-bottom: 20px">
@@ -3072,7 +3082,7 @@
       <div class="modal-content" style="max-width: 450px">
         <div class="modal-header">
           <h3><i class="fas fa-phone-alt"></i> Change Phone Number</h3>
-          <button class="close-modal">&times;</button>
+          <button class="close-modal" onclick="showAccountSecurityModal()" >&times;</button>
         </div>
         <div class="modal-body">
           <div class="form-group">
@@ -3127,7 +3137,7 @@
           <h3>
             <i class="fas fa-exclamation-triangle"></i> Close Account - Warning
           </h3>
-          <button class="close-modal">&times;</button>
+          <button class="close-modal" onclick="showAccountSecurityModal()">&times;</button>
         </div>
         <div class="modal-body">
           <div style="text-align: center; padding: 20px">
@@ -3174,7 +3184,7 @@
             <i class="fas fa-question-circle"></i> Why are you closing your
             account?
           </h3>
-          <button class="close-modal">&times;</button>
+          <button class="close-modal" onclick="showCloseAccountModal()" >&times;</button>
         </div>
         <div class="modal-body">
           <p>Please help us improve by selecting a reason:</p>
@@ -3376,7 +3386,7 @@
       <div class="modal-content" style="max-width: 550px">
         <div class="modal-header">
           <h3><i class="fas fa-sign-out-alt"></i> Logout Settings</h3>
-          <button class="close-modal">&times;</button>
+          <button class="close-modal"  onclick="showAccountSecurityModal()" >&times;</button>
         </div>
         <div class="modal-body">
           <div
@@ -3464,58 +3474,6 @@
       </div>
     </div>
 
-    <!-- Universal Confirmation Modal -
-    <div class="modal" id="confirmationModal">
-      <div
-        class="modal-content confirmation-modal-content"
-        style="max-width: 400px; text-align: center"
-      >
-        <div
-          class="modal-header"
-          style="border-bottom: none; padding-bottom: 0"
-        >
-          <button
-            class="close-modal"
-            style="position: absolute; right: 15px; top: 15px"
-          >
-            &times;
-          </button>
-        </div>
-        <div class="modal-body" style="padding: 30px 24px">
-          <div
-            id="confirmationIcon"
-            style="font-size: 48px; margin-bottom: 15px"
-          >
-            ⚠️
-          </div>
-          <h3 id="confirmationTitle" style="margin-bottom: 10px">
-            Confirm Action
-          </h3>
-          <p
-            id="confirmationMessage"
-            style="color: #64748b; margin-bottom: 25px"
-          >
-            Are you sure you want to proceed?
-          </p>
-          <div style="display: flex; gap: 12px; justify-content: center">
-            <button
-              id="confirmationCancelBtn"
-              class="btn btn-outline"
-              style="min-width: 100px"
-            >
-              Cancel
-            </button>
-            <button
-              id="confirmationConfirmBtn"
-              class="btn btn-primary"
-              style="min-width: 100px"
-            >
-              Confirm
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>-->
 
     <!-- Universal Confirmation Modal - Make sure it's the LAST modal in the body -->
     <div class="modal" id="confirmationModal" style="z-index: 10002">

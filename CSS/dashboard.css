@@ -2254,7 +2254,7 @@ Bills Grid Section .bills-grid-section {
 /* Bottom Navigation Bar */
 .bottom-nav {
   display: none;
-  position: fixed;
+  position: fixed !important;
   bottom: 0;
   left: 0;
   right: 0;
@@ -2264,6 +2264,20 @@ Bills Grid Section .bills-grid-section {
   justify-content: space-around;
   z-index: 100;
 }
+
+/* Top Bar 
+.top-bar {
+  height: var(--header-height);
+  background: white;
+  box-shadow: var(--box-shadow);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}*/
 
 .bottom-nav-item {
   display: flex;
@@ -3646,6 +3660,8 @@ Bills Grid Section .bills-grid-section {
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s;
+  padding-top: 5px !important;
+  padding-bottom: 5px !important;
 }
 
 .security-option-btn:hover {
@@ -4307,6 +4323,20 @@ Bills Grid Section .bills-grid-section {
   .transaction-amount {
     font-size: 12px;
   }
+  .success-name{
+    font-size: 17px !important;
+    margin-right: 50px;
+  }
+
+}
+
+@media (max-width: 430px) {
+
+  .success-name{
+    font-size: 16px !important;
+    margin-right: 80px !important;
+  }
+  
 }
 
 /* Extra Small Mobile (280px - 360px) */
@@ -4333,6 +4363,9 @@ Bills Grid Section .bills-grid-section {
   
   .transaction-amount {
     font-size: 11px;
+  }
+  .success-name{
+    margin-right: 50px !important;
   }
 }
 
